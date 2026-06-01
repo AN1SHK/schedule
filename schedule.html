@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Schedule">
+<title>Schedule</title>
+<style>
+:root {
+  --bg: #F5F4EF;
+  --surface: #FFFFFF;
+  --text-primary: #1F1E1C;
+  --text-secondary: #6E6D67;
+  --text-tertiary: #B4B2A9;
+  --border-strong: rgba(0,0,0,0.18);
+  --green: #1D9E75;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { background: var(--bg); color: var(--text-primary); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+body { padding: 12px; padding-bottom: 40px; }
+
+.sched { padding: 0.25rem 0; max-width: 1000px; margin: 0 auto; }
+.columns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+@media (max-width: 720px) {
+  .columns { grid-template-columns: 1fr; gap: 16px; }
+  .column-label { padding-top: 8px; }
+}
+.column-label { font-size: 10px; font-weight: 700; color: #B4B2A9; text-transform: uppercase; letter-spacing: 0.08em; text-align: center; padding-bottom: 6px; }
+.date-header { display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; }
+.date-nav { display: flex; align-items: center; gap: 8px; }
+.date-nav button { background: none; border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 4px 10px; cursor: pointer; font-size: 14px; color: var(--text-primary); font-family: inherit; }
+.date-nav button:active { background: rgba(0,0,0,0.04); }
+.date-label { font-size: 15px; font-weight: 500; color: var(--text-primary); min-width: 140px; text-align: center; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border-strong); }
+
+.timeline-wrap { padding-bottom: 12px; }
+.timeline { position: relative; }
+
+.block { position: absolute; left: 0; right: 0; background: var(--surface); border-radius: 10px; overflow: hidden; user-select: none; -webkit-user-select: none; padding: 5px 12px; display: flex; align-items: center; gap: 10px; }
+.block-content { flex: 1; min-width: 0; }
+.b-label { font-size: 11px; color: var(--text-secondary); line-height: 1.2; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.b-time { font-size: 10px; color: var(--text-secondary); margin-top: 2px; font-variant-numeric: tabular-nums; }
+.subitems { list-style: none; margin-top: 6px; padding-left: 2px; }
+.subitem { font-size: 12px; color: var(--text-secondary); line-height: 1.5; padding-left: 12px; position: relative; }
+.subitem::before { content: '•'; position: absolute; left: 2px; }
+
+.marker { position: absolute; left: 0; right: 0; height: 1px; background: #C8413A; z-index: 5; pointer-events: none; }
+.marker-label { position: absolute; right: 8px; top: -8px; background: #C8413A; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.marker-shutdown { position: absolute; left: 0; right: 0; height: 1px; background: #1E3A5F; z-index: 5; pointer-events: none; }
+.marker-shutdown-label { position: absolute; right: 8px; top: -8px; background: #1E3A5F; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.now-line { position: absolute; left: 0; right: 0; height: 1px; background: #1D9E75; z-index: 6; pointer-events: none; }
+.now-label { position: absolute; right: 8px; top: -8px; background: #1D9E75; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.chk { width: 20px; height: 20px; border-radius: 50%; border: 0.5px solid var(--border-strong); background: transparent; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; transition: background 0.15s, border-color 0.15s; pointer-events: none; margin-top: 1px; }
+.chk.done { background: var(--green); border-color: var(--green); }
+.chk svg { display: none; }
+.chk.done svg { display: block; }
+
+.cal-overlay { position: absolute; left: 50%; transform: translateX(-50%); margin-top: 8px; background: var(--surface); border-radius: 12px; padding: 12px; z-index: 10; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.cal-overlay.show { display: block; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 32px); gap: 2px; }
+.cal-day { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; border-radius: 50%; color: var(--text-primary); }
+.cal-day.today { font-weight: 500; color: var(--green); }
+.cal-day.selected { background: var(--green); color: white; }
+.cal-day.empty { cursor: default; }
+.cal-dow { font-size: 10px; color: var(--text-tertiary); text-align: center; padding-bottom: 4px; text-transform: uppercase; }
+.cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 0 4px; }
+.cal-header span { font-size: 13px; font-weight: 500; }
+.cal-header button { background: none; border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 2px 8px; cursor: pointer; font-size: 12px; color: var(--text-primary); font-family: inherit; }
+.date-wrap { position: relative; }
+</style>
+</head>
+<body>
+<div class="sched">
+  <div class="date-header">
+    <div class="date-nav">
+      <button id="prev-btn">←</button>
+      <div class="date-wrap">
+        <div class="date-label" id="date-label"></div>
+        <div class="cal-overlay" id="cal">
+          <div class="cal-header">
+            <button id="cal-prev">‹</button>
+            <span id="cal-month"></span>
+            <button id="cal-next">›</button>
+          </div>
+          <div class="cal-grid" id="cal-dows"></div>
+          <div class="cal-grid" id="cal-days"></div>
+        </div>
+      </div>
+      <button id="next-btn">→</button>
+    </div>
+  </div>
+  <div class="timeline-wrap">
+    <div class="columns">
+      <div>
+        <div class="column-label">Morning</div>
+        <div class="timeline" id="timeline-morning"></div>
+      </div>
+      <div>
+        <div class="column-label">Afternoon</div>
+        <div class="timeline" id="timeline-afternoon"></div>
+      </div>
+      <div>
+        <div class="column-label">Evening</div>
+        <div class="timeline" id="timeline-evening"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const KEY = 'schedule_v2';
+const START_HOUR = 7;
+const HOUR_HEIGHT = 50;
+const TOP_PAD = 2;
+const MIN_BLOCK_HEIGHT = 36;
+
+const FIXED_BLOCKS = [
+  { start: '7:00', end: '8:00', label: 'MR', items: ['Make Bed', 'Grooming', 'Meditate (30 Minutes)', 'Gratitude (3 Points)', 'Review Plan'] },
+  { start: '8:00', end: '8:30', label: 'Eat' },
+  { start: '8:30', end: '9:00', label: 'Exercise', items: ['Walk / Run / Cycle / Yoga'] },
+  { start: '9:00', end: '13:00', label: 'Work' },
+  { start: '13:00', end: '13:30', label: 'Exercise', items: ['Walk / Run / Cycle / Yoga'] },
+  { start: '13:30', end: '15:30', label: 'Work' },
+  { start: '15:30', end: '17:30', label: 'Exercise', items: ['PPL_SLOT'] },
+  { start: '17:30', end: '18:00', label: 'Shower' },
+  { start: '18:00', end: '22:00', label: 'Relax' },
+  { start: '22:00', end: '22:30', label: 'NR', items: ['Brush Teeth', 'Plan Tomorrow', 'Review Schedule', 'Set Bedroom Temperature, Clothes, Water, Towels, Door Lock', 'Dark Room'] },
+  { start: '22:30', end: '23:00', label: 'Wind-down', items: ['Quiet Time', 'Read Fiction'] },
+  { start: '23:00', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
+];
+
+function dayKey(d) { return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function dayNum(d) { const ref = new Date(2026,0,1); return Math.floor((d - ref) / 86400000); }
+function dateFromNum(n) { return new Date(2026, 0, 1 + n); }
+function loadAll() { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch(e) { return {}; } }
+function saveAll(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch(e) {} }
+function getDoneState(key) { const all = loadAll(); return all[key] || {}; }
+function setDoneState(key, state) { const all = loadAll(); all[key] = state; saveAll(all); }
+function parseTime(t) { const [h, m] = t.split(':').map(Number); return h + (m || 0) / 60; }
+
+// PPL rotation starts tomorrow (May 27, 2026): Push → Pull → Legs → Rest (continuous)
+const PPL_START = dayNum(new Date(2026, 4, 27));
+const PPL_CYCLE = ['Push', 'Pull', 'Legs', 'Rest'];
+function getPPLLabel(d) {
+  const n = dayNum(d);
+  if (n < PPL_START) return 'Push';
+  const idx = ((n - PPL_START) % 4 + 4) % 4;
+  return PPL_CYCLE[idx];
+}
+
+let cur = dayNum(new Date());
+let calMonth = new Date().getMonth();
+let calYear = new Date().getFullYear();
+
+function renderColumn(elId, blocks, startHour, markers) {
+  const tl = document.getElementById(elId);
+  tl.innerHTML = '';
+  const layout = blocks.map(b => {
+    const naturalTop = TOP_PAD + (b.startT - startHour) * HOUR_HEIGHT;
+    const naturalHeight = (b.endT - b.startT) * HOUR_HEIGHT;
+    const itemSpace = b.items ? b.items.length * 19 + 6 : 0;
+    const minWithItems = 56 + itemSpace;
+    let height = Math.max(naturalHeight, MIN_BLOCK_HEIGHT, minWithItems);
+    if (b.capHeight) height = Math.min(height, 250);
+    return { ...b, top: naturalTop, height };
+  });
+  for (let k = 1; k < layout.length; k++) {
+    const prevBottom = layout[k-1].top + layout[k-1].height;
+    if (layout[k].top < prevBottom + 3) layout[k].top = prevBottom + 3;
+  }
+  const lastBottom = layout.length ? layout[layout.length - 1].top + layout[layout.length - 1].height : 0;
+  tl.style.height = `${lastBottom + TOP_PAD}px`;
+
+  layout.forEach(b => {
+    const block = document.createElement('div');
+    block.className = 'block';
+    block.style.top = `${b.top + 1}px`;
+    block.style.height = `${b.height - 3}px`;
+    const itemsHtml = b.items ? `<ul class="subitems">${b.items.map(it => `<li class="subitem">${it}</li>`).join('')}</ul>` : '';
+    const displayStart = b.displayStart || b.start;
+    const displayEnd = b.displayEnd || b.end;
+    block.innerHTML = `
+      <div class="block-content">
+        <div class="b-label">${b.label}</div>
+        <div class="b-time">${displayStart} – ${displayEnd}</div>
+        ${itemsHtml}
+      </div>
+    `;
+    tl.appendChild(block);
+  });
+
+  markers.forEach(m => {
+    const container = layout.find(b => b.startT <= m.time && b.endT > m.time);
+    if (!container) return;
+    const frac = (m.time - container.startT) / (container.endT - container.startT);
+    const markerTop = container.top + frac * container.height;
+    const marker = document.createElement('div');
+    marker.className = m.cls;
+    marker.style.top = `${markerTop}px`;
+    marker.innerHTML = `<div class="${m.labelCls}">${m.label}</div>`;
+    tl.appendChild(marker);
+  });
+}
+
+function render() {
+  const d = dateFromNum(cur);
+  const key = dayKey(d);
+  const doneState = getDoneState(key);
+  document.getElementById('date-label').textContent = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+  const pplLabel = getPPLLabel(d);
+  const enriched = FIXED_BLOCKS.map((b, i) => {
+    const items = b.items ? b.items.map(it => it === 'PPL_SLOT' ? pplLabel + ' / Sports' : it) : b.items;
+    return { ...b, items, i, startT: parseTime(b.start), endT: parseTime(b.end), done: !!(doneState && doneState[i]) };
+  }).sort((a, b) => a.startT - b.startT);
+
+  // Split: morning ends at 13:00, afternoon ends at 18:30, evening goes to end
+  const SPLIT_1 = 13;
+  const SPLIT_2 = 18.5;
+  const morning = enriched.filter(b => b.endT <= SPLIT_1);
+  const afternoon = enriched.filter(b => b.endT > SPLIT_1 && b.endT <= SPLIT_2);
+  const evening = enriched.filter(b => b.endT > SPLIT_2);
+
+  const today = new Date();
+  const showNow = dayNum(today) === cur;
+  const nowTime = showNow ? today.getHours() + today.getMinutes() / 60 : null;
+  const hh = showNow ? String(today.getHours()).padStart(2,'0') : '';
+  const mm = showNow ? String(today.getMinutes()).padStart(2,'0') : '';
+
+  const morningMarkers = [];
+  const afternoonMarkers = [];
+  const eveningMarkers = [
+    { time: 20, cls: 'marker', labelCls: 'marker-label', label: 'Last Meal Ate · 20:00' },
+    { time: 22, cls: 'marker-shutdown', labelCls: 'marker-shutdown-label', label: 'Shutdown All Devices · 22:00' }
+  ];
+  if (showNow) {
+    const nowMarker = { time: nowTime, cls: 'now-line', labelCls: 'now-label', label: `Now · ${hh}:${mm}` };
+    if (nowTime < SPLIT_1) morningMarkers.push(nowMarker);
+    else if (nowTime < SPLIT_2) afternoonMarkers.push(nowMarker);
+    else eveningMarkers.push(nowMarker);
+  }
+
+  renderColumn('timeline-morning', morning, START_HOUR, morningMarkers);
+  renderColumn('timeline-afternoon', afternoon, SPLIT_1, afternoonMarkers);
+  renderColumn('timeline-evening', evening, SPLIT_2, eveningMarkers);
+}
+
+// Re-render every 10s so the now-line stays current without manual refresh
+setInterval(render, 10000);
+// Also re-render the moment the page becomes visible again (return from home screen, tab switch)
+document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
+window.addEventListener('focus', render);
+window.addEventListener('pageshow', render);
+
+document.getElementById('prev-btn').onclick = () => { cur--; render(); };
+document.getElementById('next-btn').onclick = () => { cur++; render(); };
+
+const cal = document.getElementById('cal');
+document.getElementById('date-label').onclick = () => {
+  const d = dateFromNum(cur);
+  calMonth = d.getMonth();
+  calYear = d.getFullYear();
+  renderCal();
+  cal.classList.toggle('show');
+};
+document.addEventListener('click', e => {
+  if (!cal.contains(e.target) && e.target.id !== 'date-label') cal.classList.remove('show');
+});
+document.getElementById('cal-prev').onclick = (e) => { e.stopPropagation(); calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCal(); };
+document.getElementById('cal-next').onclick = (e) => { e.stopPropagation(); calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCal(); };
+
+function renderCal() {
+  document.getElementById('cal-month').textContent = new Date(calYear, calMonth, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  document.getElementById('cal-dows').innerHTML = ['S','M','T','W','T','F','S'].map(d => `<div class="cal-dow">${d}</div>`).join('');
+  const first = new Date(calYear, calMonth, 1).getDay();
+  const days = new Date(calYear, calMonth + 1, 0).getDate();
+  const grid = document.getElementById('cal-days');
+  grid.innerHTML = '';
+  for (let i = 0; i < first; i++) grid.innerHTML += `<div class="cal-day empty"></div>`;
+  const todayKey = dayKey(new Date());
+  const selKey = dayKey(dateFromNum(cur));
+  for (let d = 1; d <= days; d++) {
+    const dt = new Date(calYear, calMonth, d);
+    const k = dayKey(dt);
+    const cls = ['cal-day'];
+    if (k === todayKey) cls.push('today');
+    if (k === selKey) cls.push('selected');
+    grid.innerHTML += `<div class="${cls.join(' ')}" data-n="${dayNum(dt)}">${d}</div>`;
+  }
+  grid.querySelectorAll('[data-n]').forEach(el => {
+    el.onclick = (e) => { e.stopPropagation(); cur = +el.dataset.n; cal.classList.remove('show'); render(); };
+  });
+}
+
+render();
+</script>
+</body>
+</html>
