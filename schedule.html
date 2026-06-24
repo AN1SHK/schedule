@@ -248,8 +248,8 @@ const MIN_BLOCK_HEIGHT = 36;
 
 const FIXED_BLOCKS = [
   { start: '7:00', end: '7:30', label: 'MR', tags: ['Meditate · 10 min', 'Gratitude · 3 pts'] },
-  { start: '7:30', end: '8:00', label: 'Exercise', tags: ['MORNING_EX_TAG', 'Music'] },
-  { start: '8:00', end: '8:30', label: 'Cold Shower' },
+  { start: '7:30', end: '8:30', label: 'Exercise', tags: ['MORNING_EX_TAG', 'Music'] },
+  { start: '8:30', end: '9:00', label: 'Cold Shower' },
   { start: '9:00', end: '13:00', label: 'Work', tags: ['Mobility', 'Chores', 'Messages'], pomodoro: { work: 50, break: 10, rotationKey: 'work', prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Body Scan', color: '#9333EA' }, { name: 'Breath Count', color: '#2563EB' }] } },
   { start: '13:00', end: '13:30', label: 'Eat', tags: ['Mindful'] },
   { start: '13:30', end: '14:00', label: 'Exercise', tags: ['AFTERNOON_EX_TAG', 'Read', 'Podcasts', 'Music'] },
@@ -325,7 +325,7 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
     const tagSpace = b.tags ? (b.tags.length <= 3 ? 28 : 52) : 0;
     const minWithItems = 74 + itemSpace + tagSpace;
     let height = Math.max(naturalHeight, MIN_BLOCK_HEIGHT, minWithItems);
-    if (b.capHeight) height = Math.min(height, 250);
+    if (b.capHeight) height = Math.min(height, 80);
     return { ...b, top: naturalTop, height };
   }).filter(b => b !== null);
   for (let k = 1; k < layout.length; k++) {
