@@ -256,7 +256,7 @@ const FIXED_BLOCKS = [
   { start: '19:00', end: '19:30', label: 'Shower' },
   { start: '19:30', end: '20:00', label: 'Eat', tags: ['Mindful'] },
   { start: '20:00', end: '22:00', label: 'Relax', tags: ['Read', 'Podcasts', 'Mindful', 'YouTube', 'Sports', 'Shows', 'Movies', 'Messages'], pomodoro: { work: 50, break: 10, prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Chores', color: '#16A34A' }] } },
-  { start: '22:00', end: '23:00', label: 'NR', tags: ['Plan Tomorrow'] },
+  { start: '22:00', end: '23:00', label: 'NR', tags: ['Plan Tomorrow', 'Read Fiction'] },
   { start: '23:00', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
 ];
 
@@ -349,7 +349,7 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
     const DIGITAL_TAGS = new Set(['Music','Netflix','Movies','Shows','Socials','Gaming','Messages','Sports','YouTube','Messages','Messages']);
     const READING_TAGS = new Set(['Read','Podcasts']);
     const MINDFUL_TAGS = new Set(['Mindful','Meditate · 10 min','Gratitude · 3 pts']);
-    const PLAN_TAGS = new Set(['Plan Tomorrow']);
+    const PLAN_TAGS = new Set(['Plan Tomorrow','Read Fiction']);
     const tagsHtml = b.tags ? `<div class="tag-row">${b.tags.map(t => {
       const CHORES_TAGS = new Set(['Chores']);
     const cls = EXERCISE_TAGS.has(t) ? 'tag tag-exercise' : CHORES_TAGS.has(t) ? 'tag tag-chores' : DIGITAL_TAGS.has(t) ? 'tag tag-digital' : READING_TAGS.has(t) ? 'tag tag-reading' : MINDFUL_TAGS.has(t) ? 'tag tag-mindful' : PLAN_TAGS.has(t) ? 'tag tag-plan' : 'tag';
