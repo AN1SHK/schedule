@@ -28,31 +28,106 @@ body { padding: 12px; padding-bottom: 40px; }
   .column-label { padding-top: 8px; }
 }
 .column-label { font-size: 10px; font-weight: 700; color: #B4B2A9; text-transform: uppercase; letter-spacing: 0.08em; text-align: center; padding-bottom: 6px; }
-.date-header { display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; }
-.date-nav { display: flex; align-items: center; gap: 8px; }
+.date-header { display: flex; align-items: center; justify-content: center; margin-bottom: 14px; overflow: visible; }
+.reminders-panel { max-width: 1000px; margin: 32px auto 0; padding: 18px 20px; background: var(--surface); border-radius: 0; }
+.reminders-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 0.5px solid var(--border); }
+.reminders-title { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.08em; }
+.reminders-toggle { background: none; border: 0.5px solid var(--border-strong); border-radius: 6px; padding: 3px 10px; cursor: pointer; font-size: 11px; font-family: inherit; color: var(--text-primary); }
+.reminders-toggle:active { background: rgba(0,0,0,0.04); }
+.reminders-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.reminder-item { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px 6px 12px; background: rgba(0,0,0,0.03); border-radius: 4px; }
+.reminder-item.due-today { background: rgba(200, 65, 58, 0.1); }
+.reminder-item.due-soon { background: rgba(232, 180, 61, 0.12); }
+.reminder-name { font-size: 12px; color: var(--text-primary); }
+.reminder-countdown { font-size: 9px; color: var(--text-tertiary); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; font-variant-numeric: tabular-nums; padding: 1px 6px; border-radius: 2px; background: rgba(0,0,0,0.05); }
+.reminder-item.due-today .reminder-countdown { color: white; background: #C8413A; }
+.reminder-item.due-soon .reminder-countdown { color: white; background: #C99B3D; }
+.reminder-delete { background: none; border: 0; color: var(--text-tertiary); cursor: pointer; font-size: 14px; padding: 0 2px; line-height: 1; font-family: inherit; opacity: 0.5; }
+.reminder-delete:hover { opacity: 1; color: #C8413A; }
+.reminders-empty { font-size: 11px; color: var(--text-tertiary); font-style: italic; }
+.reminders-add { display: none; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 0.5px solid var(--border); flex-wrap: wrap; align-items: center; }
+.reminders-add.show { display: flex; }
+.reminder-input { font-size: 12px; padding: 5px 10px; border: 0.5px solid var(--border-strong); border-radius: 6px; font-family: inherit; color: var(--text-primary); background: transparent; }
+#reminder-name { flex: 1; min-width: 140px; }
+.reminder-save-btn { background: var(--text-primary); color: var(--surface); border: 0; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.date-nav { display: flex; align-items: center; gap: 8px; position: relative; padding-right: 44px; padding-left: 44px; overflow: visible; }
 .date-nav button { background: none; border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 4px 10px; cursor: pointer; font-size: 14px; color: var(--text-primary); font-family: inherit; }
 .date-nav button:active { background: rgba(0,0,0,0.04); }
-.date-label { font-size: 15px; font-weight: 500; color: var(--text-primary); min-width: 140px; text-align: center; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border-strong); }
+.date-label { font-size: 15px; font-weight: 500; color: var(--text-primary); min-width: 220px; text-align: center; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border-strong); }
+.reminder-pill { display: inline-block; background: #C8413A; color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+.reminder-pill-blue { display: inline-block; background: #2B6CB0; color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+.reminder-wrap { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.reminder-wrap:not(:empty) { margin-top: 6px; }
+.now-banner-wrap { text-align: center; }
+.now-banner-wrap:not(:empty) { margin-top: 6px; }
+.now-banner { display: inline-block; background: #1D9E75; color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+.now-banner-time { font-size: 10px; opacity: 0.85; margin-left: 8px; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; font-weight: 500; }
+.shift-wrap { position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
+.shift-btn { background: none; border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 4px 10px; cursor: pointer; font-size: 14px; color: var(--text-primary); font-family: inherit; margin-left: 4px; }
+.shift-btn:active { background: rgba(0,0,0,0.04); }
+.shift-btn.active { background: rgba(220, 60, 60, 0.08); border-color: rgba(200, 65, 58, 0.5); color: #C8413A; }
+.shift-overlay { display: none; position: absolute; top: calc(100% + 6px); right: 0; background: var(--surface); border-radius: 10px; padding: 10px 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); z-index: 100; white-space: nowrap; }
+.shift-overlay.show { display: flex; align-items: center; gap: 8px; }
+.shift-title { font-size: 10px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; }
+.shift-input { font-size: 13px; padding: 4px 8px; border: 0.5px solid var(--border-strong); border-radius: 6px; font-family: inherit; color: var(--text-primary); background: transparent; width: 90px; }
+.shift-actions { display: flex; gap: 6px; }
+.shift-apply, .shift-reset { border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 12px; font-weight: 600; font-family: inherit; min-height: 0; }
+.shift-apply { background: var(--text-primary); color: var(--surface); border: none; }
+.shift-reset { background: none; border: 0.5px solid var(--border-strong); color: var(--text-secondary); }
+.shift-info { display: none; }
+.shift-history { display: none; }
+.shift-history { margin-top: 8px; padding-top: 8px; border-top: 0.5px solid var(--border); display: none; }
+.shift-history.has-items { display: block; }
+.shift-history-title { font-size: 9px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+.shift-history-item { font-size: 11px; color: var(--text-secondary); font-variant-numeric: tabular-nums; padding: 1px 0; }
 
-.timeline-wrap { padding-bottom: 12px; }
+.timeline-wrap { padding-top: 24px; padding-bottom: 12px; }
 .timeline { position: relative; }
 
-.block { position: absolute; left: 0; right: 0; background: var(--surface); border-radius: 10px; overflow: hidden; user-select: none; -webkit-user-select: none; padding: 5px 12px; display: flex; align-items: center; gap: 10px; }
+.block { position: absolute; left: 0; right: 0; background: var(--surface); border-radius: 0; overflow: hidden; user-select: none; -webkit-user-select: none; padding: 14px 14px; display: flex; align-items: center; gap: 10px; transition: opacity 0.3s; }
+.block.past { opacity: 0.6; }
 .block-content { flex: 1; min-width: 0; }
 .b-label { font-size: 11px; color: var(--text-secondary); line-height: 1.2; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
 .b-time { font-size: 10px; color: var(--text-secondary); margin-top: 2px; font-variant-numeric: tabular-nums; }
-.subitems { list-style: none; margin-top: 6px; padding-left: 2px; }
-.subitem { font-size: 12px; color: var(--text-secondary); line-height: 1.5; padding-left: 12px; position: relative; }
-.subitem::before { content: '•'; position: absolute; left: 2px; }
+.b-note { font-size: 10px; color: var(--text-tertiary); margin-top: 6px; font-style: italic; letter-spacing: 0.02em; }
+
+.pomo-schedule { display: none; }
+
+.subitems { list-style: none; margin-top: 10px; margin-bottom: 4px; padding-left: 0; position: relative; }
+.subitems::before { content: ''; position: absolute; left: 8px; top: 6px; bottom: 6px; width: 1px; background: rgba(110, 109, 103, 0.25); }
+.subitem { font-size: 12px; color: var(--text-secondary); line-height: 1.5; padding-left: 24px; position: relative; padding-top: 2px; padding-bottom: 2px; cursor: pointer; user-select: none; -webkit-user-select: none; transition: color 0.15s; }
+.subitem::before { content: ''; position: absolute; left: 3px; top: 6px; width: 11px; height: 11px; border-radius: 50%; background: var(--surface); border: 1px solid rgba(110, 109, 103, 0.5); box-sizing: border-box; transition: background 0.15s, border-color 0.15s; }
+.subitem.done { color: rgba(110, 109, 103, 0.5); text-decoration: line-through; }
+.subitem.done::before { background: #1D9E75; border-color: #1D9E75; }
+.subitem.done::after { content: ''; position: absolute; left: 5.5px; top: 8.5px; width: 4px; height: 2px; border-left: 1.5px solid white; border-bottom: 1.5px solid white; transform: rotate(-45deg); }
+
+.tag-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+.tag { display: inline-block; background: #EEEDE7; color: #6E6D67; font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.02em; text-transform: uppercase; }
+.tag-exercise { background: rgba(184, 84, 80, 0.12); color: #B85450; }
+.tag-chores { background: rgba(22, 163, 74, 0.12); color: #15803D; }
+.tag-digital { background: rgba(74, 111, 165, 0.12); color: #4A6FA5; }
+.tag-reading { background: rgba(234, 179, 8, 0.12); color: #CA8A04; }
+.tag-mindful { background: rgba(120, 60, 180, 0.12); color: #7B3DB5; }
+.tag-plan { background: rgba(51, 65, 85, 0.12); color: #334155; }
+.messages-band { position: absolute; left: 0; right: 0; bottom: 4px; display: flex; align-items: center; justify-content: center; background: rgba(74, 111, 165, 0.07); border-top: 1px solid rgba(74, 111, 165, 0.25); border-bottom: 1px solid rgba(74, 111, 165, 0.25); z-index: 2; height: 22px; }
+.messages-band-label { font-size: 9px; font-weight: 700; color: #4A6FA5; letter-spacing: 0.08em; text-transform: uppercase; }
 
 .marker { position: absolute; left: 0; right: 0; height: 1px; background: #C8413A; z-index: 5; pointer-events: none; }
-.marker-label { position: absolute; right: 8px; top: -8px; background: #C8413A; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.marker-label { position: absolute; right: 8px; top: -8px; background: #C8413A; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
+.marker-shutdown-label { position: absolute; right: 8px; top: -8px; background: #1E3A5F; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
+.now-label { position: absolute; right: 8px; top: -8px; background: #1D9E75; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
 
 .marker-shutdown { position: absolute; left: 0; right: 0; height: 1px; background: #1E3A5F; z-index: 5; pointer-events: none; }
-.marker-shutdown-label { position: absolute; right: 8px; top: -8px; background: #1E3A5F; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.marker-water { position: absolute; left: 0; right: 0; height: 1px; background: #2B7BA8; z-index: 5; pointer-events: none; }
+.marker-water-label { position: absolute; right: 8px; top: -8px; background: #2B7BA8; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
+
+.marker-nap { position: absolute; left: 0; right: 0; height: 1px; background: #8B6FA8; z-index: 5; pointer-events: none; }
+.marker-nap-label { position: absolute; right: 8px; top: -8px; background: #8B6FA8; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
+.marker-msg { position: absolute; left: 0; right: 0; height: 1px; background: #0891B2; z-index: 5; pointer-events: none; }
+.marker-msg-label { position: absolute; right: 8px; top: -8px; background: #0891B2; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
 
 .now-line { position: absolute; left: 0; right: 0; height: 1px; background: #1D9E75; z-index: 6; pointer-events: none; }
-.now-label { position: absolute; right: 8px; top: -8px; background: #1D9E75; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 .chk { width: 20px; height: 20px; border-radius: 50%; border: 0.5px solid var(--border-strong); background: transparent; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; transition: background 0.15s, border-color 0.15s; pointer-events: none; margin-top: 1px; }
 .chk.done { background: var(--green); border-color: var(--green); }
@@ -71,6 +146,29 @@ body { padding: 12px; padding-bottom: 40px; }
 .cal-header span { font-size: 13px; font-weight: 500; }
 .cal-header button { background: none; border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 2px 8px; cursor: pointer; font-size: 12px; color: var(--text-primary); font-family: inherit; }
 .date-wrap { position: relative; }
+.cal-legend { margin-top: 12px; padding-top: 10px; border-top: 0.5px solid var(--border-strong); }
+.cal-legend-toggle { background: none; border: 0; padding: 4px 0; cursor: pointer; font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; font-family: inherit; display: flex; align-items: center; gap: 6px; width: 100%; }
+.cal-legend-toggle #legend-arrow { transition: transform 0.15s; display: inline-block; font-size: 14px; }
+.cal-legend.open .cal-legend-toggle #legend-arrow { transform: rotate(90deg); }
+.cal-legend-body { display: none; margin-top: 8px; flex-direction: column; gap: 10px; }
+.cal-legend.open .cal-legend-body { display: flex; }
+.legend-section-title { font-size: 9px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+.legend-item { font-size: 11px; color: var(--text-primary); display: flex; align-items: center; gap: 8px; padding: 2px 0; }
+.legend-swatch { display: inline-block; width: 12px; height: 3px; border-radius: 1px; }
+.legend-pill { display: inline-block; width: 14px; height: 14px; border-radius: 3px; }
+.alerts-toggle { background: none; border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 11px; color: var(--text-primary); font-family: inherit; width: 100%; text-align: left; }
+.alerts-toggle.enabled { background: rgba(29, 158, 117, 0.08); border-color: rgba(29, 158, 117, 0.5); color: #1D9E75; font-weight: 600; }
+.alerts-status { font-size: 9px; color: var(--text-tertiary); margin-top: 6px; font-style: italic; }
+.hunger-recommended { margin-top: 8px; font-size: 10px; color: var(--text-secondary); }
+.hunger-input-row { display: flex; gap: 6px; }
+.hunger-input { flex: 1; font-size: 13px; padding: 5px 8px; border: 0.5px solid var(--border-strong); border-radius: 8px; font-family: inherit; color: var(--text-primary); background: transparent; }
+.hunger-log-btn { background: var(--text-primary); color: var(--surface); border: 0; border-radius: 8px; padding: 5px 14px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.hunger-clear-btn { background: none; border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 4px 10px; font-size: 10px; cursor: pointer; font-family: inherit; color: var(--text-tertiary); margin-top: 6px; width: 100%; }
+.hunger-clear-btn:active { background: rgba(0,0,0,0.04); }
+.hunger-recommended-title { font-size: 9px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+.hunger-rec-item { display: inline-block; background: rgba(200, 65, 58, 0.08); color: #C8413A; font-weight: 600; font-size: 10px; padding: 2px 7px; border-radius: 3px; margin-right: 4px; margin-bottom: 3px; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
+.hunger-rec-empty { font-size: 10px; color: var(--text-tertiary); font-style: italic; }
+.hunger-count { font-size: 9px; color: var(--text-tertiary); margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -91,8 +189,23 @@ body { padding: 12px; padding-bottom: 40px; }
         </div>
       </div>
       <button id="next-btn">→</button>
+      <div class="shift-wrap">
+        <button id="shift-btn" class="shift-btn" title="Shift schedule (woke up late)">⟲</button>
+        <div class="shift-overlay" id="shift-overlay">
+          <span class="shift-title">Woke up at</span>
+          <input type="time" id="shift-input" value="07:00" class="shift-input">
+          <div class="shift-actions">
+            <button id="shift-apply" class="shift-apply">Apply</button>
+            <button id="shift-reset" class="shift-reset">Reset</button>
+          </div>
+          <div class="shift-info" id="shift-info"></div>
+          <div class="shift-history" id="shift-history"></div>
+        </div>
+      </div>
     </div>
   </div>
+  <div class="now-banner-wrap" id="now-banner-wrap"></div>
+  <div class="reminder-wrap" id="reminder-wrap"></div>
   <div class="timeline-wrap">
     <div class="columns">
       <div>
@@ -108,6 +221,19 @@ body { padding: 12px; padding-bottom: 40px; }
         <div class="timeline" id="timeline-evening"></div>
       </div>
     </div>
+    <div class="reminders-panel" id="reminders-panel">
+      <div class="reminders-header">
+        <span class="reminders-title">Reminders</span>
+        <button id="reminders-toggle" class="reminders-toggle">+ Add</button>
+      </div>
+      <div class="reminders-list" id="reminders-list"></div>
+      <div class="reminders-add" id="reminders-add">
+        <input type="text" id="reminder-name" class="reminder-input" placeholder="Reminder name">
+        <input type="date" id="reminder-date" class="reminder-input">
+        <input type="time" id="reminder-time" class="reminder-input">
+        <button id="reminder-save" class="reminder-save-btn">Add</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -119,17 +245,18 @@ const TOP_PAD = 2;
 const MIN_BLOCK_HEIGHT = 36;
 
 const FIXED_BLOCKS = [
-  { start: '7:00', end: '8:00', label: 'MR', items: ['Make Bed', 'Grooming', 'Meditate (30 Minutes)', 'Gratitude (3 Points)', 'Review Plan'] },
-  { start: '8:00', end: '8:30', label: 'Eat' },
-  { start: '8:30', end: '9:00', label: 'Exercise', items: ['Walk / Run / Cycle / Yoga'] },
-  { start: '9:00', end: '13:00', label: 'Work' },
-  { start: '13:00', end: '13:30', label: 'Exercise', items: ['Walk / Run / Cycle / Yoga'] },
-  { start: '13:30', end: '15:30', label: 'Work' },
-  { start: '15:30', end: '17:30', label: 'Exercise', items: ['PPL_SLOT'] },
-  { start: '17:30', end: '18:00', label: 'Shower' },
-  { start: '18:00', end: '22:00', label: 'Relax' },
-  { start: '22:00', end: '22:30', label: 'NR', items: ['Brush Teeth', 'Plan Tomorrow', 'Review Schedule', 'Set Bedroom Temperature, Clothes, Water, Towels, Door Lock', 'Dark Room'] },
-  { start: '22:30', end: '23:00', label: 'Wind-down', items: ['Quiet Time', 'Read Fiction'] },
+  { start: '7:00', end: '7:30', label: 'MR', tags: ['Meditate · 10 min', 'Gratitude · 3 pts'] },
+  { start: '7:30', end: '8:00', label: 'Exercise', tags: ['MORNING_EX_TAG', 'Music'] },
+  { start: '8:00', end: '8:30', label: 'Cold Shower' },
+  { start: '9:00', end: '13:00', label: 'Work', tags: ['Mobility', 'Chores', 'Messages'], pomodoro: { work: 50, break: 10, rotationKey: 'work', prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Body Scan', color: '#9333EA' }, { name: 'Breath Count', color: '#2563EB' }] } },
+  { start: '13:00', end: '13:30', label: 'Eat', tags: ['Mindful'] },
+  { start: '13:30', end: '14:00', label: 'Exercise', tags: ['AFTERNOON_EX_TAG', 'Read', 'Podcasts', 'Music'] },
+  { start: '14:00', end: '17:00', label: 'Work', tags: ['Mobility', 'Chores', 'Messages'], pomodoro: { work: 50, break: 10, rotationKey: 'work', prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Body Scan', color: '#9333EA' }, { name: 'Breath Count', color: '#2563EB' }], lastBreakOverride: { name: 'Chores', color: '#16A34A' } } },
+  { start: '17:00', end: '19:00', label: 'Exercise', tags: ['PPL_TAGS', 'Music'] },
+  { start: '19:00', end: '19:30', label: 'Shower' },
+  { start: '19:30', end: '20:00', label: 'Eat', tags: ['Mindful'] },
+  { start: '20:00', end: '22:00', label: 'Relax', tags: ['Read', 'Podcasts', 'Mindful', 'YouTube', 'Sports', 'Shows', 'Movies', 'Messages'], pomodoro: { work: 50, break: 10, prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Chores', color: '#16A34A' }] } },
+  { start: '22:00', end: '23:00', label: 'NR', tags: ['Plan Tomorrow'] },
   { start: '23:00', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
 ];
 
@@ -141,34 +268,66 @@ function saveAll(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catc
 function getDoneState(key) { const all = loadAll(); return all[key] || {}; }
 function setDoneState(key, state) { const all = loadAll(); all[key] = state; saveAll(all); }
 function parseTime(t) { const [h, m] = t.split(':').map(Number); return h + (m || 0) / 60; }
+function formatTime(t) {
+  const h = Math.floor(t);
+  const m = Math.round((t - h) * 60);
+  const dispH = h >= 24 ? h - 24 : h;
+  return `${dispH}:${String(m).padStart(2,'0')}`;
+}
 
 // PPL rotation starts tomorrow (May 27, 2026): Push → Pull → Legs → Rest (continuous)
-const PPL_START = dayNum(new Date(2026, 4, 27));
-const PPL_CYCLE = ['Push', 'Pull', 'Legs', 'Rest'];
-function getPPLLabel(d) {
+const PPL_START = dayNum(new Date(2026, 5, 18));
+// Each day: [big block tags, morning small block, afternoon small block]
+const PPL_CYCLE = [
+  [['Push', 'Swim', 'Sauna'], 'Run', 'Walk'],
+  [['Sprints', 'Basketball'], 'Cycle', 'Walk'],
+  [['Pull', 'Swim', 'Sauna'], 'Jump Rope', 'Walk'],
+  [['Basketball'], 'Run', 'Walk'],
+  [['Legs', 'Basketball'], 'Cycle', 'Walk'],
+  [['Sprints', 'Basketball'], 'Cycle', 'Walk'],
+  [['Push', 'Swim', 'Sauna'], 'Run', 'Walk'],
+  [['Basketball', 'Mobility'], 'Jump Rope', 'Walk'],
+  [['Pull', 'Swim', 'Sauna'], 'Run', 'Walk'],
+  [['Sprints', 'Basketball'], 'Cycle', 'Walk'],
+  [['Legs', 'Basketball'], 'Cycle', 'Walk'],
+  [['Basketball', 'Mobility'], 'Jump Rope', 'Walk']
+];
+function getCycleDay(d) {
   const n = dayNum(d);
-  if (n < PPL_START) return 'Push';
-  const idx = ((n - PPL_START) % 4 + 4) % 4;
+  if (n < PPL_START) return [['Rest'], 'Walk', 'Walk'];
+  const idx = ((n - PPL_START) % 12 + 12) % 12;
   return PPL_CYCLE[idx];
 }
+function getPPLLabel(d) { return getCycleDay(d)[0]; }
+
+function getMorningExTag(d) { return getCycleDay(d)[1]; }
+function getAfternoonExTag(d) { return getCycleDay(d)[2]; }
 
 let cur = dayNum(new Date());
 let calMonth = new Date().getMonth();
 let calYear = new Date().getFullYear();
 
-function renderColumn(elId, blocks, startHour, markers) {
+function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey, nowTime) {
   const tl = document.getElementById(elId);
   tl.innerHTML = '';
   const layout = blocks.map(b => {
-    const naturalTop = TOP_PAD + (b.startT - startHour) * HOUR_HEIGHT;
-    const naturalHeight = (b.endT - b.startT) * HOUR_HEIGHT;
+    // Skip blocks that have zero or negative display duration (e.g. fully-shifted Relax)
+    if (b.label === 'Relax' && b.dispStartT !== undefined && b.dispStartT >= b.dispEndT) return null;
+
+    const layoutStart = b.label === 'Relax' ? b.dispStartT : b.startT;
+    const layoutEnd = b.label === 'Relax' ? b.dispEndT : b.endT;
+    const naturalTop = TOP_PAD + (layoutStart - startHour) * HOUR_HEIGHT;
+    const naturalHeight = (layoutEnd - layoutStart) * HOUR_HEIGHT;
     const itemSpace = b.items ? b.items.length * 19 + 6 : 0;
-    const minWithItems = 56 + itemSpace;
+    // Tag rows: estimate ~2 rows for 7 tags at narrow widths, ~1 row at wide. Use 22 per row, assume 2 rows.
+    const tagSpace = b.tags ? (b.tags.length <= 3 ? 28 : 52) : 0;
+    const minWithItems = 74 + itemSpace + tagSpace;
     let height = Math.max(naturalHeight, MIN_BLOCK_HEIGHT, minWithItems);
     if (b.capHeight) height = Math.min(height, 250);
     return { ...b, top: naturalTop, height };
-  });
+  }).filter(b => b !== null);
   for (let k = 1; k < layout.length; k++) {
+    if (!layout[k] || !layout[k-1]) continue;
     const prevBottom = layout[k-1].top + layout[k-1].height;
     if (layout[k].top < prevBottom + 3) layout[k].top = prevBottom + 3;
   }
@@ -177,27 +336,123 @@ function renderColumn(elId, blocks, startHour, markers) {
 
   layout.forEach(b => {
     const block = document.createElement('div');
-    block.className = 'block';
+    block.className = b.messagesBand ? 'block has-messages-band' : 'block';
+    if (nowTime !== null && (b.dispEndT || b.endT) <= nowTime) block.classList.add('past');
     block.style.top = `${b.top + 1}px`;
     block.style.height = `${b.height - 3}px`;
-    const itemsHtml = b.items ? `<ul class="subitems">${b.items.map(it => `<li class="subitem">${it}</li>`).join('')}</ul>` : '';
-    const displayStart = b.displayStart || b.start;
-    const displayEnd = b.displayEnd || b.end;
+    const itemsHtml = b.items ? `<ul class="subitems">${b.items.map((it, idx) => {
+      const subKey = `${b.i}:${idx}`;
+      const isDone = doneState && doneState[subKey];
+      return `<li class="subitem${isDone ? ' done' : ''}" data-key="${subKey}">${it}</li>`;
+    }).join('')}</ul>` : '';
+    const EXERCISE_TAGS = new Set(['Run','Walk','Cycle','Jump Rope','Kallisthenics','Yoga','Push','Pull','Legs','Swim','Sauna','Sprints','Basketball','Mobility','Rest']);
+    const DIGITAL_TAGS = new Set(['Music','Netflix','Movies','Shows','Socials','Gaming','Messages','Sports','YouTube','Messages','Messages']);
+    const READING_TAGS = new Set(['Read','Podcasts']);
+    const MINDFUL_TAGS = new Set(['Mindful','Meditate · 10 min','Gratitude · 3 pts']);
+    const PLAN_TAGS = new Set(['Plan Tomorrow']);
+    const tagsHtml = b.tags ? `<div class="tag-row">${b.tags.map(t => {
+      const CHORES_TAGS = new Set(['Chores']);
+    const cls = EXERCISE_TAGS.has(t) ? 'tag tag-exercise' : CHORES_TAGS.has(t) ? 'tag tag-chores' : DIGITAL_TAGS.has(t) ? 'tag tag-digital' : READING_TAGS.has(t) ? 'tag tag-reading' : MINDFUL_TAGS.has(t) ? 'tag tag-mindful' : PLAN_TAGS.has(t) ? 'tag tag-plan' : 'tag';
+      return `<span class="${cls}">${t}</span>`;
+    }).join('')}</div>` : '';
+    const displayStart = b.displayStart || formatTime(b.dispStartT);
+    const displayEnd = b.displayEnd || formatTime(b.dispEndT);
+    const noteHtml = b.note ? `<div class="b-note">${b.note}</div>` : '';
+    const pomoLegendHtml = '';
     block.innerHTML = `
       <div class="block-content">
         <div class="b-label">${b.label}</div>
         <div class="b-time">${displayStart} – ${displayEnd}</div>
+        ${noteHtml}
+        ${pomoLegendHtml}
         ${itemsHtml}
+        ${tagsHtml}
       </div>
     `;
     tl.appendChild(block);
+
+    // Pomodoro break schedule — text list of break times and activities
+    if (b.pomodoro) {
+      const { work, break: brk, prefix, activities, lastBreakOverride } = b.pomodoro;
+      const effStart = b.dispStartT !== undefined ? b.dispStartT : b.startT;
+      const effEnd = b.dispEndT !== undefined ? b.dispEndT : b.endT;
+      const durMins = (effEnd - effStart) * 60;
+      let totalBreaks = 0;
+      let pp = 0; let isW = true;
+      while (pp < durMins) {
+        const segLen = Math.min(isW ? work : brk, durMins - pp);
+        if (!isW && segLen > 0) totalBreaks++;
+        pp += segLen; isW = !isW;
+      }
+      let pos = 0; let isWork = true;
+      let breakIdx = b.startBreakIdx || 0; let breakNum = 0;
+      const scheduleItems = [];
+      while (pos < durMins) {
+        const segLen = Math.min(isWork ? work : brk, durMins - pos);
+        if (!isWork) {
+          const breakStartH = effStart + pos / 60;
+          const h = Math.floor(breakStartH);
+          const m = Math.round((breakStartH - h) * 60);
+          const timeStr = `${h}:${String(m).padStart(2,'0')}`;
+          const isLast = breakNum === totalBreaks - 1;
+          let label;
+          if (isLast && lastBreakOverride) {
+            label = lastBreakOverride.name;
+          } else {
+            const parts = [];
+            if (prefix) parts.push(prefix.name);
+            parts.push(activities[breakIdx % activities.length].name);
+            label = parts.join(' · ');
+            breakIdx++;
+          }
+          scheduleItems.push(`<div class="pomo-schedule-item">${timeStr} — ${label}</div>`);
+          breakNum++;
+        }
+        pos += segLen; isWork = !isWork;
+      }
+      if (scheduleItems.length) {
+        const scheduleEl = document.createElement('div');
+        scheduleEl.className = 'pomo-schedule';
+        // Just show the pattern once, not every break
+        const patternParts = [];
+        if (prefix) patternParts.push(prefix.name);
+        const actNames = activities.map(a => a.name).join(' / ');
+        patternParts.push(actNames);
+        const pattern = `Every ${work} min — ${patternParts.join(' · ')}`;
+        scheduleEl.innerHTML = `<div class="pomo-schedule-item">${pattern}</div>`;
+        block.querySelector('.block-content').appendChild(scheduleEl);
+      }
+    }
+
+    // Messages band — tinted bottom section for last 10 min
+    block.querySelectorAll('.subitem').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const k = el.dataset.key;
+        const all = loadAll();
+        if (!all[currentDayKey]) all[currentDayKey] = {};
+        all[currentDayKey][k] = !all[currentDayKey][k];
+        saveAll(all);
+        el.classList.toggle('done');
+      });
+    });
   });
 
   markers.forEach(m => {
-    const container = layout.find(b => b.startT <= m.time && b.endT > m.time);
-    if (!container) return;
-    const frac = (m.time - container.startT) / (container.endT - container.startT);
-    const markerTop = container.top + frac * container.height;
+    let markerTop;
+    if (m.cls === 'now-line' || m.cls === 'marker-shutdown' || m.cls === 'marker') {
+      // Use actual rendered block positions for accuracy
+      const containing = layout.find(b => b && b.startT <= m.time && b.endT > m.time);
+      if (containing) {
+        const frac = (m.time - containing.startT) / (containing.endT - containing.startT);
+        markerTop = containing.top + frac * containing.height;
+      } else {
+        markerTop = TOP_PAD + (m.time - startHour) * HOUR_HEIGHT;
+      }
+    } else {
+      // Other markers use absolute time position
+      markerTop = TOP_PAD + (m.time - startHour) * HOUR_HEIGHT;
+    }
     const marker = document.createElement('div');
     marker.className = m.cls;
     marker.style.top = `${markerTop}px`;
@@ -210,17 +465,85 @@ function render() {
   const d = dateFromNum(cur);
   const key = dayKey(d);
   const doneState = getDoneState(key);
-  document.getElementById('date-label').textContent = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  document.getElementById('date-label').textContent = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
-  const pplLabel = getPPLLabel(d);
+  // Weekly reminders: face & body grooming on Tue (2) and Fri (5)
+  const dow = d.getDay();
+  const reminderWrap = document.getElementById('reminder-wrap');
+  let pillsHtml = '';
+  if (dow === 2 || dow === 5) {
+    pillsHtml += `<div class="reminder-pill">Personal Grooming</div>`;
+  }
+  // Upcoming reminders: show within 5 days
+  const viewDate = new Date(cur * 86400000 + new Date(2026,0,1).getTime());
+  viewDate.setHours(0,0,0,0);
+  const reminders = loadReminders();
+  for (const r of reminders) {
+    const rd = new Date(r.date + 'T00:00:00');
+    const daysAway = Math.round((rd - viewDate) / 86400000);
+    if (daysAway >= 0 && daysAway <= 5) {
+      const label = daysAway === 0 ? r.name : `${r.name} · ${daysAway}d`;
+      pillsHtml += `<div class="reminder-pill-blue">${label}</div>`;
+    }
+  }
+  reminderWrap.innerHTML = pillsHtml;
+
+  const pplTags = getPPLLabel(d);
+  const morningExTag = getMorningExTag(d);
+  const afternoonExTag = getAfternoonExTag(d);
+
+
+  // Load shift offset for this day (hours past 7:00)
+  const shiftKey = `shift_${key}`;
+  const shiftHours = parseFloat(localStorage.getItem(shiftKey) || '0');
+  const shiftBtnEl = document.getElementById('shift-btn');
+  if (shiftBtnEl) {
+    if (shiftHours > 0) shiftBtnEl.classList.add('active');
+    else shiftBtnEl.classList.remove('active');
+  }
+
   const enriched = FIXED_BLOCKS.map((b, i) => {
-    const items = b.items ? b.items.map(it => it === 'PPL_SLOT' ? pplLabel + ' / Sports' : it) : b.items;
-    return { ...b, items, i, startT: parseTime(b.start), endT: parseTime(b.end), done: !!(doneState && doneState[i]) };
+    const tags = b.tags ? b.tags.flatMap(t => {
+      if (t === 'PPL_TAGS') return pplTags;
+      if (t === 'MORNING_EX_TAG') return [morningExTag];
+      if (t === 'AFTERNOON_EX_TAG') return [afternoonExTag];
+      return [t];
+    }) : b.tags;
+    const startT = parseTime(b.start);
+    const endT = parseTime(b.end);
+    // For display only: shift times if applicable. Layout stays fixed.
+    let dispStartT = startT;
+    let dispEndT = endT;
+    if (shiftHours > 0) {
+      if (b.label === 'NR' || b.label === 'Sleep') {
+        // anchored
+      } else if (b.label === 'Relax') {
+        dispStartT = Math.min(startT + shiftHours, endT);
+      } else if (startT >= 7 && startT < 19) {
+        // MR through Shower
+        dispStartT = startT + shiftHours;
+        dispEndT = endT + shiftHours;
+      }
+    }
+    const items = b.items;
+    return { ...b, items, tags, i, startT, endT, dispStartT, dispEndT, done: !!(doneState && doneState[i]) };
   }).sort((a, b) => a.startT - b.startT);
+
+  // Pre-compute starting breakIdx for each pomodoro block sharing a rotationKey
+  const rotationCounts = {};
+  for (const blk of enriched) {
+    if (blk.pomodoro && blk.pomodoro.rotationKey) {
+      blk.startBreakIdx = rotationCounts[blk.pomodoro.rotationKey] || 0;
+      const durMins = (blk.endT - blk.startT) * 60;
+      const cycle = blk.pomodoro.work + blk.pomodoro.break;
+      const numBreaks = Math.floor(durMins / cycle);
+      rotationCounts[blk.pomodoro.rotationKey] = blk.startBreakIdx + numBreaks;
+    }
+  }
 
   // Split: morning ends at 13:00, afternoon ends at 18:30, evening goes to end
   const SPLIT_1 = 13;
-  const SPLIT_2 = 18.5;
+  const SPLIT_2 = 19;
   const morning = enriched.filter(b => b.endT <= SPLIT_1);
   const afternoon = enriched.filter(b => b.endT > SPLIT_1 && b.endT <= SPLIT_2);
   const evening = enriched.filter(b => b.endT > SPLIT_2);
@@ -228,25 +551,56 @@ function render() {
   const today = new Date();
   const showNow = dayNum(today) === cur;
   const nowTime = showNow ? today.getHours() + today.getMinutes() / 60 : null;
+  // For visual placement: subtract shift, BUT only when current time hasn't crossed the NR anchor (21:00).
+  // After 21:00, NR and Sleep are at their normal positions, so use real time.
+  const visualNowTime = (showNow && shiftHours > 0 && nowTime < 22) ? nowTime - shiftHours : nowTime;
   const hh = showNow ? String(today.getHours()).padStart(2,'0') : '';
   const mm = showNow ? String(today.getMinutes()).padStart(2,'0') : '';
+
+  // Now banner
+  const nowBanner = document.getElementById('now-banner-wrap');
+  if (showNow) {
+    const cur_block = enriched.find(b => {
+      const s = b.dispStartT !== undefined ? b.dispStartT : b.startT;
+      const e = b.dispEndT !== undefined ? b.dispEndT : b.endT;
+      return nowTime >= s && nowTime < e;
+    });
+    if (cur_block) {
+      const s = cur_block.dispStartT !== undefined ? cur_block.dispStartT : cur_block.startT;
+      const e = cur_block.dispEndT !== undefined ? cur_block.dispEndT : cur_block.endT;
+      const pct = Math.min(100, Math.max(0, ((nowTime - s) / (e - s)) * 100));
+      let nowLabel = cur_block.label;
+      let segRemaining = (e - nowTime) * 60;
+      const remH = Math.floor(segRemaining / 60);
+      const remM = Math.round(segRemaining % 60);
+      const remStr = remH > 0 ? `${remH}h ${remM}m left` : `${remM} min left`;
+      nowBanner.innerHTML = `<div class="now-banner">Now: ${nowLabel}<span class="now-banner-time">${remStr}</span></div>`;
+    } else {
+      nowBanner.innerHTML = '';
+    }
+  } else {
+    nowBanner.innerHTML = '';
+  }
 
   const morningMarkers = [];
   const afternoonMarkers = [];
   const eveningMarkers = [
-    { time: 20, cls: 'marker', labelCls: 'marker-label', label: 'Last Meal Ate · 20:00' },
-    { time: 22, cls: 'marker-shutdown', labelCls: 'marker-shutdown-label', label: 'Shutdown All Devices · 22:00' }
+    { time: 22, cls: 'marker-shutdown', labelCls: 'marker-shutdown-label', label: 'Shutdown All Devices · 22:00' },
+    { time: 20, cls: 'marker', labelCls: 'marker-label', label: 'Last Meal · 20:00' }
   ];
+
   if (showNow) {
-    const nowMarker = { time: nowTime, cls: 'now-line', labelCls: 'now-label', label: `Now · ${hh}:${mm}` };
-    if (nowTime < SPLIT_1) morningMarkers.push(nowMarker);
-    else if (nowTime < SPLIT_2) afternoonMarkers.push(nowMarker);
+    const nowMarker = { time: visualNowTime, cls: 'now-line', labelCls: 'now-label', label: `Now · ${hh}:${mm}` };
+    if (visualNowTime < SPLIT_1) morningMarkers.push(nowMarker);
+    else if (visualNowTime < SPLIT_2) afternoonMarkers.push(nowMarker);
     else eveningMarkers.push(nowMarker);
   }
 
-  renderColumn('timeline-morning', morning, START_HOUR, morningMarkers);
-  renderColumn('timeline-afternoon', afternoon, SPLIT_1, afternoonMarkers);
-  renderColumn('timeline-evening', evening, SPLIT_2, eveningMarkers);
+  const nowParam = showNow ? nowTime : null;
+  renderColumn('timeline-morning', morning, START_HOUR, morningMarkers, doneState, key, nowParam);
+  renderColumn('timeline-afternoon', afternoon, SPLIT_1, afternoonMarkers, doneState, key, nowParam);
+  renderColumn('timeline-evening', evening, SPLIT_2, eveningMarkers, doneState, key, nowParam);
+  enrichedToday = enriched;
 }
 
 // Re-render every 10s so the now-line stays current without manual refresh
@@ -272,6 +626,146 @@ document.addEventListener('click', e => {
 });
 document.getElementById('cal-prev').onclick = (e) => { e.stopPropagation(); calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCal(); };
 document.getElementById('cal-next').onclick = (e) => { e.stopPropagation(); calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCal(); };
+let enrichedToday = [];
+
+// Reminders
+const REM_KEY = 'reminders';
+function loadReminders() {
+  try { return JSON.parse(localStorage.getItem(REM_KEY) || '[]'); } catch { return []; }
+}
+function saveReminders(arr) { localStorage.setItem(REM_KEY, JSON.stringify(arr)); }
+function renderReminders() {
+  const list = document.getElementById('reminders-list');
+  if (!list) return;
+  const arr = loadReminders();
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const enriched = arr.map(r => {
+    const d = new Date(r.date + 'T00:00:00');
+    const days = Math.round((d - today) / 86400000);
+    return { ...r, days };
+  }).filter(r => r.days >= 0).sort((a, b) => a.days - b.days);
+  if (enriched.length === 0) {
+    list.innerHTML = '<div class="reminders-empty">No upcoming reminders</div>';
+    return;
+  }
+  list.innerHTML = enriched.map(r => {
+    let cls = 'reminder-item';
+    let countdown;
+    if (r.days === 0) { cls += ' due-today'; countdown = r.time ? r.time : 'Today'; }
+    else if (r.days <= 3) { cls += ' due-soon'; countdown = `${r.days}d${r.time ? ' · ' + r.time : ''}`; }
+    else { countdown = `${r.days}d${r.time ? ' · ' + r.time : ''}`; }
+    return `<div class="${cls}"><span class="reminder-name">${r.name}</span><span class="reminder-countdown">${countdown}</span><button class="reminder-delete" data-id="${r.id}">×</button></div>`;
+  }).join('');
+  list.querySelectorAll('.reminder-delete').forEach(btn => {
+    btn.onclick = (e) => { e.stopPropagation(); saveReminders(loadReminders().filter(r => r.id !== btn.dataset.id)); renderReminders(); };
+  });
+}
+document.getElementById('reminders-toggle').onclick = (e) => { e.stopPropagation(); document.getElementById('reminders-add').classList.toggle('show'); };
+document.getElementById('reminder-save').onclick = (e) => {
+  e.stopPropagation();
+  const name = document.getElementById('reminder-name').value.trim();
+  const date = document.getElementById('reminder-date').value;
+  const time = document.getElementById('reminder-time').value;
+  if (!name || !date) return;
+  const arr = loadReminders();
+  arr.push({ id: String(Date.now()), name, date, time: time || null });
+  saveReminders(arr);
+  document.getElementById('reminder-name').value = '';
+  document.getElementById('reminder-date').value = '';
+  document.getElementById('reminder-time').value = '';
+  document.getElementById('reminders-add').classList.remove('show');
+  renderReminders();
+};
+renderReminders();
+
+// Shift button: opens overlay to shift today's schedule
+const shiftBtn = document.getElementById('shift-btn');
+const shiftOverlay = document.getElementById('shift-overlay');
+const shiftInput = document.getElementById('shift-input');
+const shiftInfo = document.getElementById('shift-info');
+shiftBtn.onclick = (e) => {
+  e.stopPropagation();
+  const d = new Date(cur * 86400000 + new Date(2026,0,1).getTime());
+  const key = dayKey(d);
+  const cur_shift = parseFloat(localStorage.getItem(`shift_${key}`) || '0');
+  const wakeH = 7 + cur_shift;
+  const hh = String(Math.floor(wakeH)).padStart(2,'0');
+  const mm = String(Math.round((wakeH % 1) * 60)).padStart(2,'0');
+  shiftInput.value = `${hh}:${mm}`;
+  updateShiftInfo(cur_shift);
+  renderShiftHistory(key);
+  shiftOverlay.classList.toggle('show');
+};
+function renderShiftHistory(key) {
+  const el = document.getElementById('shift-history');
+  const raw = localStorage.getItem(`shift_history_${key}`);
+  const list = raw ? JSON.parse(raw) : [];
+  if (list.length === 0) {
+    el.classList.remove('has-items');
+    el.innerHTML = '';
+    return;
+  }
+  el.classList.add('has-items');
+  const items = list.slice(-5).reverse().map(t => `<div class="shift-history-item">${t}</div>`).join('');
+  el.innerHTML = `<div class="shift-history-title">Today's wake history</div>${items}`;
+}
+function updateShiftInfo(shift) {
+  if (shift <= 0) {
+    shiftInfo.textContent = 'On schedule';
+    return;
+  }
+  const relaxStart = 20 + shift;
+  const relaxRemaining = Math.max(0, 22 - relaxStart);
+  const h = Math.floor(relaxRemaining);
+  const m = Math.round((relaxRemaining % 1) * 60);
+  if (relaxRemaining <= 0) {
+    shiftInfo.textContent = `Shifted by ${shift.toFixed(1)}h · No Relax buffer left`;
+  } else {
+    shiftInfo.textContent = `Shifted by ${shift.toFixed(1)}h · Relax: ${h}h ${m}m`;
+  }
+}
+function applyShift(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const val = shiftInput.value;
+  if (!val || !val.includes(':')) { shiftInfo.textContent = 'Enter a wake time first'; return; }
+  const [h, m] = val.split(':').map(Number);
+  if (isNaN(h) || isNaN(m)) { shiftInfo.textContent = 'Invalid time format'; return; }
+  const wakeT = h + m/60;
+  const shift = Math.max(0, wakeT - 7);
+  const d = new Date(cur * 86400000 + new Date(2026,0,1).getTime());
+  const key = dayKey(d);
+  if (shift > 0) { localStorage.setItem(`shift_${key}`, String(shift)); shiftBtn.classList.add('active'); }
+  else { localStorage.removeItem(`shift_${key}`); shiftBtn.classList.remove('active'); }
+  const histRaw = localStorage.getItem(`shift_history_${key}`);
+  const hist = histRaw ? JSON.parse(histRaw) : [];
+  hist.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+  localStorage.setItem(`shift_history_${key}`, JSON.stringify(hist));
+  updateShiftInfo(shift);
+  shiftOverlay.classList.remove('show');
+  render();
+}
+function resetShift(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const d = new Date(cur * 86400000 + new Date(2026,0,1).getTime());
+  const key = dayKey(d);
+  localStorage.removeItem(`shift_${key}`);
+  localStorage.removeItem(`shift_history_${key}`);
+  shiftBtn.classList.remove('active');
+  shiftInput.value = '07:00';
+  updateShiftInfo(0);
+  shiftOverlay.classList.remove('show');
+  render();
+}
+document.getElementById('shift-apply').addEventListener('click', applyShift);
+document.getElementById('shift-apply').addEventListener('touchend', applyShift);
+document.getElementById('shift-reset').addEventListener('click', resetShift);
+document.getElementById('shift-reset').addEventListener('touchend', resetShift);
+document.addEventListener('click', e => {
+  if (!shiftOverlay.contains(e.target) && e.target.id !== 'shift-btn') shiftOverlay.classList.remove('show');
+});
 
 function renderCal() {
   document.getElementById('cal-month').textContent = new Date(calYear, calMonth, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
