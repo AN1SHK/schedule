@@ -32,12 +32,11 @@ body { padding: 12px; padding-bottom: 40px; }
 .column-label { font-size: 10px; font-weight: 700; color: #B4B2A9; text-transform: uppercase; letter-spacing: 0.08em; text-align: center; padding-bottom: 6px; }
 .date-header { display: flex; align-items: center; justify-content: center; margin-bottom: 14px; overflow: visible; }
 .reminders-panel { max-width: 1000px; margin: 32px auto 0; padding: 18px 20px; background: var(--surface); border-radius: 0; }
-.reminders-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 0.5px solid var(--border); }
+.reminders-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 0.5px solid var(--border-strong); }
 .reminders-title { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.08em; }
 .reminders-toggle { background: none; border: 0.5px solid var(--border-strong); border-radius: 6px; padding: 3px 10px; cursor: pointer; font-size: 11px; font-family: inherit; color: var(--text-primary); }
 .reminders-toggle:active { background: rgba(0,0,0,0.04); }
 .reminders-list { display: flex; flex-wrap: wrap; gap: 8px; }
-
 .reminder-delete:hover { opacity: 1; color: #C8413A; }
 .reminders-empty { font-size: 11px; color: var(--text-tertiary); font-style: italic; }
 .reminder-item { display: flex; align-items: center; gap: 8px; background: var(--surface); border-radius: 6px; padding: 6px 10px; border: 0.5px solid var(--border-strong); }
@@ -48,7 +47,7 @@ body { padding: 12px; padding-bottom: 40px; }
 .reminder-item.due-today .reminder-countdown { color: #C8413A; font-weight: 600; }
 .reminder-item.due-soon .reminder-countdown { color: #CA8A04; font-weight: 600; }
 .reminder-delete { font-size: 14px; color: var(--text-tertiary); background: none; border: none; cursor: pointer; padding: 0 2px; line-height: 1; font-family: inherit; opacity: 0.5; }
-.reminders-add { display: none; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 0.5px solid var(--border); flex-wrap: wrap; align-items: center; }
+.reminders-add { display: none; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 0.5px solid var(--border-strong); flex-wrap: wrap; align-items: center; }
 .reminders-add.show { display: flex; }
 .reminder-input { font-size: 12px; padding: 5px 10px; border: 0.5px solid var(--border-strong); border-radius: 6px; font-family: inherit; color: var(--text-primary); background: transparent; }
 #reminder-name { flex: 1; min-width: 140px; }
@@ -79,10 +78,15 @@ body { padding: 12px; padding-bottom: 40px; }
 .shift-reset { background: none; border: 0.5px solid var(--border-strong); color: var(--text-secondary); }
 .shift-info { display: none; }
 .shift-history { display: none; }
-.shift-history { margin-top: 8px; padding-top: 8px; border-top: 0.5px solid var(--border); display: none; }
 .shift-history.has-items { display: block; }
 .shift-history-title { font-size: 9px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
 .shift-history-item { font-size: 11px; color: var(--text-secondary); font-variant-numeric: tabular-nums; padding: 1px 0; }
+
+.sync-indicator { position: fixed; bottom: 12px; right: 12px; font-size: 9px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+.sync-indicator.show { opacity: 1; }
+.sync-indicator.syncing { color: #CA8A04; }
+.sync-indicator.synced { color: #1D9E75; }
+.sync-indicator.error { color: #C8413A; }
 
 .timeline-wrap { padding-top: 24px; padding-bottom: 12px; }
 .timeline { position: relative; }
@@ -112,9 +116,7 @@ body { padding: 12px; padding-bottom: 40px; }
 .b-label { font-size: 11px; color: var(--text-secondary); line-height: 1.2; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
 .b-time { font-size: 10px; color: var(--text-secondary); margin-top: 2px; font-variant-numeric: tabular-nums; }
 .b-note { font-size: 10px; color: var(--text-tertiary); margin-top: 6px; font-style: italic; letter-spacing: 0.02em; }
-
 .pomo-schedule { display: none; }
-
 .subitems { list-style: none; margin-top: 10px; margin-bottom: 4px; padding-left: 0; position: relative; }
 .subitems::before { content: ''; position: absolute; left: 8px; top: 6px; bottom: 6px; width: 1px; background: rgba(110, 109, 103, 0.25); }
 .subitem { font-size: 12px; color: var(--text-secondary); line-height: 1.5; padding-left: 24px; position: relative; padding-top: 2px; padding-bottom: 2px; cursor: pointer; user-select: none; -webkit-user-select: none; transition: color 0.15s; }
@@ -122,7 +124,6 @@ body { padding: 12px; padding-bottom: 40px; }
 .subitem.done { color: rgba(110, 109, 103, 0.5); text-decoration: line-through; }
 .subitem.done::before { background: #1D9E75; border-color: #1D9E75; }
 .subitem.done::after { content: ''; position: absolute; left: 5.5px; top: 8.5px; width: 4px; height: 2px; border-left: 1.5px solid white; border-bottom: 1.5px solid white; transform: rotate(-45deg); }
-
 .tag-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
 .tag { display: inline-block; background: #EEEDE7; color: #6E6D67; font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.02em; text-transform: uppercase; }
 .tag-exercise { background: rgba(184, 84, 80, 0.12); color: #B85450; }
@@ -131,33 +132,20 @@ body { padding: 12px; padding-bottom: 40px; }
 .tag-reading { background: rgba(234, 179, 8, 0.12); color: #CA8A04; }
 .tag-mindful { background: rgba(120, 60, 180, 0.12); color: #7B3DB5; }
 .tag-plan { background: rgba(51, 65, 85, 0.12); color: #334155; }
-.messages-band { position: absolute; left: 0; right: 0; bottom: 4px; display: flex; align-items: center; justify-content: center; background: rgba(74, 111, 165, 0.07); border-top: 1px solid rgba(74, 111, 165, 0.25); border-bottom: 1px solid rgba(74, 111, 165, 0.25); z-index: 2; height: 22px; }
-.messages-band-label { font-size: 9px; font-weight: 700; color: #4A6FA5; letter-spacing: 0.08em; text-transform: uppercase; }
-
 .marker { position: absolute; left: 0; right: 0; height: 1px; background: #C8413A; z-index: 5; pointer-events: none; }
 .marker-label { position: absolute; right: 8px; top: -8px; background: #C8413A; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
 .marker-shutdown-label { position: absolute; right: 8px; top: -8px; background: #1E3A5F; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
 .marker-device-label { position: absolute; right: 8px; top: -8px; background: #4A6FA5; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
 .marker-device { position: absolute; left: 0; right: 0; height: 1px; background: #4A6FA5; z-index: 5; pointer-events: none; }
 .now-label { position: absolute; right: 8px; top: -8px; background: #1D9E75; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
-
 .marker-shutdown { position: absolute; left: 0; right: 0; height: 1px; background: #1E3A5F; z-index: 5; pointer-events: none; }
-
-.marker-water { position: absolute; left: 0; right: 0; height: 1px; background: #2B7BA8; z-index: 5; pointer-events: none; }
-.marker-water-label { position: absolute; right: 8px; top: -8px; background: #2B7BA8; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
-
 .marker-nap { position: absolute; left: 0; right: 0; height: 1px; background: #8B6FA8; z-index: 5; pointer-events: none; }
 .marker-nap-label { position: absolute; right: 8px; top: -8px; background: #8B6FA8; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
-.marker-msg { position: absolute; left: 0; right: 0; height: 1px; background: #0891B2; z-index: 5; pointer-events: none; }
-.marker-msg-label { position: absolute; right: 8px; top: -8px; background: #0891B2; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
-
 .now-line { position: absolute; left: 0; right: 0; height: 1px; background: #1D9E75; z-index: 6; pointer-events: none; }
-
 .chk { width: 20px; height: 20px; border-radius: 50%; border: 0.5px solid var(--border-strong); background: transparent; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; transition: background 0.15s, border-color 0.15s; pointer-events: none; margin-top: 1px; }
 .chk.done { background: var(--green); border-color: var(--green); }
 .chk svg { display: none; }
 .chk.done svg { display: block; }
-
 .cal-overlay { position: absolute; left: 50%; transform: translateX(-50%); margin-top: 8px; background: var(--surface); border-radius: 12px; padding: 12px; z-index: 10; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
 .cal-overlay.show { display: block; }
 .cal-grid { display: grid; grid-template-columns: repeat(7, 32px); gap: 2px; }
@@ -176,29 +164,12 @@ body { padding: 12px; padding-bottom: 40px; }
 .cal-legend.open .cal-legend-toggle #legend-arrow { transform: rotate(90deg); }
 .cal-legend-body { display: none; margin-top: 8px; flex-direction: column; gap: 10px; }
 .cal-legend.open .cal-legend-body { display: flex; }
-.hunger-input-row { display: flex; gap: 8px; align-items: center; }
-.hunger-input { font-size: 12px; padding: 4px 8px; border: 0.5px solid var(--border-strong); border-radius: 6px; font-family: inherit; color: var(--text-primary); background: transparent; }
-.hunger-log-btn { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; border: none; background: var(--text-primary); color: var(--surface); cursor: pointer; font-family: inherit; }
-.hunger-recommended { font-size: 11px; color: var(--text-secondary); display: flex; flex-wrap: wrap; gap: 6px; }
-.hunger-recommended-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); width: 100%; }
-.hunger-rec-item { background: rgba(0,0,0,0.05); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-variant-numeric: tabular-nums; }
-.hunger-rec-empty { font-size: 11px; color: var(--text-tertiary); font-style: italic; }
-.hunger-count { font-size: 10px; color: var(--text-tertiary); width: 100%; margin-top: 2px; }
-.hunger-clear-btn { font-size: 10px; color: var(--text-tertiary); background: none; border: none; cursor: pointer; font-family: inherit; text-align: left; padding: 0; }
-.cal-legend.open .cal-legend-body { display: flex; }
-.legend-section-title { font-size: 9px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
-.legend-item { font-size: 11px; color: var(--text-primary); display: flex; align-items: center; gap: 8px; padding: 2px 0; }
-.legend-swatch { display: inline-block; width: 12px; height: 3px; border-radius: 1px; }
-.legend-pill { display: inline-block; width: 14px; height: 14px; border-radius: 3px; }
-.alerts-toggle { background: none; border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 11px; color: var(--text-primary); font-family: inherit; width: 100%; text-align: left; }
-.alerts-toggle.enabled { background: rgba(29, 158, 117, 0.08); border-color: rgba(29, 158, 117, 0.5); color: #1D9E75; font-weight: 600; }
-.alerts-status { font-size: 9px; color: var(--text-tertiary); margin-top: 6px; font-style: italic; }
-.hunger-recommended { margin-top: 8px; font-size: 10px; color: var(--text-secondary); }
 .hunger-input-row { display: flex; gap: 6px; }
 .hunger-input { flex: 1; font-size: 13px; padding: 5px 8px; border: 0.5px solid var(--border-strong); border-radius: 8px; font-family: inherit; color: var(--text-primary); background: transparent; }
 .hunger-log-btn { background: var(--text-primary); color: var(--surface); border: 0; border-radius: 8px; padding: 5px 14px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
 .hunger-clear-btn { background: none; border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 4px 10px; font-size: 10px; cursor: pointer; font-family: inherit; color: var(--text-tertiary); margin-top: 6px; width: 100%; }
 .hunger-clear-btn:active { background: rgba(0,0,0,0.04); }
+.hunger-recommended { margin-top: 8px; font-size: 10px; color: var(--text-secondary); }
 .hunger-recommended-title { font-size: 9px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
 .hunger-rec-item { display: inline-block; background: rgba(200, 65, 58, 0.08); color: #C8413A; font-weight: 600; font-size: 10px; padding: 2px 7px; border-radius: 3px; margin-right: 4px; margin-bottom: 3px; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
 .hunger-rec-empty { font-size: 10px; color: var(--text-tertiary); font-style: italic; }
@@ -235,7 +206,7 @@ body { padding: 12px; padding-bottom: 40px; }
       </div>
       <button id="next-btn">→</button>
       <div class="shift-wrap">
-        <button id="shift-btn" class="shift-btn" title="Shift schedule (woke up late)">⟲</button>
+        <button id="shift-btn" class="shift-btn" title="Shift schedule">⟲</button>
         <div class="shift-overlay" id="shift-overlay">
           <span class="shift-title">Woke up at</span>
           <input type="time" id="shift-input" value="07:00" class="shift-input">
@@ -281,8 +252,63 @@ body { padding: 12px; padding-bottom: 40px; }
     </div>
   </div>
 </div>
+<div class="sync-indicator" id="sync-indicator"></div>
 
-<script>
+<script type="module">
+// ── Firebase ──────────────────────────────────────────────────────────────────
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getDatabase, ref, set, onValue, get } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAIlMRgVKpN_xe48WKJihiQ1ZgiVLRouMs",
+  authDomain: "my-schedule-a0ded.firebaseapp.com",
+  databaseURL: "https://my-schedule-a0ded-default-rtdb.firebaseio.com",
+  projectId: "my-schedule-a0ded",
+  storageBucket: "my-schedule-a0ded.firebasestorage.app",
+  messagingSenderId: "941701290759",
+  appId: "1:941701290759:web:86d0c144ee0425fad983a2"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// Sync indicator
+const syncEl = document.getElementById('sync-indicator');
+let syncTimer;
+function showSync(state, text) {
+  syncEl.textContent = text;
+  syncEl.className = `sync-indicator show ${state}`;
+  clearTimeout(syncTimer);
+  if (state === 'synced') syncTimer = setTimeout(() => syncEl.classList.remove('show'), 2000);
+}
+
+// ── Firebase helpers ──────────────────────────────────────────────────────────
+// Paths: /tasks/{dayKey}/{blockStart} = [{text,done}]
+//        /tallies/{dayKey}/{blockStart} = number
+//        /reminders = [{id,name,date,time}]
+
+function fbSetTasks(dayKey, blockStart, tasks) {
+  showSync('syncing', 'Syncing…');
+  set(ref(db, `tasks/${dayKey}/${blockStart.replace(':','_')}`), tasks)
+    .then(() => showSync('synced', 'Synced'))
+    .catch(() => showSync('error', 'Sync failed'));
+}
+
+function fbSetTally(dayKey, blockStart, val) {
+  showSync('syncing', 'Syncing…');
+  set(ref(db, `tallies/${dayKey}/${blockStart.replace(':','_')}`), val)
+    .then(() => showSync('synced', 'Synced'))
+    .catch(() => showSync('error', 'Sync failed'));
+}
+
+function fbSetReminders(arr) {
+  showSync('syncing', 'Syncing…');
+  set(ref(db, 'reminders'), arr)
+    .then(() => showSync('synced', 'Synced'))
+    .catch(() => showSync('error', 'Sync failed'));
+}
+
+// ── Schedule constants ────────────────────────────────────────────────────────
 const KEY = 'schedule_v2';
 const START_HOUR = 7;
 const HOUR_HEIGHT = 50;
@@ -311,7 +337,6 @@ function dateFromNum(n) { return new Date(2026, 0, 1 + n); }
 function loadAll() { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch(e) { return {}; } }
 function saveAll(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch(e) {} }
 function getDoneState(key) { const all = loadAll(); return all[key] || {}; }
-function setDoneState(key, state) { const all = loadAll(); all[key] = state; saveAll(all); }
 function parseTime(t) { const [h, m] = t.split(':').map(Number); return h + (m || 0) / 60; }
 function formatTime(t) {
   const h = Math.floor(t);
@@ -320,9 +345,7 @@ function formatTime(t) {
   return `${dispH}:${String(m).padStart(2,'0')}`;
 }
 
-// PPL rotation starts tomorrow (May 27, 2026): Push → Pull → Legs → Rest (continuous)
 const PPL_START = dayNum(new Date(2026, 5, 18));
-// Each day: [big block tags, morning small block, afternoon small block]
 const PPL_CYCLE = [
   [['Push', 'Swim', 'Sauna'], 'Run', 'Walk'],
   [['Sprints', 'Basketball'], 'Cycle', 'Walk'],
@@ -344,33 +367,90 @@ function getCycleDay(d) {
   return PPL_CYCLE[idx];
 }
 function getPPLLabel(d) { return getCycleDay(d)[0]; }
-
 function getMorningExTag(d) { return getCycleDay(d)[1]; }
 function getAfternoonExTag(d) { return getCycleDay(d)[2]; }
 
 let cur = dayNum(new Date());
-let nowScrub = null; // null = real time, number = scrubbed time override
+let nowScrub = null;
 let calMonth = new Date().getMonth();
 let calYear = new Date().getFullYear();
 
+// ── Firebase realtime listeners ───────────────────────────────────────────────
+// In-memory cache (source of truth once loaded from Firebase)
+const fbCache = {
+  tasks: {},   // { [dayKey_blockStart]: [{text,done}] }
+  tallies: {}, // { [dayKey_blockStart]: number }
+  reminders: null
+};
+
+// Listen to today + tomorrow tasks/tallies
+function listenToDay(dk) {
+  onValue(ref(db, `tasks/${dk}`), snap => {
+    const val = snap.val() || {};
+    for (const [k, v] of Object.entries(val)) {
+      fbCache.tasks[`${dk}_${k.replace('_',':')}`] = v;
+    }
+    render();
+  });
+  onValue(ref(db, `tallies/${dk}`), snap => {
+    const val = snap.val() || {};
+    for (const [k, v] of Object.entries(val)) {
+      fbCache.tallies[`${dk}_${k.replace('_',':')}`] = v;
+    }
+    render();
+  });
+}
+
+// Listen to reminders globally
+onValue(ref(db, 'reminders'), snap => {
+  const val = snap.val();
+  fbCache.reminders = val || [];
+  renderReminders();
+  render(); // re-render reminder pills
+});
+
+// Start listening for today
+listenToDay(dayKey(new Date()));
+
+// Task helpers using Firebase
+function getTasks(dk, blockStart) {
+  const k = `${dk}_${blockStart}`;
+  return fbCache.tasks[k] || [];
+}
+function saveTasks(dk, blockStart, tasks) {
+  const k = `${dk}_${blockStart}`;
+  fbCache.tasks[k] = tasks;
+  fbSetTasks(dk, blockStart, tasks);
+}
+function getTally(dk, blockStart) {
+  return fbCache.tallies[`${dk}_${blockStart}`] || 0;
+}
+function saveTally(dk, blockStart, val) {
+  fbCache.tallies[`${dk}_${blockStart}`] = val;
+  fbSetTally(dk, blockStart, val);
+}
+function loadReminders() {
+  return fbCache.reminders || [];
+}
+function saveReminders(arr) {
+  fbCache.reminders = arr;
+  fbSetReminders(arr);
+}
+
+// ── Rendering ─────────────────────────────────────────────────────────────────
 function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey, nowTime) {
   const tl = document.getElementById(elId);
   tl.innerHTML = '';
-  // Store start/end hour for drag scrubbing
   const endHour = blocks.length ? Math.max(...blocks.map(b => b.endT)) : startHour + 10;
   tl._endHour = endHour;
   const layout = blocks.map(b => {
-    // Skip blocks that have zero or negative display duration (e.g. fully-shifted Relax)
     if (b.label === 'Relax' && b.dispStartT !== undefined && b.dispStartT >= b.dispEndT) return null;
-
     const layoutStart = b.label === 'Relax' ? b.dispStartT : b.startT;
     const layoutEnd = b.label === 'Relax' ? b.dispEndT : b.endT;
     const naturalTop = TOP_PAD + (layoutStart - startHour) * HOUR_HEIGHT;
     const naturalHeight = (layoutEnd - layoutStart) * HOUR_HEIGHT;
-    const itemSpace = b.items ? b.items.length * 19 + 6 : 0;
-    // Tag rows: estimate ~2 rows for 7 tags at narrow widths, ~1 row at wide. Use 22 per row, assume 2 rows.
     const tagSpace = b.tags ? (b.tags.length <= 3 ? 28 : 52) : 0;
-    const minWithItems = 74 + itemSpace + tagSpace;
+    const minWithItems = 74 + tagSpace;
     let height = Math.max(naturalHeight, MIN_BLOCK_HEIGHT, minWithItems);
     if (b.capHeight) height = Math.min(height, 80);
     return { ...b, top: naturalTop, height };
@@ -385,49 +465,40 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
 
   layout.forEach(b => {
     const block = document.createElement('div');
-    block.className = b.messagesBand ? 'block has-messages-band' : 'block';
+    block.className = 'block';
     if (nowTime !== null && (b.dispEndT || b.endT) <= nowTime) block.classList.add('past');
     block.style.top = `${b.top + 1}px`;
     block.style.height = `${b.height - 3}px`;
-    const itemsHtml = b.items ? `<ul class="subitems">${b.items.map((it, idx) => {
-      const subKey = `${b.i}:${idx}`;
-      const isDone = doneState && doneState[subKey];
-      return `<li class="subitem${isDone ? ' done' : ''}" data-key="${subKey}">${it}</li>`;
-    }).join('')}</ul>` : '';
+
     const EXERCISE_TAGS = new Set(['Run','Walk','Cycle','Jump Rope','Kallisthenics','Yoga','Push','Pull','Legs','Swim','Sauna','Sprints','Basketball','Mobility','Rest']);
     const DIGITAL_TAGS = new Set(['Music','Netflix','Entertainment','Socials','Gaming','Messages']);
     const READING_TAGS = new Set(['Read','Podcasts']);
     const MINDFUL_TAGS = new Set(['Mindful','Meditate · 10 min','Gratitude · 3 pts']);
     const PLAN_TAGS = new Set(['Plan Tomorrow','Read Fiction']);
+    const CHORES_TAGS = new Set(['Chores']);
     const tagsHtml = b.tags ? `<div class="tag-row">${b.tags.map(t => {
-      const CHORES_TAGS = new Set(['Chores']);
-    const cls = EXERCISE_TAGS.has(t) ? 'tag tag-exercise' : CHORES_TAGS.has(t) ? 'tag tag-chores' : DIGITAL_TAGS.has(t) ? 'tag tag-digital' : READING_TAGS.has(t) ? 'tag tag-reading' : MINDFUL_TAGS.has(t) ? 'tag tag-mindful' : PLAN_TAGS.has(t) ? 'tag tag-plan' : 'tag';
+      const cls = EXERCISE_TAGS.has(t) ? 'tag tag-exercise' : CHORES_TAGS.has(t) ? 'tag tag-chores' : DIGITAL_TAGS.has(t) ? 'tag tag-digital' : READING_TAGS.has(t) ? 'tag tag-reading' : MINDFUL_TAGS.has(t) ? 'tag tag-mindful' : PLAN_TAGS.has(t) ? 'tag tag-plan' : 'tag';
       return `<span class="${cls}">${t}</span>`;
     }).join('')}</div>` : '';
     const displayStart = b.displayStart || formatTime(b.dispStartT);
     const displayEnd = b.displayEnd || formatTime(b.dispEndT);
     const noteHtml = b.note ? `<div class="b-note">${b.note}</div>` : '';
-    const pomoLegendHtml = '';
     block.innerHTML = `
       <div class="block-content">
         <div class="b-label">${b.label}</div>
         <div class="b-time">${displayStart} – ${displayEnd}</div>
         ${noteHtml}
-        ${pomoLegendHtml}
-        ${itemsHtml}
         ${tagsHtml}
       </div>
     `;
     tl.appendChild(block);
 
-    // Task checklist for Work blocks
+    // Task checklist for Work blocks — Firebase backed
     if (b.label === 'Work') {
-      const taskKey = `tasks_${currentDayKey}_${b.start}`;
-      const taskData = JSON.parse(localStorage.getItem(taskKey) || '[]');
       const taskContainer = document.createElement('div');
       taskContainer.className = 'task-list';
       function renderTasks() {
-        const tasks = JSON.parse(localStorage.getItem(taskKey) || '[]');
+        const tasks = getTasks(currentDayKey, b.start);
         taskContainer.innerHTML = tasks.map((t, idx) =>
           `<div class="task-item${t.done ? ' done' : ''}" data-idx="${idx}">
             <div class="task-cb"></div>
@@ -443,19 +514,19 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
           el.addEventListener('click', e => {
             if (e.target.classList.contains('task-delete')) return;
             e.stopPropagation();
-            const tasks = JSON.parse(localStorage.getItem(taskKey) || '[]');
+            const tasks = getTasks(currentDayKey, b.start);
             const idx = parseInt(el.dataset.idx);
             tasks[idx].done = !tasks[idx].done;
-            localStorage.setItem(taskKey, JSON.stringify(tasks));
+            saveTasks(currentDayKey, b.start, tasks);
             renderTasks();
           });
         });
         taskContainer.querySelectorAll('.task-delete').forEach(btn => {
           const delFn = e => {
             e.preventDefault(); e.stopPropagation();
-            const tasks = JSON.parse(localStorage.getItem(taskKey) || '[]');
+            const tasks = getTasks(currentDayKey, b.start);
             tasks.splice(parseInt(btn.dataset.del), 1);
-            localStorage.setItem(taskKey, JSON.stringify(tasks));
+            saveTasks(currentDayKey, b.start, tasks);
             renderTasks();
           };
           btn.addEventListener('click', delFn);
@@ -470,9 +541,9 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
           e.stopPropagation();
           const val = inp.value.trim();
           if (!val) return;
-          const tasks = JSON.parse(localStorage.getItem(taskKey) || '[]');
+          const tasks = getTasks(currentDayKey, b.start);
           tasks.push({ text: val, done: false });
-          localStorage.setItem(taskKey, JSON.stringify(tasks));
+          saveTasks(currentDayKey, b.start, tasks);
           renderTasks();
         };
         inp.addEventListener('keydown', e => { if (e.key === 'Enter') addFn(e); });
@@ -483,23 +554,22 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
       const tagRow = blockContent.querySelector('.tag-row');
       blockContent.insertBefore(taskContainer, tagRow || blockContent.lastChild);
 
-      // Pomodoro tally tracker
-      const tallyKey = `pomo_tally_${currentDayKey}_${b.start}`;
-      const maxPomos = b.start === '9:00' ? 4 : 3; // Work1=4h, Work2=3h
+      // Pomodoro tally — Firebase backed
+      const maxPomos = b.start === '9:00' ? 4 : 3;
       const tallyEl = document.createElement('div');
       tallyEl.className = 'pomo-tally';
       function renderTally() {
-        const done = parseInt(localStorage.getItem(tallyKey) || '0');
+        const done = getTally(currentDayKey, b.start);
         tallyEl.innerHTML = Array.from({length: maxPomos}, (_, i) =>
           `<div class="pomo-mark${i < done ? ' done' : ''}" data-i="${i}"></div>`
         ).join('') + `<button class="pomo-tally-reset" title="Reset">↺</button>`;
         tallyEl.querySelectorAll('.pomo-mark').forEach(m => {
-          const tap = e => { e.stopPropagation(); const d = parseInt(localStorage.getItem(tallyKey)||'0'); const i = parseInt(m.dataset.i); localStorage.setItem(tallyKey, i < d ? i : i+1); renderTally(); };
+          const tap = e => { e.stopPropagation(); const d = getTally(currentDayKey, b.start); const i = parseInt(m.dataset.i); saveTally(currentDayKey, b.start, i < d ? i : i+1); renderTally(); };
           m.addEventListener('click', tap);
           m.addEventListener('touchend', e => { e.preventDefault(); tap(e); });
         });
         const resetBtn = tallyEl.querySelector('.pomo-tally-reset');
-        const rst = e => { e.stopPropagation(); localStorage.setItem(tallyKey, 0); renderTally(); };
+        const rst = e => { e.stopPropagation(); saveTally(currentDayKey, b.start, 0); renderTally(); };
         resetBtn.addEventListener('click', rst);
         resetBtn.addEventListener('touchend', e => { e.preventDefault(); rst(e); });
       }
@@ -507,60 +577,6 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
       blockContent.insertBefore(tallyEl, tagRow || blockContent.lastChild);
     }
 
-    // Pomodoro break schedule — text list of break times and activities
-    if (b.pomodoro) {
-      const { work, break: brk, prefix, activities, lastBreakOverride } = b.pomodoro;
-      const effStart = b.dispStartT !== undefined ? b.dispStartT : b.startT;
-      const effEnd = b.dispEndT !== undefined ? b.dispEndT : b.endT;
-      const durMins = (effEnd - effStart) * 60;
-      let totalBreaks = 0;
-      let pp = 0; let isW = true;
-      while (pp < durMins) {
-        const segLen = Math.min(isW ? work : brk, durMins - pp);
-        if (!isW && segLen > 0) totalBreaks++;
-        pp += segLen; isW = !isW;
-      }
-      let pos = 0; let isWork = true;
-      let breakIdx = b.startBreakIdx || 0; let breakNum = 0;
-      const scheduleItems = [];
-      while (pos < durMins) {
-        const segLen = Math.min(isWork ? work : brk, durMins - pos);
-        if (!isWork) {
-          const breakStartH = effStart + pos / 60;
-          const h = Math.floor(breakStartH);
-          const m = Math.round((breakStartH - h) * 60);
-          const timeStr = `${h}:${String(m).padStart(2,'0')}`;
-          const isLast = breakNum === totalBreaks - 1;
-          let label;
-          if (isLast && lastBreakOverride) {
-            label = lastBreakOverride.name;
-          } else {
-            const parts = [];
-            if (prefix) parts.push(prefix.name);
-            parts.push(activities[breakIdx % activities.length].name);
-            label = parts.join(' · ');
-            breakIdx++;
-          }
-          scheduleItems.push(`<div class="pomo-schedule-item">${timeStr} — ${label}</div>`);
-          breakNum++;
-        }
-        pos += segLen; isWork = !isWork;
-      }
-      if (scheduleItems.length) {
-        const scheduleEl = document.createElement('div');
-        scheduleEl.className = 'pomo-schedule';
-        // Just show the pattern once, not every break
-        const patternParts = [];
-        if (prefix) patternParts.push(prefix.name);
-        const actNames = activities.map(a => a.name).join(' / ');
-        patternParts.push(actNames);
-        const pattern = `Every ${work} min — ${patternParts.join(' · ')}`;
-        scheduleEl.innerHTML = `<div class="pomo-schedule-item">${pattern}</div>`;
-        block.querySelector('.block-content').appendChild(scheduleEl);
-      }
-    }
-
-    // Messages band — tinted bottom section for last 10 min
     block.querySelectorAll('.subitem').forEach(el => {
       el.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -577,7 +593,6 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
   markers.forEach(m => {
     let markerTop;
     if (m.cls === 'now-line' || m.cls === 'marker-shutdown' || m.cls === 'marker' || m.cls === 'marker-device') {
-      // Use actual rendered block positions for accuracy
       const containing = layout.find(b => b && b.startT <= m.time && b.endT > m.time);
       if (containing) {
         const frac = (m.time - containing.startT) / (containing.endT - containing.startT);
@@ -586,7 +601,6 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
         markerTop = TOP_PAD + (m.time - startHour) * HOUR_HEIGHT;
       }
     } else {
-      // Other markers use absolute time position
       markerTop = TOP_PAD + (m.time - startHour) * HOUR_HEIGHT;
     }
     const marker = document.createElement('div');
@@ -595,7 +609,6 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
     marker.innerHTML = `<div class="${m.labelCls}">${m.label}</div>`;
     tl.appendChild(marker);
 
-    // Make now-line draggable to scrub time
     if (m.cls === 'now-line') {
       marker.style.cursor = 'ns-resize';
       marker.style.pointerEvents = 'all';
@@ -630,14 +643,10 @@ function render() {
   const doneState = getDoneState(key);
   document.getElementById('date-label').textContent = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
-  // Weekly reminders: face & body grooming on Tue (2) and Fri (5)
   const dow = d.getDay();
   const reminderWrap = document.getElementById('reminder-wrap');
   let pillsHtml = '';
-  if (dow === 2 || dow === 5) {
-    pillsHtml += `<div class="reminder-pill">Personal Grooming</div>`;
-  }
-  // Upcoming reminders: show within 5 days
+  if (dow === 2 || dow === 5) pillsHtml += `<div class="reminder-pill">Personal Grooming</div>`;
   const viewDate = new Date(cur * 86400000 + new Date(2026,0,1).getTime());
   viewDate.setHours(0,0,0,0);
   const reminders = loadReminders();
@@ -654,9 +663,6 @@ function render() {
   const pplTags = getPPLLabel(d);
   const morningExTag = getMorningExTag(d);
   const afternoonExTag = getAfternoonExTag(d);
-
-
-  // Load shift offset for this day (hours past 7:00)
   const shiftKey = `shift_${key}`;
   const shiftHours = parseFloat(localStorage.getItem(shiftKey) || '0');
   const shiftBtnEl = document.getElementById('shift-btn');
@@ -674,37 +680,20 @@ function render() {
     }) : b.tags;
     const startT = parseTime(b.start);
     const endT = parseTime(b.end);
-    // For display only: shift times if applicable. Layout stays fixed.
     let dispStartT = startT;
     let dispEndT = endT;
     if (shiftHours > 0) {
       if (b.label === 'NR' || b.label === 'Sleep') {
-        // anchored
       } else if (b.label === 'Relax') {
         dispStartT = Math.min(startT + shiftHours, endT);
       } else if (startT >= 7 && startT < 19) {
-        // MR through Shower
         dispStartT = startT + shiftHours;
         dispEndT = endT + shiftHours;
       }
     }
-    const items = b.items;
-    return { ...b, items, tags, i, startT, endT, dispStartT, dispEndT, done: !!(doneState && doneState[i]) };
+    return { ...b, tags, i, startT, endT, dispStartT, dispEndT, done: !!(doneState && doneState[i]) };
   }).sort((a, b) => a.startT - b.startT);
 
-  // Pre-compute starting breakIdx for each pomodoro block sharing a rotationKey
-  const rotationCounts = {};
-  for (const blk of enriched) {
-    if (blk.pomodoro && blk.pomodoro.rotationKey) {
-      blk.startBreakIdx = rotationCounts[blk.pomodoro.rotationKey] || 0;
-      const durMins = (blk.endT - blk.startT) * 60;
-      const cycle = blk.pomodoro.work + blk.pomodoro.break;
-      const numBreaks = Math.floor(durMins / cycle);
-      rotationCounts[blk.pomodoro.rotationKey] = blk.startBreakIdx + numBreaks;
-    }
-  }
-
-  // Split: morning ends at 13:00, afternoon ends at 18:30, evening goes to end
   const SPLIT_1 = 13;
   const SPLIT_2 = 19;
   const morning = enriched.filter(b => b.endT <= SPLIT_1);
@@ -714,13 +703,10 @@ function render() {
   const today = new Date();
   const showNow = dayNum(today) === cur;
   const nowTime = showNow ? (nowScrub !== null ? nowScrub : today.getHours() + today.getMinutes() / 60) : null;
-  // For visual placement: subtract shift, BUT only when current time hasn't crossed the NR anchor (21:00).
-  // After 21:00, NR and Sleep are at their normal positions, so use real time.
   const visualNowTime = (showNow && shiftHours > 0 && nowTime < 22) ? nowTime - shiftHours : nowTime;
   const hh = showNow ? String(today.getHours()).padStart(2,'0') : '';
   const mm = showNow ? String(today.getMinutes()).padStart(2,'0') : '';
 
-  // Now banner
   const nowBanner = document.getElementById('now-banner-wrap');
   if (showNow) {
     const cur_block = enriched.find(b => {
@@ -731,19 +717,13 @@ function render() {
     if (cur_block) {
       const s = cur_block.dispStartT !== undefined ? cur_block.dispStartT : cur_block.startT;
       const e = cur_block.dispEndT !== undefined ? cur_block.dispEndT : cur_block.endT;
-      const pct = Math.min(100, Math.max(0, ((nowTime - s) / (e - s)) * 100));
-      let nowLabel = cur_block.label;
-      let segRemaining = (e - nowTime) * 60;
+      const isScrubbing = nowScrub !== null;
+      const segRemaining = (e - nowTime) * 60;
       const remH = Math.floor(segRemaining / 60);
       const remM = Math.round(segRemaining % 60);
       const remStr = remH > 0 ? `${remH}h ${remM}m left` : `${remM} min left`;
-      const isScrubbing = nowScrub !== null;
-      nowBanner.innerHTML = `<div class="now-banner" id="now-banner-pill" style="${isScrubbing ? 'opacity:0.75;' : ''}">${isScrubbing ? '⟳ ' : ''}Now: ${nowLabel}<span class="now-banner-time">${isScrubbing ? 'tap to reset' : remStr}</span></div>`;
-      document.getElementById('now-banner-pill').onclick = () => {
-        nowScrub = null;
-        cur = dayNum(new Date());
-        render();
-      };
+      nowBanner.innerHTML = `<div class="now-banner" id="now-banner-pill" style="${isScrubbing ? 'opacity:0.75;' : ''}">${isScrubbing ? '⟳ ' : ''}Now: ${cur_block.label}<span class="now-banner-time">${isScrubbing ? 'tap to reset' : remStr}</span></div>`;
+      document.getElementById('now-banner-pill').onclick = () => { nowScrub = null; cur = dayNum(new Date()); render(); };
     } else {
       nowBanner.innerHTML = '';
     }
@@ -769,16 +749,12 @@ function render() {
     else eveningMarkers.push(nowMarker);
   }
 
-  const nowParam = showNow ? nowTime : null;
-  renderColumn('timeline-morning', morning, START_HOUR, morningMarkers, doneState, key, nowParam);
-  renderColumn('timeline-afternoon', afternoon, SPLIT_1, afternoonMarkers, doneState, key, nowParam);
-  renderColumn('timeline-evening', evening, SPLIT_2, eveningMarkers, doneState, key, nowParam);
-  enrichedToday = enriched;
+  renderColumn('timeline-morning', morning, START_HOUR, morningMarkers, doneState, key, nowTime);
+  renderColumn('timeline-afternoon', afternoon, SPLIT_1, afternoonMarkers, doneState, key, nowTime);
+  renderColumn('timeline-evening', evening, SPLIT_2, eveningMarkers, doneState, key, nowTime);
 }
 
-// Re-render every 10s so the now-line stays current without manual refresh
 setInterval(render, 10000);
-// Also re-render the moment the page becomes visible again (return from home screen, tab switch)
 document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
 window.addEventListener('focus', render);
 window.addEventListener('pageshow', render);
@@ -845,14 +821,7 @@ document.getElementById('hunger-clear').onclick = (e) => {
 };
 renderHungerRecommended();
 
-let enrichedToday = [];
-
-// Reminders
-const REM_KEY = 'reminders';
-function loadReminders() {
-  try { return JSON.parse(localStorage.getItem(REM_KEY) || '[]'); } catch { return []; }
-}
-function saveReminders(arr) { localStorage.setItem(REM_KEY, JSON.stringify(arr)); }
+// ── Reminders ─────────────────────────────────────────────────────────────────
 function renderReminders() {
   const list = document.getElementById('reminders-list');
   if (!list) return;
@@ -877,9 +846,10 @@ function renderReminders() {
     return `<div class="${cls}"><span class="reminder-name">${r.name}</span><span class="reminder-countdown">${countdown}</span><button class="reminder-delete" data-id="${r.id}">×</button></div>`;
   }).join('');
   list.querySelectorAll('.reminder-delete').forEach(btn => {
-    btn.onclick = (e) => { e.stopPropagation(); saveReminders(loadReminders().filter(r => r.id !== btn.dataset.id)); renderReminders(); };
+    btn.onclick = (e) => { e.stopPropagation(); saveReminders(loadReminders().filter(r => r.id !== btn.dataset.id)); };
   });
 }
+
 document.getElementById('reminders-toggle').onclick = (e) => { e.stopPropagation(); document.getElementById('reminders-add').classList.toggle('show'); };
 document.getElementById('reminder-save').onclick = (e) => {
   e.stopPropagation();
@@ -894,11 +864,9 @@ document.getElementById('reminder-save').onclick = (e) => {
   document.getElementById('reminder-date').value = '';
   document.getElementById('reminder-time').value = '';
   document.getElementById('reminders-add').classList.remove('show');
-  renderReminders();
 };
-renderReminders();
 
-// Shift button: opens overlay to shift today's schedule
+// ── Shift overlay ─────────────────────────────────────────────────────────────
 const shiftBtn = document.getElementById('shift-btn');
 const shiftOverlay = document.getElementById('shift-overlay');
 const shiftInput = document.getElementById('shift-input');
@@ -909,9 +877,7 @@ shiftBtn.onclick = (e) => {
   const key = dayKey(d);
   const cur_shift = parseFloat(localStorage.getItem(`shift_${key}`) || '0');
   const wakeH = 7 + cur_shift;
-  const hh = String(Math.floor(wakeH)).padStart(2,'0');
-  const mm = String(Math.round((wakeH % 1) * 60)).padStart(2,'0');
-  shiftInput.value = `${hh}:${mm}`;
+  shiftInput.value = `${String(Math.floor(wakeH)).padStart(2,'0')}:${String(Math.round((wakeH % 1) * 60)).padStart(2,'0')}`;
   updateShiftInfo(cur_shift);
   renderShiftHistory(key);
   shiftOverlay.classList.toggle('show');
@@ -920,33 +886,20 @@ function renderShiftHistory(key) {
   const el = document.getElementById('shift-history');
   const raw = localStorage.getItem(`shift_history_${key}`);
   const list = raw ? JSON.parse(raw) : [];
-  if (list.length === 0) {
-    el.classList.remove('has-items');
-    el.innerHTML = '';
-    return;
-  }
+  if (list.length === 0) { el.classList.remove('has-items'); el.innerHTML = ''; return; }
   el.classList.add('has-items');
-  const items = list.slice(-5).reverse().map(t => `<div class="shift-history-item">${t}</div>`).join('');
-  el.innerHTML = `<div class="shift-history-title">Today's wake history</div>${items}`;
+  el.innerHTML = `<div class="shift-history-title">Today's wake history</div>${list.slice(-5).reverse().map(t => `<div class="shift-history-item">${t}</div>`).join('')}`;
 }
 function updateShiftInfo(shift) {
-  if (shift <= 0) {
-    shiftInfo.textContent = 'On schedule';
-    return;
-  }
+  if (shift <= 0) { shiftInfo.textContent = 'On schedule'; return; }
   const relaxStart = 20 + shift;
   const relaxRemaining = Math.max(0, 22 - relaxStart);
   const h = Math.floor(relaxRemaining);
   const m = Math.round((relaxRemaining % 1) * 60);
-  if (relaxRemaining <= 0) {
-    shiftInfo.textContent = `Shifted by ${shift.toFixed(1)}h · No Relax buffer left`;
-  } else {
-    shiftInfo.textContent = `Shifted by ${shift.toFixed(1)}h · Relax: ${h}h ${m}m`;
-  }
+  shiftInfo.textContent = relaxRemaining <= 0 ? `Shifted by ${shift.toFixed(1)}h · No Relax buffer left` : `Shifted by ${shift.toFixed(1)}h · Relax: ${h}h ${m}m`;
 }
 function applyShift(e) {
-  e.preventDefault();
-  e.stopPropagation();
+  e.preventDefault(); e.stopPropagation();
   const val = shiftInput.value;
   if (!val || !val.includes(':')) { shiftInfo.textContent = 'Enter a wake time first'; return; }
   const [h, m] = val.split(':').map(Number);
@@ -966,8 +919,7 @@ function applyShift(e) {
   render();
 }
 function resetShift(e) {
-  e.preventDefault();
-  e.stopPropagation();
+  e.preventDefault(); e.stopPropagation();
   const d = new Date(cur * 86400000 + new Date(2026,0,1).getTime());
   const key = dayKey(d);
   localStorage.removeItem(`shift_${key}`);
