@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Schedule">
 <title>Schedule</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='42' fill='none' stroke='%231F1E1C' stroke-width='7' stroke-opacity='0.85'/><line x1='50' y1='50' x2='50' y2='12' stroke='%231F1E1C' stroke-width='7' stroke-linecap='round' stroke-opacity='0.85'/><line x1='50' y1='50' x2='77' y2='68' stroke='%231D9E75' stroke-width='7' stroke-linecap='round'/><circle cx='50' cy='50' r='5' fill='%231F1E1C' stroke-opacity='0.85'/></svg>">
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='42' fill='none' stroke='%231F1E1C' stroke-width='7' stroke-opacity='0.85'/><line x1='50' y1='50' x2='50' y2='12' stroke='%231F1E1C' stroke-width='7' stroke-linecap='round' stroke-opacity='0.85'/><line x1='50' y1='50' x2='77' y2='68' stroke='%231D9E75' stroke-width='7' stroke-linecap='round'/><circle cx='50' cy='50' r='5' fill='%231F1E1C' stroke-opacity='0.85'/></svg>"><rect width='100' height='100' rx='22' fill='%23F5F4EF'/><rect x='20' y='22' width='18' height='56' rx='9' fill='%23FFFFFF' stroke='%231F1E1C' stroke-width='0.6' stroke-opacity='0.08'/><rect x='41' y='12' width='18' height='76' rx='9' fill='%231D9E75'/><rect x='62' y='32' width='18' height='46' rx='9' fill='%23FFFFFF' stroke='%231F1E1C' stroke-width='0.6' stroke-opacity='0.08'/></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='42' fill='none' stroke='%231F1E1C' stroke-width='7' stroke-opacity='0.85'/><line x1='50' y1='50' x2='50' y2='12' stroke='%231F1E1C' stroke-width='7' stroke-linecap='round' stroke-opacity='0.85'/><line x1='50' y1='50' x2='77' y2='68' stroke='%231D9E75' stroke-width='7' stroke-linecap='round'/><circle cx='50' cy='50' r='5' fill='%231F1E1C'/></svg>">
 <style>
 :root {
   --bg: #F5F4EF;
@@ -37,14 +37,7 @@ body { padding: 12px; padding-bottom: 40px; }
 .reminders-toggle { background: none; border: 0.5px solid var(--border-strong); border-radius: 6px; padding: 3px 10px; cursor: pointer; font-size: 11px; font-family: inherit; color: var(--text-primary); }
 .reminders-toggle:active { background: rgba(0,0,0,0.04); }
 .reminders-list { display: flex; flex-wrap: wrap; gap: 8px; }
-.reminder-item { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px 6px 12px; background: rgba(0,0,0,0.03); border-radius: 4px; }
-.reminder-item.due-today { background: rgba(200, 65, 58, 0.1); }
-.reminder-item.due-soon { background: rgba(232, 180, 61, 0.12); }
-.reminder-name { font-size: 12px; color: var(--text-primary); }
-.reminder-countdown { font-size: 9px; color: var(--text-tertiary); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; font-variant-numeric: tabular-nums; padding: 1px 6px; border-radius: 2px; background: rgba(0,0,0,0.05); }
-.reminder-item.due-today .reminder-countdown { color: white; background: #C8413A; }
-.reminder-item.due-soon .reminder-countdown { color: white; background: #C99B3D; }
-.reminder-delete { background: none; border: 0; color: var(--text-tertiary); cursor: pointer; font-size: 14px; padding: 0 2px; line-height: 1; font-family: inherit; opacity: 0.5; }
+
 .reminder-delete:hover { opacity: 1; color: #C8413A; }
 .reminders-empty { font-size: 11px; color: var(--text-tertiary); font-style: italic; }
 .reminder-item { display: flex; align-items: center; gap: 8px; background: var(--surface); border-radius: 6px; padding: 6px 10px; border: 0.5px solid var(--border-strong); }
@@ -817,7 +810,7 @@ function renderReminders() {
     return `<div class="${cls}"><span class="reminder-name">${r.name}</span><span class="reminder-countdown">${countdown}</span><button class="reminder-delete" data-id="${r.id}">×</button></div>`;
   }).join('');
   list.querySelectorAll('.reminder-delete').forEach(btn => {
-    btn.onclick = (e) => { e.stopPropagation(); saveReminders(loadReminders().filter(r => r.id !== btn.dataset.id)); renderReminders(); };
+    btn.onclick = (e) => { e.stopPropagation(); saveReminders(loadReminders().filter(r => r.id !== btn.dataset.id)); document.addEventListener("DOMContentLoaded", renderReminders); };
   });
 }
 document.getElementById('reminders-toggle').onclick = (e) => { e.stopPropagation(); document.getElementById('reminders-add').classList.toggle('show'); };
@@ -834,9 +827,9 @@ document.getElementById('reminder-save').onclick = (e) => {
   document.getElementById('reminder-date').value = '';
   document.getElementById('reminder-time').value = '';
   document.getElementById('reminders-add').classList.remove('show');
-  renderReminders();
+  document.addEventListener("DOMContentLoaded", renderReminders);
 };
-renderReminders();
+document.addEventListener("DOMContentLoaded", renderReminders);
 
 // Shift button: opens overlay to shift today's schedule
 const shiftBtn = document.getElementById('shift-btn');
