@@ -200,6 +200,7 @@ body { padding: 12px; padding-bottom: 40px; }
               </div>
               <div class="hunger-recommended" id="hunger-recommended"></div>
               <button id="hunger-clear" class="hunger-clear-btn">Clear all logs</button>
+              <button id="notif-test" class="hunger-clear-btn" style="margin-top:4px;color:var(--text-secondary);">🔔 Test notification</button>
             </div>
           </div>
         </div>
@@ -818,6 +819,16 @@ document.getElementById('hunger-log').onclick = (e) => {
 document.getElementById('hunger-clear').onclick = (e) => {
   e.stopPropagation();
   if (confirm('Clear all hunger logs?')) { saveHunger([]); renderHungerRecommended(); }
+};
+document.getElementById('notif-test').onclick = async (e) => {
+  e.stopPropagation();
+  if (!('Notification' in window)) { alert('Notifications not supported in this browser.'); return; }
+  if (Notification.permission === 'denied') { alert('Notifications are blocked. Allow them in browser site settings for this URL.'); return; }
+  if (Notification.permission !== 'granted') {
+    const result = await Notification.requestPermission();
+    if (result !== 'granted') { alert('Permission not granted.'); return; }
+  }
+  new Notification('Schedule · Test', { body: 'Notifications are working! ✓' });
 };
 renderHungerRecommended();
 
