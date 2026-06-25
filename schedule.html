@@ -176,6 +176,16 @@ body { padding: 12px; padding-bottom: 40px; }
 .cal-legend.open .cal-legend-toggle #legend-arrow { transform: rotate(90deg); }
 .cal-legend-body { display: none; margin-top: 8px; flex-direction: column; gap: 10px; }
 .cal-legend.open .cal-legend-body { display: flex; }
+.hunger-input-row { display: flex; gap: 8px; align-items: center; }
+.hunger-input { font-size: 12px; padding: 4px 8px; border: 0.5px solid var(--border-strong); border-radius: 6px; font-family: inherit; color: var(--text-primary); background: transparent; }
+.hunger-log-btn { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; border: none; background: var(--text-primary); color: var(--surface); cursor: pointer; font-family: inherit; }
+.hunger-recommended { font-size: 11px; color: var(--text-secondary); display: flex; flex-wrap: wrap; gap: 6px; }
+.hunger-recommended-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); width: 100%; }
+.hunger-rec-item { background: rgba(0,0,0,0.05); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-variant-numeric: tabular-nums; }
+.hunger-rec-empty { font-size: 11px; color: var(--text-tertiary); font-style: italic; }
+.hunger-count { font-size: 10px; color: var(--text-tertiary); width: 100%; margin-top: 2px; }
+.hunger-clear-btn { font-size: 10px; color: var(--text-tertiary); background: none; border: none; cursor: pointer; font-family: inherit; text-align: left; padding: 0; }
+.cal-legend.open .cal-legend-body { display: flex; }
 .legend-section-title { font-size: 9px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
 .legend-item { font-size: 11px; color: var(--text-primary); display: flex; align-items: center; gap: 8px; padding: 2px 0; }
 .legend-swatch { display: inline-block; width: 12px; height: 3px; border-radius: 1px; }
@@ -210,6 +220,17 @@ body { padding: 12px; padding-bottom: 40px; }
           </div>
           <div class="cal-grid" id="cal-dows"></div>
           <div class="cal-grid" id="cal-days"></div>
+          <div class="cal-legend" id="cal-legend">
+            <button class="cal-legend-toggle" id="legend-toggle">Hunger Tracker <span id="legend-arrow">›</span></button>
+            <div class="cal-legend-body" id="legend-body">
+              <div class="hunger-input-row">
+                <input type="time" id="hunger-input" class="hunger-input">
+                <button id="hunger-log" class="hunger-log-btn">Log</button>
+              </div>
+              <div class="hunger-recommended" id="hunger-recommended"></div>
+              <button id="hunger-clear" class="hunger-clear-btn">Clear all logs</button>
+            </div>
+          </div>
         </div>
       </div>
       <button id="next-btn">→</button>
@@ -778,6 +799,52 @@ document.addEventListener('click', e => {
 });
 document.getElementById('cal-prev').onclick = (e) => { e.stopPropagation(); calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCal(); };
 document.getElementById('cal-next').onclick = (e) => { e.stopPropagation(); calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCal(); };
+document.getElementById('legend-toggle').onclick = (e) => { e.stopPropagation(); document.getElementById('cal-legend').classList.toggle('open'); };
+
+const HUNGER_KEY = 'hunger_log';
+function loadHunger() { try { return JSON.parse(localStorage.getItem(HUNGER_KEY) || '[]'); } catch { return []; } }
+function saveHunger(arr) { localStorage.setItem(HUNGER_KEY, JSON.stringify(arr)); }
+function renderHungerRecommended() {
+  const el = document.getElementById('hunger-recommended');
+  if (!el) return;
+  const arr = loadHunger();
+  if (arr.length < 3) { el.innerHTML = `<div class="hunger-recommended-title">Recommended hunger times</div><div class="hunger-rec-empty">Log at least 3 times to see patterns (${arr.length}/3)</div>`; return; }
+  const buckets = new Array(48).fill(0);
+  for (const e of arr) { const idx = e.h * 2 + (e.m >= 30 ? 1 : 0); buckets[idx]++; }
+  const peaks = [];
+  for (let i = 0; i < 48; i++) {
+    if (buckets[i] < 2) continue;
+    if (buckets[i] >= buckets[(i-1+48)%48] && buckets[i] >= buckets[(i+1)%48]) peaks.push({ idx: i, count: buckets[i] });
+  }
+  peaks.sort((a,b) => a.idx - b.idx);
+  const merged = [];
+  for (const p of peaks) {
+    if (merged.length > 0 && p.idx - merged[merged.length-1].idx <= 2) { if (p.count > merged[merged.length-1].count) merged[merged.length-1] = p; } else merged.push(p);
+  }
+  const top = merged.sort((a,b) => b.count-a.count).slice(0,5).sort((a,b) => a.idx-b.idx);
+  const itemsHtml = top.map(p => { const h = Math.floor(p.idx/2); const m = (p.idx%2)*30; return `<span class="hunger-rec-item">${h}:${String(m).padStart(2,'0')}</span>`; }).join('');
+  el.innerHTML = `<div class="hunger-recommended-title">Recommended hunger times</div>${itemsHtml||'<div class="hunger-rec-empty">No clear patterns yet</div>'}<div class="hunger-count">Based on ${arr.length} logs</div>`;
+}
+document.getElementById('hunger-log').onclick = (e) => {
+  e.stopPropagation();
+  const val = document.getElementById('hunger-input').value;
+  if (!val || !val.includes(':')) return;
+  const [h, m] = val.split(':').map(Number);
+  if (isNaN(h) || isNaN(m)) return;
+  const arr = loadHunger();
+  arr.push({ t: Date.now(), h, m });
+  saveHunger(arr);
+  renderHungerRecommended();
+  const btn = document.getElementById('hunger-log');
+  btn.textContent = `✓ ${h}:${String(m).padStart(2,'0')}`;
+  setTimeout(() => { btn.textContent = 'Log'; }, 2000);
+};
+document.getElementById('hunger-clear').onclick = (e) => {
+  e.stopPropagation();
+  if (confirm('Clear all hunger logs?')) { saveHunger([]); renderHungerRecommended(); }
+};
+renderHungerRecommended();
+
 let enrichedToday = [];
 
 // Reminders
