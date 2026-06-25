@@ -593,7 +593,7 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
 
   markers.forEach(m => {
     let markerTop;
-    if (m.cls === 'now-line' || m.cls === 'marker-shutdown' || m.cls === 'marker' || m.cls === 'marker-device') {
+    if (m.cls === 'now-line' || m.cls === 'marker-shutdown' || m.cls === 'marker' || m.cls === 'marker-device' || m.cls === 'marker-nap') {
       const containing = layout.find(b => b && b.startT <= m.time && b.endT > m.time);
       if (containing) {
         const frac = (m.time - containing.startT) / (containing.endT - containing.startT);
