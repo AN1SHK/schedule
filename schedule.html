@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Schedule">
 <title>Schedule</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M12 75 C15 65 20 45 28 32 C32 26 36 24 39 28 C42 32 40 45 37 55 C35 62 33 68 35 70 C37 72 42 65 48 55 M35 52 C40 52 46 52 50 52 M50 30 C50 30 38 50 44 58 C48 63 56 55 62 45 C66 38 68 32 65 30 C62 28 60 35 58 42 C56 50 56 58 60 65 C63 70 68 72 74 70' fill='none' stroke='%231F1E1C' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'/></svg>">
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M12 75 C15 65 20 45 28 32 C32 26 36 24 39 28 C42 32 40 45 37 55 C35 62 33 68 35 70 C37 72 42 65 48 55 M35 52 C40 52 46 52 50 52 M50 30 C50 30 38 50 44 58 C48 63 56 55 62 45 C66 38 68 32 65 30 C62 28 60 35 58 42 C56 50 56 58 60 65 C63 70 68 72 74 70' fill='none' stroke='%231F1E1C' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23F5F4EF'/><rect x='20' y='22' width='18' height='56' rx='9' fill='%23FFFFFF' stroke='%231F1E1C' stroke-width='0.6' stroke-opacity='0.08'/><rect x='41' y='12' width='18' height='76' rx='9' fill='%231D9E75'/><rect x='62' y='32' width='18' height='46' rx='9' fill='%23FFFFFF' stroke='%231F1E1C' stroke-width='0.6' stroke-opacity='0.08'/></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23F5F4EF'/><rect x='20' y='22' width='18' height='56' rx='9' fill='%23FFFFFF' stroke='%231F1E1C' stroke-width='0.6' stroke-opacity='0.08'/><rect x='41' y='12' width='18' height='76' rx='9' fill='%231D9E75'/><rect x='62' y='32' width='18' height='46' rx='9' fill='%23FFFFFF' stroke='%231F1E1C' stroke-width='0.6' stroke-opacity='0.08'/></svg>">
 <style>
 :root {
   --bg: #F5F4EF;
@@ -92,16 +92,22 @@ body { padding: 12px; padding-bottom: 40px; }
 .task-list { margin-top: 8px; margin-bottom: 4px; display: flex; flex-direction: column; gap: 2px; }
 .task-item { display: flex; align-items: center; gap: 7px; cursor: pointer; padding: 2px 0; }
 .task-cb { width: 11px; height: 11px; border-radius: 50%; border: 1.5px solid rgba(110,109,103,0.35); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-.task-item.done .task-cb { background: #1D9E75; border-color: #1D9E75; }
-.task-item.done .task-cb::after { content: ''; display: block; width: 5px; height: 3px; border-left: 1.5px solid white; border-bottom: 1.5px solid white; transform: rotate(-45deg) translateY(-1px); }
+.task-item.done .task-cb { background: rgba(110,109,103,0.15); border-color: rgba(110,109,103,0.4); }
+.task-item.done .task-cb::after { content: ''; display: block; width: 3px; height: 2px; border-left: 1.5px solid var(--text-secondary); border-bottom: 1.5px solid var(--text-secondary); transform: rotate(-45deg) translateY(-0.5px); }
 .task-item.done .task-text { text-decoration: line-through; opacity: 0.4; }
-.task-text { font-size: 11px; color: var(--text-secondary); flex: 1; }
+.task-text { font-size: 10px; font-weight: 700; color: var(--text-secondary); flex: 1; letter-spacing: 0.06em; text-transform: uppercase; }
 .task-delete { font-size: 13px; color: var(--text-tertiary); background: none; border: none; cursor: pointer; padding: 0 2px; opacity: 0; line-height: 1; font-family: inherit; }
-.task-item:hover .task-delete { opacity: 0.5; }
-.task-input-row { display: flex; align-items: center; gap: 4px; margin-top: 3px; }
-.task-input { font-size: 11px; color: var(--text-primary); background: transparent; border: none; outline: none; flex: 1; padding: 2px 0; font-family: inherit; }
+.task-item:hover .task-delete, .task-item .task-delete:focus { opacity: 0.5; }
+.task-input-row { display: flex; align-items: center; gap: 4px; margin-top: 2px; max-height: 0; overflow: hidden; transition: max-height 0.15s ease; }
+.task-input-row.open { max-height: 28px; }
+.task-input { font-size: 11px; color: var(--text-primary); background: transparent; border: none; border-bottom: 1px solid rgba(110,109,103,0.2); outline: none; flex: 1; padding: 2px 0; font-family: inherit; }
 .task-input::placeholder { color: var(--text-tertiary); font-style: italic; }
-.task-add-btn { font-size: 13px; color: var(--text-tertiary); background: none; border: none; cursor: pointer; line-height: 1; padding: 0; font-family: inherit; }
+.task-add-btn { font-size: 16px; line-height: 1; color: var(--text-tertiary); background: none; border: none; cursor: pointer; padding: 0; font-family: inherit; margin-top: 3px; display: block; }
+.pomo-tally { display: flex; align-items: center; gap: 5px; margin-top: 6px; margin-bottom: 2px; flex-wrap: wrap; }
+.pomo-mark { width: 16px; height: 16px; border-radius: 50%; background: transparent; border: 1.5px solid rgba(110,109,103,0.35); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.pomo-mark.done { background: rgba(110,109,103,0.15); border-color: rgba(110,109,103,0.4); }
+.pomo-mark.done::after { content: ''; display: block; width: 5px; height: 3px; border-left: 1.5px solid var(--text-secondary); border-bottom: 1.5px solid var(--text-secondary); transform: rotate(-45deg) translateY(-1px); }
+.pomo-tally-reset { font-size: 9px; color: var(--text-tertiary); background: none; border: none; cursor: pointer; font-family: inherit; margin-left: 2px; padding: 0; }
 .b-label { font-size: 11px; color: var(--text-secondary); line-height: 1.2; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
 .b-time { font-size: 10px; color: var(--text-secondary); margin-top: 2px; font-variant-numeric: tabular-nums; }
 .b-note { font-size: 10px; color: var(--text-tertiary); margin-top: 6px; font-style: italic; letter-spacing: 0.02em; }
@@ -130,6 +136,8 @@ body { padding: 12px; padding-bottom: 40px; }
 .marker { position: absolute; left: 0; right: 0; height: 1px; background: #C8413A; z-index: 5; pointer-events: none; }
 .marker-label { position: absolute; right: 8px; top: -8px; background: #C8413A; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
 .marker-shutdown-label { position: absolute; right: 8px; top: -8px; background: #1E3A5F; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
+.marker-device-label { position: absolute; right: 8px; top: -8px; background: #4A6FA5; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
+.marker-device { position: absolute; left: 0; right: 0; height: 1px; background: #4A6FA5; z-index: 5; pointer-events: none; }
 .now-label { position: absolute; right: 8px; top: -8px; background: #1D9E75; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
 
 .marker-shutdown { position: absolute; left: 0; right: 0; height: 1px; background: #1E3A5F; z-index: 5; pointer-events: none; }
@@ -270,7 +278,7 @@ const FIXED_BLOCKS = [
   { start: '17:00', end: '19:00', label: 'Exercise', tags: ['PPL_TAGS', 'Music'] },
   { start: '19:00', end: '19:30', label: 'Shower' },
   { start: '19:30', end: '20:00', label: 'Eat', tags: ['Mindful'] },
-  { start: '20:00', end: '22:00', label: 'Relax', tags: ['Read', 'Podcasts', 'Mindful', 'Chores', 'Entertainment', 'Messages'], pomodoro: { work: 50, break: 10, prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Chores', color: '#16A34A' }] } },
+  { start: '20:00', end: '22:00', label: 'Relax', tags: ['Read', 'Podcasts', 'Mindful', 'Chores', 'Music', 'Entertainment', 'Messages'], pomodoro: { work: 50, break: 10, prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Chores', color: '#16A34A' }] } },
   { start: '22:00', end: '23:00', label: 'NR', tags: ['Plan Tomorrow', 'Read Fiction'] },
   { start: '23:00', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
 ];
@@ -405,8 +413,9 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
             <button class="task-delete" data-del="${idx}" title="Remove">×</button>
           </div>`
         ).join('') +
-        `<div class="task-input-row">
-          <input class="task-input" placeholder="+ Add task" type="text">
+        `<button class="task-add-btn" title="Add task">+</button>
+        <div class="task-input-row">
+          <input class="task-input" placeholder="Type task, Enter to add" type="text">
         </div>`;
         taskContainer.querySelectorAll('.task-item').forEach(el => {
           el.addEventListener('click', e => {
@@ -420,23 +429,21 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
           });
         });
         taskContainer.querySelectorAll('.task-delete').forEach(btn => {
-          btn.addEventListener('click', e => {
-            e.stopPropagation();
+          const delFn = e => {
+            e.preventDefault(); e.stopPropagation();
             const tasks = JSON.parse(localStorage.getItem(taskKey) || '[]');
             tasks.splice(parseInt(btn.dataset.del), 1);
             localStorage.setItem(taskKey, JSON.stringify(tasks));
             renderTasks();
-          });
-          btn.addEventListener('touchend', e => {
-            e.preventDefault();
-            e.stopPropagation();
-            const tasks = JSON.parse(localStorage.getItem(taskKey) || '[]');
-            tasks.splice(parseInt(btn.dataset.del), 1);
-            localStorage.setItem(taskKey, JSON.stringify(tasks));
-            renderTasks();
-          });
+          };
+          btn.addEventListener('click', delFn);
+          btn.addEventListener('touchend', delFn);
         });
+        const addBtn = taskContainer.querySelector('.task-add-btn');
+        const inputRow = taskContainer.querySelector('.task-input-row');
         const inp = taskContainer.querySelector('.task-input');
+        addBtn.addEventListener('click', e => { e.stopPropagation(); inputRow.classList.toggle('open'); if (inputRow.classList.contains('open')) inp.focus(); });
+        addBtn.addEventListener('touchend', e => { e.preventDefault(); e.stopPropagation(); inputRow.classList.toggle('open'); if (inputRow.classList.contains('open')) inp.focus(); });
         const addFn = e => {
           e.stopPropagation();
           const val = inp.value.trim();
@@ -450,10 +457,32 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
         inp.addEventListener('click', e => e.stopPropagation());
       }
       renderTasks();
-      block.querySelector('.block-content').insertBefore(taskContainer,
-        block.querySelector('.block-content').querySelector('.tag-row') ||
-        block.querySelector('.block-content').lastChild
-      );
+      const blockContent = block.querySelector('.block-content');
+      const tagRow = blockContent.querySelector('.tag-row');
+      blockContent.insertBefore(taskContainer, tagRow || blockContent.lastChild);
+
+      // Pomodoro tally tracker
+      const tallyKey = `pomo_tally_${currentDayKey}_${b.start}`;
+      const maxPomos = b.start === '9:00' ? 4 : 3; // Work1=4h, Work2=3h
+      const tallyEl = document.createElement('div');
+      tallyEl.className = 'pomo-tally';
+      function renderTally() {
+        const done = parseInt(localStorage.getItem(tallyKey) || '0');
+        tallyEl.innerHTML = Array.from({length: maxPomos}, (_, i) =>
+          `<div class="pomo-mark${i < done ? ' done' : ''}" data-i="${i}"></div>`
+        ).join('') + `<button class="pomo-tally-reset" title="Reset">↺</button>`;
+        tallyEl.querySelectorAll('.pomo-mark').forEach(m => {
+          const tap = e => { e.stopPropagation(); const d = parseInt(localStorage.getItem(tallyKey)||'0'); const i = parseInt(m.dataset.i); localStorage.setItem(tallyKey, i < d ? i : i+1); renderTally(); };
+          m.addEventListener('click', tap);
+          m.addEventListener('touchend', e => { e.preventDefault(); tap(e); });
+        });
+        const resetBtn = tallyEl.querySelector('.pomo-tally-reset');
+        const rst = e => { e.stopPropagation(); localStorage.setItem(tallyKey, 0); renderTally(); };
+        resetBtn.addEventListener('click', rst);
+        resetBtn.addEventListener('touchend', e => { e.preventDefault(); rst(e); });
+      }
+      renderTally();
+      blockContent.insertBefore(tallyEl, tagRow || blockContent.lastChild);
     }
 
     // Pomodoro break schedule — text list of break times and activities
@@ -525,7 +554,7 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
 
   markers.forEach(m => {
     let markerTop;
-    if (m.cls === 'now-line' || m.cls === 'marker-shutdown' || m.cls === 'marker') {
+    if (m.cls === 'now-line' || m.cls === 'marker-shutdown' || m.cls === 'marker' || m.cls === 'marker-device') {
       // Use actual rendered block positions for accuracy
       const containing = layout.find(b => b && b.startT <= m.time && b.endT > m.time);
       if (containing) {
@@ -700,7 +729,9 @@ function render() {
     nowBanner.innerHTML = '';
   }
 
-  const morningMarkers = [];
+  const morningMarkers = [
+    { time: 7.5, cls: 'marker-device', labelCls: 'marker-device-label', label: 'Start All Devices · 7:30' },
+  ];
   const afternoonMarkers = [
     { time: 15, cls: 'marker-nap', labelCls: 'marker-nap-label', label: 'Last Nap · 15:00' }
   ];
