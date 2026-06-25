@@ -828,7 +828,8 @@ document.getElementById('notif-test').onclick = async (e) => {
     const result = await Notification.requestPermission();
     if (result !== 'granted') { alert('Permission not granted.'); return; }
   }
-  new Notification('Schedule · Test', { body: 'Notifications are working! ✓' });
+  playPing();
+  new Notification('Cold Shower (8:30–9:00)', { body: '', silent: true });
 };
 renderHungerRecommended();
 
@@ -976,6 +977,24 @@ function renderCal() {
 let scheduledNotifTimers = [];
 let notifScheduledForDate = null;
 
+function playPing() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.15);
+    gain.gain.setValueAtTime(0.4, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.5);
+    osc.onended = () => ctx.close();
+  } catch(e) {}
+}
+
 async function requestNotifPermission() {
   if (!('Notification' in window)) return false;
   if (Notification.permission === 'granted') return true;
@@ -1013,11 +1032,15 @@ function scheduleBlockNotifications() {
     const timer = setTimeout(() => {
       const h = Math.floor(blockStart);
       const m = Math.round((blockStart - h) * 60);
-      const timeStr = `${h}:${String(m).padStart(2,'0')}`;
-      new Notification(`${b.label} · ${timeStr}`, {
-        body: b.tags ? b.tags.filter(t => !['PPL_TAGS','MORNING_EX_TAG','AFTERNOON_EX_TAG'].includes(t)).slice(0,3).join(' · ') : '',
+      const startStr = `${h}:${String(m).padStart(2,'0')}`;
+      const endH = Math.floor(b.endT || blockStart);
+      const endM = Math.round(((b.endT || blockStart) - endH) * 60);
+      const endStr = `${endH >= 24 ? endH-24 : endH}:${String(endM).padStart(2,'0')}`;
+      playPing();
+      new Notification(`${b.label} (${startStr}–${endStr})`, {
+        body: '',
         icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='42' fill='none' stroke='%231F1E1C' stroke-width='7'/><line x1='50' y1='50' x2='50' y2='12' stroke='%231F1E1C' stroke-width='7' stroke-linecap='round'/><line x1='50' y1='50' x2='77' y2='68' stroke='%231D9E75' stroke-width='7' stroke-linecap='round'/><circle cx='50' cy='50' r='5' fill='%231F1E1C'/></svg>",
-        silent: false
+        silent: true
       });
     }, delay);
     scheduledNotifTimers.push(timer);
