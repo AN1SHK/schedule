@@ -92,7 +92,7 @@ body { padding: 12px; padding-bottom: 40px; }
 .timeline { position: relative; }
 
 .block { position: absolute; left: 0; right: 0; background: var(--surface); border-radius: 0; overflow: hidden; user-select: none; -webkit-user-select: none; padding: 14px 14px; display: flex; align-items: center; gap: 10px; transition: opacity 0.3s; }
-.block.past { opacity: 0.6; }
+.block.past { opacity: 0.35; }
 .block-content { flex: 1; min-width: 0; }
 .task-list { margin-top: 8px; margin-bottom: 4px; display: flex; flex-direction: column; gap: 2px; }
 .task-item { display: flex; align-items: center; gap: 7px; cursor: pointer; padding: 2px 0; }
@@ -607,6 +607,7 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
     const marker = document.createElement('div');
     marker.className = m.cls;
     marker.style.top = `${markerTop}px`;
+    if (nowTime !== null && m.cls !== 'now-line' && m.time < nowTime) marker.style.opacity = '0.3';
     marker.innerHTML = `<div class="${m.labelCls}">${m.label}</div>`;
     tl.appendChild(marker);
 
