@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Schedule">
 <title>Schedule</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='5' y='15' width='90' height='82' rx='8' fill='%23F5F4EF' stroke='%231F1E1C' stroke-width='6'/><line x1='5' y1='38' x2='95' y2='38' stroke='%231F1E1C' stroke-width='6'/><line x1='28' y1='5' x2='28' y2='28' stroke='%231F1E1C' stroke-width='7' stroke-linecap='round'/><line x1='72' y1='5' x2='72' y2='28' stroke='%231F1E1C' stroke-width='7' stroke-linecap='round'/><rect x='14' y='48' width='18' height='12' rx='2' fill='%231D9E75'/><rect x='41' y='48' width='18' height='12' rx='2' fill='%231D9E75'/><rect x='14' y='68' width='18' height='12' rx='2' fill='%231D9E75'/><rect x='41' y='68' width='18' height='12' rx='2' fill='%231D9E75'/></svg>">
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='5' y='15' width='90' height='82' rx='8' fill='%23F5F4EF' stroke='%231F1E1C' stroke-width='6'/><line x1='5' y1='38' x2='95' y2='38' stroke='%231F1E1C' stroke-width='6'/><line x1='28' y1='5' x2='28' y2='28' stroke='%231F1E1C' stroke-width='7' stroke-linecap='round'/><line x1='72' y1='5' x2='72' y2='28' stroke='%231F1E1C' stroke-width='7' stroke-linecap='round'/><rect x='14' y='48' width='18' height='12' rx='2' fill='%231D9E75'/><rect x='41' y='48' width='18' height='12' rx='2' fill='%231D9E75'/><rect x='14' y='68' width='18' height='12' rx='2' fill='%231D9E75'/><rect x='41' y='68' width='18' height='12' rx='2' fill='%231D9E75'/></svg>">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M12 75 C15 65 20 45 28 32 C32 26 36 24 39 28 C42 32 40 45 37 55 C35 62 33 68 35 70 C37 72 42 65 48 55 M35 52 C40 52 46 52 50 52 M50 30 C50 30 38 50 44 58 C48 63 56 55 62 45 C66 38 68 32 65 30 C62 28 60 35 58 42 C56 50 56 58 60 65 C63 70 68 72 74 70' fill='none' stroke='%231F1E1C' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M12 75 C15 65 20 45 28 32 C32 26 36 24 39 28 C42 32 40 45 37 55 C35 62 33 68 35 70 C37 72 42 65 48 55 M35 52 C40 52 46 52 50 52 M50 30 C50 30 38 50 44 58 C48 63 56 55 62 45 C66 38 68 32 65 30 C62 28 60 35 58 42 C56 50 56 58 60 65 C63 70 68 72 74 70' fill='none' stroke='%231F1E1C' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'/></svg>">
 <style>
 :root {
   --bg: #F5F4EF;
@@ -62,7 +62,7 @@ body { padding: 12px; padding-bottom: 40px; }
 .reminder-wrap:not(:empty) { margin-top: 6px; }
 .now-banner-wrap { text-align: center; }
 .now-banner-wrap:not(:empty) { margin-top: 6px; }
-.now-banner { display: inline-block; background: #1D9E75; color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+.now-banner { display: inline-block; background: #1D9E75; color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer; user-select: none; -webkit-user-select: none; }
 .now-banner-time { font-size: 10px; opacity: 0.85; margin-left: 8px; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; font-weight: 500; }
 .shift-wrap { position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
 .shift-btn { background: none; border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 4px 10px; cursor: pointer; font-size: 14px; color: var(--text-primary); font-family: inherit; margin-left: 4px; }
@@ -89,6 +89,19 @@ body { padding: 12px; padding-bottom: 40px; }
 .block { position: absolute; left: 0; right: 0; background: var(--surface); border-radius: 0; overflow: hidden; user-select: none; -webkit-user-select: none; padding: 14px 14px; display: flex; align-items: center; gap: 10px; transition: opacity 0.3s; }
 .block.past { opacity: 0.6; }
 .block-content { flex: 1; min-width: 0; }
+.task-list { margin-top: 8px; margin-bottom: 4px; display: flex; flex-direction: column; gap: 2px; }
+.task-item { display: flex; align-items: center; gap: 7px; cursor: pointer; padding: 2px 0; }
+.task-cb { width: 11px; height: 11px; border-radius: 50%; border: 1.5px solid rgba(110,109,103,0.35); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.task-item.done .task-cb { background: #1D9E75; border-color: #1D9E75; }
+.task-item.done .task-cb::after { content: ''; display: block; width: 5px; height: 3px; border-left: 1.5px solid white; border-bottom: 1.5px solid white; transform: rotate(-45deg) translateY(-1px); }
+.task-item.done .task-text { text-decoration: line-through; opacity: 0.4; }
+.task-text { font-size: 11px; color: var(--text-secondary); flex: 1; }
+.task-delete { font-size: 13px; color: var(--text-tertiary); background: none; border: none; cursor: pointer; padding: 0 2px; opacity: 0; line-height: 1; font-family: inherit; }
+.task-item:hover .task-delete { opacity: 0.5; }
+.task-input-row { display: flex; align-items: center; gap: 4px; margin-top: 3px; }
+.task-input { font-size: 11px; color: var(--text-primary); background: transparent; border: none; outline: none; flex: 1; padding: 2px 0; font-family: inherit; }
+.task-input::placeholder { color: var(--text-tertiary); font-style: italic; }
+.task-add-btn { font-size: 13px; color: var(--text-tertiary); background: none; border: none; cursor: pointer; line-height: 1; padding: 0; font-family: inherit; }
 .b-label { font-size: 11px; color: var(--text-secondary); line-height: 1.2; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
 .b-time { font-size: 10px; color: var(--text-secondary); margin-top: 2px; font-variant-numeric: tabular-nums; }
 .b-note { font-size: 10px; color: var(--text-tertiary); margin-top: 6px; font-style: italic; letter-spacing: 0.02em; }
@@ -257,7 +270,7 @@ const FIXED_BLOCKS = [
   { start: '17:00', end: '19:00', label: 'Exercise', tags: ['PPL_TAGS', 'Music'] },
   { start: '19:00', end: '19:30', label: 'Shower' },
   { start: '19:30', end: '20:00', label: 'Eat', tags: ['Mindful'] },
-  { start: '20:00', end: '22:00', label: 'Relax', tags: ['Read', 'Podcasts', 'Mindful', 'YouTube', 'Sports', 'Shows', 'Movies', 'Messages'], pomodoro: { work: 50, break: 10, prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Chores', color: '#16A34A' }] } },
+  { start: '20:00', end: '22:00', label: 'Relax', tags: ['Read', 'Podcasts', 'Mindful', 'Chores', 'Entertainment', 'Messages'], pomodoro: { work: 50, break: 10, prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Chores', color: '#16A34A' }] } },
   { start: '22:00', end: '23:00', label: 'NR', tags: ['Plan Tomorrow', 'Read Fiction'] },
   { start: '23:00', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
 ];
@@ -306,12 +319,16 @@ function getMorningExTag(d) { return getCycleDay(d)[1]; }
 function getAfternoonExTag(d) { return getCycleDay(d)[2]; }
 
 let cur = dayNum(new Date());
+let nowScrub = null; // null = real time, number = scrubbed time override
 let calMonth = new Date().getMonth();
 let calYear = new Date().getFullYear();
 
 function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey, nowTime) {
   const tl = document.getElementById(elId);
   tl.innerHTML = '';
+  // Store start/end hour for drag scrubbing
+  const endHour = blocks.length ? Math.max(...blocks.map(b => b.endT)) : startHour + 10;
+  tl._endHour = endHour;
   const layout = blocks.map(b => {
     // Skip blocks that have zero or negative display duration (e.g. fully-shifted Relax)
     if (b.label === 'Relax' && b.dispStartT !== undefined && b.dispStartT >= b.dispEndT) return null;
@@ -348,7 +365,7 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
       return `<li class="subitem${isDone ? ' done' : ''}" data-key="${subKey}">${it}</li>`;
     }).join('')}</ul>` : '';
     const EXERCISE_TAGS = new Set(['Run','Walk','Cycle','Jump Rope','Kallisthenics','Yoga','Push','Pull','Legs','Swim','Sauna','Sprints','Basketball','Mobility','Rest']);
-    const DIGITAL_TAGS = new Set(['Music','Netflix','Movies','Shows','Socials','Gaming','Messages','Sports','YouTube','Messages','Messages']);
+    const DIGITAL_TAGS = new Set(['Music','Netflix','Entertainment','Socials','Gaming','Messages']);
     const READING_TAGS = new Set(['Read','Podcasts']);
     const MINDFUL_TAGS = new Set(['Mindful','Meditate · 10 min','Gratitude · 3 pts']);
     const PLAN_TAGS = new Set(['Plan Tomorrow','Read Fiction']);
@@ -372,6 +389,72 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
       </div>
     `;
     tl.appendChild(block);
+
+    // Task checklist for Work blocks
+    if (b.label === 'Work') {
+      const taskKey = `tasks_${currentDayKey}_${b.start}`;
+      const taskData = JSON.parse(localStorage.getItem(taskKey) || '[]');
+      const taskContainer = document.createElement('div');
+      taskContainer.className = 'task-list';
+      function renderTasks() {
+        const tasks = JSON.parse(localStorage.getItem(taskKey) || '[]');
+        taskContainer.innerHTML = tasks.map((t, idx) =>
+          `<div class="task-item${t.done ? ' done' : ''}" data-idx="${idx}">
+            <div class="task-cb"></div>
+            <span class="task-text">${t.text}</span>
+            <button class="task-delete" data-del="${idx}" title="Remove">×</button>
+          </div>`
+        ).join('') +
+        `<div class="task-input-row">
+          <input class="task-input" placeholder="+ Add task" type="text">
+        </div>`;
+        taskContainer.querySelectorAll('.task-item').forEach(el => {
+          el.addEventListener('click', e => {
+            if (e.target.classList.contains('task-delete')) return;
+            e.stopPropagation();
+            const tasks = JSON.parse(localStorage.getItem(taskKey) || '[]');
+            const idx = parseInt(el.dataset.idx);
+            tasks[idx].done = !tasks[idx].done;
+            localStorage.setItem(taskKey, JSON.stringify(tasks));
+            renderTasks();
+          });
+        });
+        taskContainer.querySelectorAll('.task-delete').forEach(btn => {
+          btn.addEventListener('click', e => {
+            e.stopPropagation();
+            const tasks = JSON.parse(localStorage.getItem(taskKey) || '[]');
+            tasks.splice(parseInt(btn.dataset.del), 1);
+            localStorage.setItem(taskKey, JSON.stringify(tasks));
+            renderTasks();
+          });
+          btn.addEventListener('touchend', e => {
+            e.preventDefault();
+            e.stopPropagation();
+            const tasks = JSON.parse(localStorage.getItem(taskKey) || '[]');
+            tasks.splice(parseInt(btn.dataset.del), 1);
+            localStorage.setItem(taskKey, JSON.stringify(tasks));
+            renderTasks();
+          });
+        });
+        const inp = taskContainer.querySelector('.task-input');
+        const addFn = e => {
+          e.stopPropagation();
+          const val = inp.value.trim();
+          if (!val) return;
+          const tasks = JSON.parse(localStorage.getItem(taskKey) || '[]');
+          tasks.push({ text: val, done: false });
+          localStorage.setItem(taskKey, JSON.stringify(tasks));
+          renderTasks();
+        };
+        inp.addEventListener('keydown', e => { if (e.key === 'Enter') addFn(e); });
+        inp.addEventListener('click', e => e.stopPropagation());
+      }
+      renderTasks();
+      block.querySelector('.block-content').insertBefore(taskContainer,
+        block.querySelector('.block-content').querySelector('.tag-row') ||
+        block.querySelector('.block-content').lastChild
+      );
+    }
 
     // Pomodoro break schedule — text list of break times and activities
     if (b.pomodoro) {
@@ -460,6 +543,33 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
     marker.style.top = `${markerTop}px`;
     marker.innerHTML = `<div class="${m.labelCls}">${m.label}</div>`;
     tl.appendChild(marker);
+
+    // Make now-line draggable to scrub time
+    if (m.cls === 'now-line') {
+      marker.style.cursor = 'ns-resize';
+      marker.style.pointerEvents = 'all';
+      const onDrag = (clientY) => {
+        const rect = tl.getBoundingClientRect();
+        const y = Math.max(0, Math.min(clientY - rect.top, rect.height));
+        const scrubbed = startHour + (y / rect.height) * (tl._endHour - startHour);
+        nowScrub = Math.max(START_HOUR, Math.min(31, scrubbed));
+        render();
+      };
+      marker.addEventListener('mousedown', e => {
+        e.stopPropagation();
+        const move = e2 => onDrag(e2.clientY);
+        const up = () => { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up); };
+        document.addEventListener('mousemove', move);
+        document.addEventListener('mouseup', up);
+      });
+      marker.addEventListener('touchstart', e => {
+        e.stopPropagation();
+        const move = e2 => { e2.preventDefault(); onDrag(e2.touches[0].clientY); };
+        const up = () => { document.removeEventListener('touchmove', move); document.removeEventListener('touchend', up); };
+        document.addEventListener('touchmove', move, { passive: false });
+        document.addEventListener('touchend', up);
+      });
+    }
   });
 }
 
@@ -552,7 +662,7 @@ function render() {
 
   const today = new Date();
   const showNow = dayNum(today) === cur;
-  const nowTime = showNow ? today.getHours() + today.getMinutes() / 60 : null;
+  const nowTime = showNow ? (nowScrub !== null ? nowScrub : today.getHours() + today.getMinutes() / 60) : null;
   // For visual placement: subtract shift, BUT only when current time hasn't crossed the NR anchor (21:00).
   // After 21:00, NR and Sleep are at their normal positions, so use real time.
   const visualNowTime = (showNow && shiftHours > 0 && nowTime < 22) ? nowTime - shiftHours : nowTime;
@@ -576,7 +686,13 @@ function render() {
       const remH = Math.floor(segRemaining / 60);
       const remM = Math.round(segRemaining % 60);
       const remStr = remH > 0 ? `${remH}h ${remM}m left` : `${remM} min left`;
-      nowBanner.innerHTML = `<div class="now-banner">Now: ${nowLabel}<span class="now-banner-time">${remStr}</span></div>`;
+      const isScrubbing = nowScrub !== null;
+      nowBanner.innerHTML = `<div class="now-banner" id="now-banner-pill" style="${isScrubbing ? 'opacity:0.75;' : ''}">${isScrubbing ? '⟳ ' : ''}Now: ${nowLabel}<span class="now-banner-time">${isScrubbing ? 'tap to reset' : remStr}</span></div>`;
+      document.getElementById('now-banner-pill').onclick = () => {
+        nowScrub = null;
+        cur = dayNum(new Date());
+        render();
+      };
     } else {
       nowBanner.innerHTML = '';
     }
@@ -585,7 +701,9 @@ function render() {
   }
 
   const morningMarkers = [];
-  const afternoonMarkers = [];
+  const afternoonMarkers = [
+    { time: 15, cls: 'marker-nap', labelCls: 'marker-nap-label', label: 'Last Nap · 15:00' }
+  ];
   const eveningMarkers = [
     { time: 22, cls: 'marker-shutdown', labelCls: 'marker-shutdown-label', label: 'Shutdown All Devices · 22:00' },
     { time: 20, cls: 'marker', labelCls: 'marker-label', label: 'Last Meal · 20:00' }
