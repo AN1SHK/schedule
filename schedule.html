@@ -961,6 +961,72 @@ function renderCal() {
   });
 }
 
+// ── Block-start notifications ─────────────────────────────────────────────────
+let scheduledNotifTimers = [];
+let notifScheduledForDate = null;
+
+async function requestNotifPermission() {
+  if (!('Notification' in window)) return false;
+  if (Notification.permission === 'granted') return true;
+  if (Notification.permission === 'denied') return false;
+  const result = await Notification.requestPermission();
+  return result === 'granted';
+}
+
+function scheduleBlockNotifications() {
+  // Only schedule for today
+  const today = new Date();
+  const todayStr = dayKey(today);
+  if (notifScheduledForDate === todayStr) return; // already scheduled for today
+  notifScheduledForDate = todayStr;
+
+  // Clear any existing timers
+  scheduledNotifTimers.forEach(t => clearTimeout(t));
+  scheduledNotifTimers = [];
+
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+  const now = today.getHours() + today.getMinutes() / 60 + today.getSeconds() / 3600;
+
+  FIXED_BLOCKS.forEach(b => {
+    if (b.label === 'Sleep') return; // skip sleep block
+    const blockStart = parseTime(b.start);
+    if (blockStart <= now) return; // already past
+
+    const nowMs = Date.now();
+    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+    const blockMs = todayMidnight + blockStart * 3600 * 1000;
+    const delay = blockMs - nowMs;
+    if (delay <= 0) return;
+
+    const timer = setTimeout(() => {
+      const h = Math.floor(blockStart);
+      const m = Math.round((blockStart - h) * 60);
+      const timeStr = `${h}:${String(m).padStart(2,'0')}`;
+      new Notification(`${b.label} · ${timeStr}`, {
+        body: b.tags ? b.tags.filter(t => !['PPL_TAGS','MORNING_EX_TAG','AFTERNOON_EX_TAG'].includes(t)).slice(0,3).join(' · ') : '',
+        icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='42' fill='none' stroke='%231F1E1C' stroke-width='7'/><line x1='50' y1='50' x2='50' y2='12' stroke='%231F1E1C' stroke-width='7' stroke-linecap='round'/><line x1='50' y1='50' x2='77' y2='68' stroke='%231D9E75' stroke-width='7' stroke-linecap='round'/><circle cx='50' cy='50' r='5' fill='%231F1E1C'/></svg>",
+        silent: false
+      });
+    }, delay);
+    scheduledNotifTimers.push(timer);
+  });
+}
+
+// Init notifications — request permission then schedule
+(async () => {
+  const granted = await requestNotifPermission();
+  if (granted) scheduleBlockNotifications();
+})();
+
+// Re-schedule at midnight for the new day
+const now = new Date();
+const msTillMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).getTime() - now.getTime();
+setTimeout(() => {
+  notifScheduledForDate = null;
+  scheduleBlockNotifications();
+}, msTillMidnight);
+
 render();
 </script>
 </body>
