@@ -877,7 +877,7 @@ function renderReminders() {
     return `<div class="${cls}"><span class="reminder-name">${r.name}</span><span class="reminder-countdown">${countdown}</span><button class="reminder-delete" data-id="${r.id}">×</button></div>`;
   }).join('');
   list.querySelectorAll('.reminder-delete').forEach(btn => {
-    btn.onclick = (e) => { e.stopPropagation(); saveReminders(loadReminders().filter(r => r.id !== btn.dataset.id)); document.addEventListener("DOMContentLoaded", renderReminders); };
+    btn.onclick = (e) => { e.stopPropagation(); saveReminders(loadReminders().filter(r => r.id !== btn.dataset.id)); renderReminders(); };
   });
 }
 document.getElementById('reminders-toggle').onclick = (e) => { e.stopPropagation(); document.getElementById('reminders-add').classList.toggle('show'); };
@@ -894,9 +894,9 @@ document.getElementById('reminder-save').onclick = (e) => {
   document.getElementById('reminder-date').value = '';
   document.getElementById('reminder-time').value = '';
   document.getElementById('reminders-add').classList.remove('show');
-  document.addEventListener("DOMContentLoaded", renderReminders);
+  renderReminders();
 };
-document.addEventListener("DOMContentLoaded", renderReminders);
+renderReminders();
 
 // Shift button: opens overlay to shift today's schedule
 const shiftBtn = document.getElementById('shift-btn');
