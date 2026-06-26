@@ -978,9 +978,21 @@ function renderCal() {
 let scheduledNotifTimers = [];
 let notifScheduledForDate = null;
 
+let _audioCtx = null;
+function getAudioCtx() {
+  if (!_audioCtx || _audioCtx.state === 'closed') {
+    _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (_audioCtx.state === 'suspended') _audioCtx.resume();
+  return _audioCtx;
+}
+// Unlock AudioContext on first user interaction
+document.addEventListener('click', () => getAudioCtx(), { once: true });
+document.addEventListener('touchend', () => getAudioCtx(), { once: true });
+
 function playPing() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = getAudioCtx();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain);
@@ -992,7 +1004,6 @@ function playPing() {
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.5);
-    osc.onended = () => ctx.close();
   } catch(e) {}
 }
 
@@ -1038,7 +1049,7 @@ function scheduleBlockNotifications() {
       const endM = Math.round(((b.endT || blockStart) - endH) * 60);
       const endStr = `${endH >= 24 ? endH-24 : endH}:${String(endM).padStart(2,'0')}`;
       playPing();
-      new Notification(`${b.label} (${startStr}–${endStr})`, {
+      new Notification(b.label, {
         body: '',
         icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='42' fill='none' stroke='%231F1E1C' stroke-width='7'/><line x1='50' y1='50' x2='50' y2='12' stroke='%231F1E1C' stroke-width='7' stroke-linecap='round'/><line x1='50' y1='50' x2='77' y2='68' stroke='%231D9E75' stroke-width='7' stroke-linecap='round'/><circle cx='50' cy='50' r='5' fill='%231F1E1C'/></svg>",
         silent: true
