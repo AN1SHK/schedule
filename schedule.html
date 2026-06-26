@@ -60,10 +60,13 @@ body { padding: 12px; padding-bottom: 40px; }
 .reminder-pill-blue { display: inline-block; background: #2B6CB0; color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
 .reminder-wrap { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .reminder-wrap:not(:empty) { margin-top: 6px; }
-.now-banner-wrap { text-align: center; }
+.now-banner-wrap { text-align: center; display: flex; align-items: center; justify-content: center; gap: 0; }
 .now-banner-wrap:not(:empty) { margin-top: 6px; }
 .now-banner { display: inline-block; background: #1D9E75; color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer; user-select: none; -webkit-user-select: none; }
 .now-banner-time { font-size: 10px; opacity: 0.85; margin-left: 8px; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; font-weight: 500; }
+.pomo-timer-pill { display: inline-block; background: #4A6FA5; color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; margin-left: 8px; font-variant-numeric: tabular-nums; }
+.pomo-timer-pill.break { background: #7B3DB5; }
+.pomo-timer-time { font-size: 10px; opacity: 0.85; margin-left: 8px; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; font-weight: 500; }
 .shift-wrap { position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
 .shift-btn { background: none; border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 4px 10px; cursor: pointer; font-size: 14px; color: var(--text-primary); font-family: inherit; margin-left: 4px; }
 .shift-btn:active { background: rgba(0,0,0,0.04); }
@@ -729,8 +732,11 @@ function render() {
       const remH = Math.floor(segRemaining / 60);
       const remM = Math.round(segRemaining % 60);
       const remStr = remH > 0 ? `${remH}h ${remM}m left` : `${remM} min left`;
-      nowBanner.innerHTML = `<div class="now-banner" id="now-banner-pill" style="${isScrubbing ? 'opacity:0.75;' : ''}">${isScrubbing ? '⟳ ' : ''}Now: ${cur_block.label}<span class="now-banner-time">${isScrubbing ? 'tap to reset' : remStr}</span></div>`;
+      const isWorkBlock = cur_block.label === 'Work';
+      const pomoHtml = isWorkBlock ? `<div class="pomo-timer-pill" id="pomo-timer-pill"></div>` : '';
+      nowBanner.innerHTML = `<div class="now-banner" id="now-banner-pill" style="${isScrubbing ? 'opacity:0.75;' : ''}">${isScrubbing ? '⟳ ' : ''}Now: ${cur_block.label}<span class="now-banner-time">${isScrubbing ? 'tap to reset' : remStr}</span></div>${pomoHtml}`;
       document.getElementById('now-banner-pill').onclick = () => { nowScrub = null; cur = dayNum(new Date()); render(); };
+      if (isWorkBlock) updatePomoTimer(cur_block);
     } else {
       nowBanner.innerHTML = '';
     }
@@ -977,6 +983,59 @@ function renderCal() {
   grid.querySelectorAll('[data-n]').forEach(el => {
     el.onclick = (e) => { e.stopPropagation(); cur = +el.dataset.n; cal.classList.remove('show'); render(); };
   });
+}
+
+// ── Pomodoro Timer Engine ─────────────────────────────────────────────────────
+let _pomoTick = null;
+
+function updatePomoTimer(workBlock) {
+  const pill = document.getElementById('pomo-timer-pill');
+  if (!pill) return;
+
+  const WORK_MINS = 50;
+  const BREAK_MINS = 10;
+  const CYCLE_MINS = WORK_MINS + BREAK_MINS;
+
+  const now = new Date();
+  const blockStartH = Math.floor(workBlock.dispStartT);
+  const blockStartM = Math.round((workBlock.dispStartT - blockStartH) * 60);
+  const blockStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), blockStartH, blockStartM, 0);
+  const elapsedMins = (now - blockStart) / 60000;
+  if (elapsedMins < 0) { pill.style.display = 'none'; return; }
+  pill.style.display = '';
+
+  const posInCycle = elapsedMins % CYCLE_MINS;
+  const isWork = posInCycle < WORK_MINS;
+  const secsLeft = isWork
+    ? Math.ceil((WORK_MINS - posInCycle) * 60)
+    : Math.ceil((CYCLE_MINS - posInCycle) * 60);
+
+  const mm = String(Math.floor(secsLeft / 60)).padStart(2, '0');
+  const ss = String(secsLeft % 60).padStart(2, '0');
+
+  pill.className = isWork ? 'pomo-timer-pill' : 'pomo-timer-pill break';
+  pill.innerHTML = `${isWork ? 'Work' : 'Break'}<span class="pomo-timer-time">${mm}:${ss}</span>`;
+
+  // Tick every second
+  clearTimeout(_pomoTick);
+  _pomoTick = setTimeout(() => {
+    const p = document.getElementById('pomo-timer-pill');
+    if (p) updatePomoTimer(workBlock);
+  }, 1000);
+
+  // Auto-tick pomodoro circle when a work segment completes
+  // Check: at the exact moment posInCycle crosses WORK_MINS (within 1 sec)
+  if (!isWork && posInCycle >= WORK_MINS && posInCycle < WORK_MINS + 1/60) {
+    const completedCycles = Math.floor(elapsedMins / CYCLE_MINS);
+    const dk = dayKey(new Date());
+    const blockStart = workBlock.start;
+    const current = getTally(dk, blockStart);
+    const maxPomos = blockStart === '9:00' ? 4 : 3;
+    if (completedCycles > current && current < maxPomos) {
+      saveTally(dk, blockStart, completedCycles);
+      render();
+    }
+  }
 }
 
 // ── Block-start notifications ─────────────────────────────────────────────────
