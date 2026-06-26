@@ -765,6 +765,8 @@ function render() {
   renderColumn('timeline-morning', morning, START_HOUR, morningMarkers, doneState, key, nowTime);
   renderColumn('timeline-afternoon', afternoon, SPLIT_1, afternoonMarkers, doneState, key, nowTime);
   renderColumn('timeline-evening', evening, SPLIT_2, eveningMarkers, doneState, key, nowTime);
+
+
 }
 
 setInterval(render, 10000);
