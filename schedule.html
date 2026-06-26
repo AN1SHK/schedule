@@ -132,6 +132,7 @@ body { padding: 12px; padding-bottom: 40px; }
 .tag-reading { background: rgba(234, 179, 8, 0.12); color: #CA8A04; }
 .tag-mindful { background: rgba(120, 60, 180, 0.12); color: #7B3DB5; }
 .tag-plan { background: rgba(51, 65, 85, 0.12); color: #334155; }
+.tag-grooming { background: rgba(240,240,238,0.9); color: #6E6D67; }
 .marker { position: absolute; left: 0; right: 0; height: 1px; background: #C8413A; z-index: 5; pointer-events: none; }
 .marker-label { position: absolute; right: 8px; top: -8px; background: #C8413A; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
 .marker-shutdown-label { position: absolute; right: 8px; top: -8px; background: #1E3A5F; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
@@ -319,7 +320,7 @@ const MIN_BLOCK_HEIGHT = 36;
 const FIXED_BLOCKS = [
   { start: '7:00', end: '7:30', label: 'MR', tags: ['Meditate · 10 min', 'Gratitude · 3 pts'] },
   { start: '7:30', end: '8:30', label: 'Exercise', tags: ['MORNING_EX_TAG', 'Music'] },
-  { start: '8:30', end: '9:00', label: 'Cold Shower' },
+  { start: '8:30', end: '9:00', label: 'Cold Shower', grooming: true },
   { start: '9:00', end: '13:00', label: 'Work', tags: ['Mobility', 'Chores', 'Messages'], pomodoro: { work: 50, break: 10, rotationKey: 'work', prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Body Scan', color: '#9333EA' }, { name: 'Breath Count', color: '#2563EB' }] } },
   { start: '13:00', end: '13:30', label: 'Eat', tags: ['Mindful'] },
   { start: '13:30', end: '14:00', label: 'Exercise', tags: ['AFTERNOON_EX_TAG', 'Read', 'Podcasts', 'Music'] },
@@ -478,7 +479,8 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
     const PLAN_TAGS = new Set(['Plan Tomorrow','Read Fiction']);
     const CHORES_TAGS = new Set(['Chores']);
     const tagsHtml = b.tags ? `<div class="tag-row">${b.tags.map(t => {
-      const cls = EXERCISE_TAGS.has(t) ? 'tag tag-exercise' : CHORES_TAGS.has(t) ? 'tag tag-chores' : DIGITAL_TAGS.has(t) ? 'tag tag-digital' : READING_TAGS.has(t) ? 'tag tag-reading' : MINDFUL_TAGS.has(t) ? 'tag tag-mindful' : PLAN_TAGS.has(t) ? 'tag tag-plan' : 'tag';
+      const GROOMING_TAGS = new Set(['Personal Grooming']);
+      const cls = GROOMING_TAGS.has(t) ? 'tag tag-grooming' : EXERCISE_TAGS.has(t) ? 'tag tag-exercise' : CHORES_TAGS.has(t) ? 'tag tag-chores' : DIGITAL_TAGS.has(t) ? 'tag tag-digital' : READING_TAGS.has(t) ? 'tag tag-reading' : MINDFUL_TAGS.has(t) ? 'tag tag-mindful' : PLAN_TAGS.has(t) ? 'tag tag-plan' : 'tag';
       return `<span class="${cls}">${t}</span>`;
     }).join('')}</div>` : '';
     const displayStart = b.displayStart || formatTime(b.dispStartT);
@@ -648,7 +650,7 @@ function render() {
   const dow = d.getDay();
   const reminderWrap = document.getElementById('reminder-wrap');
   let pillsHtml = '';
-  if (dow === 2 || dow === 5) pillsHtml += `<div class="reminder-pill">Personal Grooming</div>`;
+
   const viewDate = new Date(cur * 86400000 + new Date(2026,0,1).getTime());
   viewDate.setHours(0,0,0,0);
   const reminders = loadReminders();
@@ -674,12 +676,15 @@ function render() {
   }
 
   const enriched = FIXED_BLOCKS.map((b, i) => {
-    const tags = b.tags ? b.tags.flatMap(t => {
+    // Inject Personal Grooming tag into Cold Shower on Tue/Fri
+    let extraTags = [];
+    if (b.grooming && (dow === 2 || dow === 5)) extraTags = ['Personal Grooming'];
+    const tags = b.tags ? [...b.tags.flatMap(t => {
       if (t === 'PPL_TAGS') return pplTags;
       if (t === 'MORNING_EX_TAG') return [morningExTag];
       if (t === 'AFTERNOON_EX_TAG') return [afternoonExTag];
       return [t];
-    }) : b.tags;
+    }), ...extraTags] : (extraTags.length ? extraTags : b.tags);
     const startT = parseTime(b.start);
     const endT = parseTime(b.end);
     let dispStartT = startT;
