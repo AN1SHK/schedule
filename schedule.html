@@ -770,7 +770,7 @@ function render() {
 }
 
 setInterval(render, 10000);
-document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { render(); scheduleBlockNotifications(); } });
 window.addEventListener('focus', render);
 window.addEventListener('pageshow', render);
 
@@ -1130,38 +1130,24 @@ async function requestNotifPermission() {
 }
 
 function scheduleBlockNotifications() {
-  // Only schedule for today
-  const today = new Date();
-  const todayStr = dayKey(today);
-  if (notifScheduledForDate === todayStr) return; // already scheduled for today
-  notifScheduledForDate = todayStr;
-
   // Clear any existing timers
   scheduledNotifTimers.forEach(t => clearTimeout(t));
   scheduledNotifTimers = [];
 
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
 
-  const now = today.getHours() + today.getMinutes() / 60 + today.getSeconds() / 3600;
+  const today = new Date();
+  const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+  const nowMs = Date.now();
 
   FIXED_BLOCKS.forEach(b => {
-    if (b.label === 'Sleep') return; // skip sleep block
+    if (b.label === 'Sleep') return;
     const blockStart = parseTime(b.start);
-    if (blockStart <= now) return; // already past
-
-    const nowMs = Date.now();
-    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
     const blockMs = todayMidnight + blockStart * 3600 * 1000;
     const delay = blockMs - nowMs;
-    if (delay <= 0) return;
+    if (delay <= 0) return; // already past
 
     const timer = setTimeout(() => {
-      const h = Math.floor(blockStart);
-      const m = Math.round((blockStart - h) * 60);
-      const startStr = `${h}:${String(m).padStart(2,'0')}`;
-      const endH = Math.floor(b.endT || blockStart);
-      const endM = Math.round(((b.endT || blockStart) - endH) * 60);
-      const endStr = `${endH >= 24 ? endH-24 : endH}:${String(endM).padStart(2,'0')}`;
       playPing();
       new Notification(b.label, {
         body: '',
