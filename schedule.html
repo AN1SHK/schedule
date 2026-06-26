@@ -321,8 +321,8 @@ const TOP_PAD = 2;
 const MIN_BLOCK_HEIGHT = 36;
 
 const FIXED_BLOCKS = [
-  { start: '7:00', end: '7:30', label: 'MR', tags: ['Meditate · 10 min', 'Gratitude · 3 pts', 'Schedule Today'] },
-  { start: '7:30', end: '8:30', label: 'Exercise', tags: ['MORNING_EX_TAG', 'Music'] },
+  { start: '7:00', end: '8:00', label: 'MR', tags: ['Meditate · 10 min', 'Gratitude · 3 pts', 'Schedule Today'] },
+  { start: '8:00', end: '8:30', label: 'Exercise', tags: ['MORNING_EX_TAG', 'Music'] },
   { start: '8:30', end: '9:00', label: 'Cold Shower', grooming: true },
   { start: '9:00', end: '13:00', label: 'Work', tags: ['Mobility', 'Chores', 'Messages'], pomodoro: { work: 50, break: 10, rotationKey: 'work', prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Body Scan', color: '#9333EA' }, { name: 'Breath Count', color: '#2563EB' }] } },
   { start: '13:00', end: '13:30', label: 'Eat', tags: ['Mindful'] },
@@ -745,7 +745,7 @@ function render() {
   }
 
   const morningMarkers = [
-    { time: 7.5, cls: 'marker-device', labelCls: 'marker-device-label', label: 'Start All Devices · 7:30' },
+    { time: 8.0, cls: 'marker-device', labelCls: 'marker-device-label', label: 'Start All Devices · 8:00' },
   ];
   const afternoonMarkers = [
     { time: 15, cls: 'marker-nap', labelCls: 'marker-nap-label', label: 'Last Nap · 15:00' }
