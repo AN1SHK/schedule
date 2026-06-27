@@ -770,7 +770,7 @@ function render() {
 }
 
 setInterval(render, 10000);
-document.addEventListener('visibilitychange', () => { if (!document.hidden) { render(); scheduleBlockNotifications(); } });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
 window.addEventListener('focus', render);
 window.addEventListener('pageshow', render);
 
@@ -1054,8 +1054,6 @@ function updatePomoTimer(workBlock) {
 }
 
 // ── Block-start notifications ─────────────────────────────────────────────────
-let scheduledNotifTimers = [];
-let notifScheduledForDate = null;
 
 let _audioCtx = null;
 function getAudioCtx() {
@@ -1129,34 +1127,38 @@ async function requestNotifPermission() {
   return result === 'granted';
 }
 
-function scheduleBlockNotifications() {
-  // Clear any existing timers
-  scheduledNotifTimers.forEach(t => clearTimeout(t));
-  scheduledNotifTimers = [];
+let _lastNotifBlock = null;
 
+function checkBlockTransition() {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
-
-  const today = new Date();
-  const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-  const nowMs = Date.now();
-
-  FIXED_BLOCKS.forEach(b => {
-    if (b.label === 'Sleep') return;
-    const blockStart = parseTime(b.start);
-    const blockMs = todayMidnight + blockStart * 3600 * 1000;
-    const delay = blockMs - nowMs;
-    if (delay <= 0) return; // already past
-
-    const timer = setTimeout(() => {
+  const now = new Date();
+  const nowT = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
+  // Find current block
+  const current = FIXED_BLOCKS.find(b => {
+    if (b.label === 'Sleep') return false;
+    const s = parseTime(b.start);
+    const e = parseTime(b.end);
+    return nowT >= s && nowT < e;
+  });
+  const currentLabel = current ? current.label + '_' + current.start : null;
+  if (currentLabel && currentLabel !== _lastNotifBlock) {
+    if (_lastNotifBlock !== null) {
+      // Genuine transition — fire notification and sound
       playPing();
-      new Notification(b.label, {
+      new Notification(current.label, {
         body: '',
         icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='42' fill='none' stroke='%231F1E1C' stroke-width='7'/><line x1='50' y1='50' x2='50' y2='12' stroke='%231F1E1C' stroke-width='7' stroke-linecap='round'/><line x1='50' y1='50' x2='77' y2='68' stroke='%231D9E75' stroke-width='7' stroke-linecap='round'/><circle cx='50' cy='50' r='5' fill='%231F1E1C'/></svg>",
         silent: true
       });
-    }, delay);
-    scheduledNotifTimers.push(timer);
-  });
+    }
+    _lastNotifBlock = currentLabel;
+  }
+}
+
+function scheduleBlockNotifications() {
+  // Poll every 15 seconds — catches every block transition reliably
+  checkBlockTransition();
+  setInterval(checkBlockTransition, 15000);
 }
 
 // Init notifications — request permission then schedule
