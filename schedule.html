@@ -1127,38 +1127,50 @@ async function requestNotifPermission() {
   return result === 'granted';
 }
 
-let _lastNotifBlock = null;
+const NOTIF_TIMES = ['7:00','8:00','8:30','9:00','13:00','13:30','14:00','17:00','19:00','19:30','20:00','22:00','23:00'];
+let _notifTimer = null;
 
-function checkBlockTransition() {
+function fireBlockNotif(label) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
-  const now = new Date();
-  const nowT = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
-  // Find current block
-  const current = FIXED_BLOCKS.find(b => {
-    if (b.label === 'Sleep') return false;
-    const s = parseTime(b.start);
-    const e = parseTime(b.end);
-    return nowT >= s && nowT < e;
+  playPing();
+  new Notification(label, {
+    body: '',
+    icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='42' fill='none' stroke='%231F1E1C' stroke-width='7'/><line x1='50' y1='50' x2='50' y2='12' stroke='%231F1E1C' stroke-width='7' stroke-linecap='round'/><line x1='50' y1='50' x2='77' y2='68' stroke='%231D9E75' stroke-width='7' stroke-linecap='round'/><circle cx='50' cy='50' r='5' fill='%231F1E1C'/></svg>",
+    silent: true
   });
-  const currentLabel = current ? current.label + '_' + current.start : null;
-  if (currentLabel && currentLabel !== _lastNotifBlock) {
-    if (_lastNotifBlock !== null) {
-      // Genuine transition — fire notification and sound
-      playPing();
-      new Notification(current.label, {
-        body: '',
-        icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='42' fill='none' stroke='%231F1E1C' stroke-width='7'/><line x1='50' y1='50' x2='50' y2='12' stroke='%231F1E1C' stroke-width='7' stroke-linecap='round'/><line x1='50' y1='50' x2='77' y2='68' stroke='%231D9E75' stroke-width='7' stroke-linecap='round'/><circle cx='50' cy='50' r='5' fill='%231F1E1C'/></svg>",
-        silent: true
-      });
-    }
-    _lastNotifBlock = currentLabel;
-  }
 }
 
 function scheduleBlockNotifications() {
-  // Poll every 15 seconds — catches every block transition reliably
-  checkBlockTransition();
-  setInterval(checkBlockTransition, 15000);
+  clearTimeout(_notifTimer);
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+  const now = new Date();
+  const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const nowMs = Date.now();
+
+  // Find the next upcoming block time
+  let nextDelay = null;
+  let nextLabel = null;
+
+  for (const timeStr of NOTIF_TIMES) {
+    const t = parseTime(timeStr);
+    const blockMs = midnight + t * 3600 * 1000;
+    const delay = blockMs - nowMs;
+    if (delay > 500 && (nextDelay === null || delay < nextDelay)) {
+      nextDelay = delay;
+      // Find matching block label
+      const block = FIXED_BLOCKS.find(b => b.start === timeStr);
+      nextLabel = block ? block.label : timeStr;
+    }
+  }
+
+  if (nextDelay === null || nextLabel === null) return;
+
+  _notifTimer = setTimeout(() => {
+    fireBlockNotif(nextLabel);
+    // Schedule the one after that
+    scheduleBlockNotifications();
+  }, nextDelay);
 }
 
 // Init notifications — request permission then schedule
