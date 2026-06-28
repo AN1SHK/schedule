@@ -322,16 +322,16 @@ const MIN_BLOCK_HEIGHT = 36;
 
 const FIXED_BLOCKS = [
   { start: '7:00', end: '7:45', label: 'MR', tags: ['Meditate · 10 min', 'Gratitude · 3 pts'] },
-  { start: '7:45', end: '8:30', label: 'Exercise', tags: ['MORNING_EX_TAG', 'Music'] },
-  { start: '8:30', end: '9:00', label: 'Cold Shower', grooming: true },
-  { start: '9:00', end: '13:00', label: 'Work', tags: [], pomodoro: { work: 50, break: 10, rotationKey: 'work', prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Body Scan', color: '#9333EA' }, { name: 'Breath Count', color: '#2563EB' }] } },
-  { start: '13:00', end: '13:30', label: 'Eat', tags: ['Read', 'Podcasts', 'Mindful'] },
-  { start: '13:30', end: '14:00', label: 'Exercise', tags: ['AFTERNOON_EX_TAG', 'Read', 'Podcasts', 'Music', 'Messages'] },
-  { start: '14:00', end: '16:00', label: 'Work', tags: [], pomodoro: { work: 50, break: 10, rotationKey: 'work', prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Body Scan', color: '#9333EA' }, { name: 'Breath Count', color: '#2563EB' }], lastBreakOverride: { name: 'Chores', color: '#16A34A' } } },
-  { start: '16:00', end: '18:00', label: 'Exercise', tags: ['PPL_TAGS', 'Music', 'Messages'] },
+  { start: '7:45', end: '8:30', label: 'Exercise', tags: ['Accessory', 'MORNING_EX_TAG'] },
+  { start: '8:30', end: '9:00', label: 'Shower' },
+  { start: '9:00', end: '12:00', label: 'Work', tags: [], pomodoro: { work: 50, break: 10, rotationKey: 'work', prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Body Scan', color: '#9333EA' }, { name: 'Breath Count', color: '#2563EB' }] } },
+  { start: '12:00', end: '12:30', label: 'Eat', tags: ['Read', 'Podcasts', 'Mindful'] },
+  { start: '12:30', end: '13:00', label: 'Exercise', tags: ['AFTERNOON_EX_TAG'] },
+  { start: '13:00', end: '16:00', label: 'Work', tags: [], pomodoro: { work: 50, break: 10, rotationKey: 'work', prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Body Scan', color: '#9333EA' }, { name: 'Breath Count', color: '#2563EB' }], lastBreakOverride: { name: 'Chores', color: '#16A34A' } } },
+  { start: '16:00', end: '18:00', label: 'Exercise', tags: ['PPL_TAGS'] },
   { start: '18:00', end: '18:30', label: 'Shower' },
   { start: '18:30', end: '19:00', label: 'Eat', tags: ['Read', 'Podcasts', 'Mindful'] },
-  { start: '19:00', end: '22:00', label: 'Relax', tags: ['Read', 'Podcasts', 'Mindful', 'Chores', 'Calm Music', 'Messages'], pomodoro: { work: 50, break: 10, prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Chores', color: '#16A34A' }] } },
+  { start: '19:00', end: '22:00', label: 'Relax', tags: ['Read', 'Podcasts', 'Mindful'], pomodoro: { work: 50, break: 10, prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Chores', color: '#16A34A' }] } },
   { start: '22:00', end: '23:00', label: 'NR', tags: ['Plan Tomorrow', 'Read Fiction'] },
   { start: '23:00', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
 ];
@@ -352,18 +352,18 @@ function formatTime(t) {
 
 const PPL_START = dayNum(new Date(2026, 5, 18));
 const PPL_CYCLE = [
-  [['Push', 'Swim', 'Sauna'], 'Run', 'Walk'],
-  [['Sprints', 'Basketball'], 'Cycle', 'Walk'],
-  [['Pull', 'Swim', 'Sauna'], 'Jump Rope', 'Walk'],
-  [['Basketball'], 'Run', 'Walk'],
-  [['Legs', 'Basketball'], 'Cycle', 'Walk'],
-  [['Sprints', 'Basketball'], 'Cycle', 'Walk'],
-  [['Push', 'Swim', 'Sauna'], 'Run', 'Walk'],
-  [['Basketball', 'Mobility'], 'Jump Rope', 'Walk'],
-  [['Pull', 'Swim', 'Sauna'], 'Run', 'Walk'],
-  [['Sprints', 'Basketball'], 'Cycle', 'Walk'],
-  [['Legs', 'Basketball'], 'Cycle', 'Walk'],
-  [['Basketball', 'Mobility'], 'Jump Rope', 'Walk']
+  [['Push', 'Basketball'], 'Run', 'Walk'],
+  [['Pull', 'Basketball'], 'Cycle', 'Basketball'],
+  [['Legs', 'Basketball'], 'Run', 'Walk'],
+  [['Jump Rope', 'Basketball'], 'Cycle', 'Basketball'],
+  [['Push', 'Basketball'], 'Run', 'Walk'],
+  [['Pull', 'Basketball'], 'Cycle', 'Basketball'],
+  [['Legs', 'Basketball'], 'Run', 'Walk'],
+  [['Jump Rope', 'Basketball'], 'Cycle', 'Basketball'],
+  [['Push', 'Basketball'], 'Run', 'Walk'],
+  [['Pull', 'Basketball'], 'Cycle', 'Basketball'],
+  [['Legs', 'Basketball'], 'Run', 'Walk'],
+  [['Jump Rope', 'Basketball'], 'Cycle', 'Basketball']
 ];
 function getCycleDay(d) {
   const n = dayNum(d);
@@ -477,7 +477,7 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
     block.style.top = `${b.top + 1}px`;
     block.style.height = `${b.height - 3}px`;
 
-    const EXERCISE_TAGS = new Set(['Run','Walk','Cycle','Jump Rope','Kallisthenics','Yoga','Push','Pull','Legs','Swim','Sauna','Sprints','Basketball','Mobility','Rest']);
+    const EXERCISE_TAGS = new Set(['Run','Walk','Cycle','Jump Rope','Kallisthenics','Yoga','Push','Pull','Legs','Basketball','Basketball','Rest','Accessory']);
     const DIGITAL_TAGS = new Set(['Music','Music','Calm Music','Netflix','Socials','Gaming','Messages']);
     const READING_TAGS = new Set(['Read','Podcasts','Learn']);
     const MINDFUL_TAGS = new Set(['Mindful','Meditate · 10 min','Gratitude · 3 pts','Schedule Today']);
@@ -563,7 +563,7 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
       blockContent.insertBefore(taskContainer, tagRow || blockContent.lastChild);
 
       // Pomodoro tally — Firebase backed
-      const maxPomos = b.start === '9:00' ? 4 : 3;
+      const maxPomos = 3; // both work blocks are 3h
       const tallyEl = document.createElement('div');
       tallyEl.className = 'pomo-tally';
       function renderTally() {
@@ -706,7 +706,7 @@ function render() {
     return { ...b, tags, i, startT, endT, dispStartT, dispEndT, done: !!(doneState && doneState[i]) };
   }).sort((a, b) => a.startT - b.startT);
 
-  const SPLIT_1 = 13;
+  const SPLIT_1 = 12;
   const SPLIT_2 = 18;
   const morning = enriched.filter(b => b.endT <= SPLIT_1);
   const afternoon = enriched.filter(b => b.endT > SPLIT_1 && b.endT <= SPLIT_2);
@@ -747,14 +747,11 @@ function render() {
   }
 
   const morningMarkers = [
-    { time: 7.75, cls: 'marker-device', labelCls: 'marker-device-label', label: 'Start All Devices · 7:45' },
   ];
   const afternoonMarkers = [
     { time: 15, cls: 'marker-nap', labelCls: 'marker-nap-label', label: 'Last Nap · 15:00' }
   ];
   const eveningMarkers = [
-    { time: 22, cls: 'marker-shutdown', labelCls: 'marker-shutdown-label', label: 'Shutdown All Devices · 22:00' },
-    { time: 20, cls: 'marker', labelCls: 'marker-label', label: 'Last Meal · 20:00' }
   ];
 
   if (showNow) {
@@ -845,7 +842,7 @@ document.getElementById('notif-test').onclick = async (e) => {
     if (result !== 'granted') { alert('Permission not granted.'); return; }
   }
   playPing();
-  new Notification('Cold Shower (8:30–9:00)', { body: '', silent: true });
+  new Notification('Shower', { body: '', silent: true });
 };
 renderHungerRecommended();
 
@@ -1047,7 +1044,7 @@ function updatePomoTimer(workBlock) {
     const dk = dayKey(new Date());
     const blockStart = workBlock.start;
     const current = getTally(dk, blockStart);
-    const maxPomos = blockStart === '9:00' ? 4 : 3;
+    const maxPomos = 3;
     if (completedCycles > current && current < maxPomos) {
       saveTally(dk, blockStart, completedCycles);
       render();
@@ -1129,7 +1126,7 @@ async function requestNotifPermission() {
   return result === 'granted';
 }
 
-const NOTIF_TIMES = ['7:00','7:45','8:30','9:00','13:00','13:30','14:00','16:00','18:00','18:30','19:00','22:00','23:00'];
+const NOTIF_TIMES = ['7:00','7:45','8:30','9:00','12:00','12:30','13:00','16:00','18:00','18:30','19:00','22:00','23:00'];
 let _notifTimer = null;
 
 function fireBlockNotif(label) {
