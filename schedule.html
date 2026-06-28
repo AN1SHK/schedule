@@ -740,6 +740,17 @@ function render() {
   renderColumn('timeline-afternoon', afternoon, SPLIT_1, afternoonMarkers, doneState, key, nowTime);
   renderColumn('timeline-evening', evening, SPLIT_2, eveningMarkers, doneState, key, nowTime);
 
+  // Auto-tick all pomos for any fully elapsed work block today
+  if (showNow && nowTime !== null) {
+    enriched.forEach(b => {
+      if (b.label !== 'Work') return;
+      const blockEnd = b.dispEndT !== undefined ? b.dispEndT : b.endT;
+      if (nowTime < blockEnd) return; // not fully past
+      const current = getTally(key, b.start);
+      if (current < 3) saveTally(key, b.start, 3);
+    });
+  }
+
   // Equal column bottoms while keeping blocks proportional within each column.
   // Scale each shorter column up uniformly so its content fills the tallest height.
   requestAnimationFrame(() => {
