@@ -765,7 +765,28 @@ function render() {
   renderColumn('timeline-afternoon', afternoon, SPLIT_1, afternoonMarkers, doneState, key, nowTime);
   renderColumn('timeline-evening', evening, SPLIT_2, eveningMarkers, doneState, key, nowTime);
 
-
+  // Equal column bottoms while keeping blocks proportional within each column.
+  // Scale each shorter column up uniformly so its content fills the tallest height.
+  requestAnimationFrame(() => {
+    const tls = ['timeline-morning','timeline-afternoon','timeline-evening'].map(id => document.getElementById(id));
+    const naturalHeights = tls.map(t => parseInt(t.style.height) || 0);
+    const maxH = Math.max(...naturalHeights);
+    tls.forEach((t, i) => {
+      const nh = naturalHeights[i];
+      if (nh > 0 && nh < maxH) {
+        const scale = maxH / nh;
+        Array.from(t.children).forEach(el => {
+          const top = parseFloat(el.style.top);
+          if (!isNaN(top)) el.style.top = (top * scale) + 'px';
+          if (el.classList.contains('block')) {
+            const h = parseFloat(el.style.height) || 0;
+            el.style.height = (h * scale) + 'px';
+          }
+        });
+      }
+      t.style.height = maxH + 'px';
+    });
+  });
 }
 
 setInterval(render, 10000);
