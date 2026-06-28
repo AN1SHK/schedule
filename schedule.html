@@ -162,22 +162,8 @@ body { padding: 12px; padding-bottom: 40px; }
 .cal-header span { font-size: 13px; font-weight: 500; }
 .cal-header button { background: none; border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 2px 8px; cursor: pointer; font-size: 12px; color: var(--text-primary); font-family: inherit; }
 .date-wrap { position: relative; }
-.cal-legend { margin-top: 12px; padding-top: 10px; border-top: 0.5px solid var(--border-strong); }
-.cal-legend-toggle { background: none; border: 0; padding: 4px 0; cursor: pointer; font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; font-family: inherit; display: flex; align-items: center; gap: 6px; width: 100%; }
-.cal-legend-toggle #legend-arrow { transition: transform 0.15s; display: inline-block; font-size: 14px; }
-.cal-legend.open .cal-legend-toggle #legend-arrow { transform: rotate(90deg); }
-.cal-legend-body { display: none; margin-top: 8px; flex-direction: column; gap: 10px; }
-.cal-legend.open .cal-legend-body { display: flex; }
-.hunger-input-row { display: flex; gap: 6px; }
-.hunger-input { flex: 1; font-size: 13px; padding: 5px 8px; border: 0.5px solid var(--border-strong); border-radius: 8px; font-family: inherit; color: var(--text-primary); background: transparent; }
-.hunger-log-btn { background: var(--text-primary); color: var(--surface); border: 0; border-radius: 8px; padding: 5px 14px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
-.hunger-clear-btn { background: none; border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 4px 10px; font-size: 10px; cursor: pointer; font-family: inherit; color: var(--text-tertiary); margin-top: 6px; width: 100%; }
-.hunger-clear-btn:active { background: rgba(0,0,0,0.04); }
-.hunger-recommended { margin-top: 8px; font-size: 10px; color: var(--text-secondary); }
-.hunger-recommended-title { font-size: 9px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
-.hunger-rec-item { display: inline-block; background: rgba(200, 65, 58, 0.08); color: #C8413A; font-weight: 600; font-size: 10px; padding: 2px 7px; border-radius: 3px; margin-right: 4px; margin-bottom: 3px; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
-.hunger-rec-empty { font-size: 10px; color: var(--text-tertiary); font-style: italic; }
-.hunger-count { font-size: 9px; color: var(--text-tertiary); margin-top: 4px; }
+
+
 </style>
 </head>
 <body>
@@ -195,18 +181,7 @@ body { padding: 12px; padding-bottom: 40px; }
           </div>
           <div class="cal-grid" id="cal-dows"></div>
           <div class="cal-grid" id="cal-days"></div>
-          <div class="cal-legend" id="cal-legend">
-            <button class="cal-legend-toggle" id="legend-toggle">Hunger Tracker <span id="legend-arrow">›</span></button>
-            <div class="cal-legend-body" id="legend-body">
-              <div class="hunger-input-row">
-                <input type="time" id="hunger-input" class="hunger-input">
-                <button id="hunger-log" class="hunger-log-btn">Log</button>
-              </div>
-              <div class="hunger-recommended" id="hunger-recommended"></div>
-              <button id="hunger-clear" class="hunger-clear-btn">Clear all logs</button>
-              <button id="notif-test" class="hunger-clear-btn" style="margin-top:4px;color:var(--text-secondary);">🔔 Test notification</button>
-            </div>
-          </div>
+
         </div>
       </div>
       <button id="next-btn">→</button>
@@ -662,7 +637,7 @@ function render() {
   for (const r of reminders) {
     const rd = new Date(r.date + 'T00:00:00');
     const daysAway = Math.round((rd - viewDate) / 86400000);
-    if (daysAway >= 0 && daysAway <= 5) {
+    if (daysAway >= 0 && daysAway <= 3) {
       const label = daysAway === 0 ? r.name : `${r.name} · ${daysAway}d`;
       pillsHtml += `<div class="reminder-pill-blue">${label}</div>`;
     }
@@ -790,7 +765,7 @@ function render() {
 }
 
 setInterval(render, 10000);
-document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { render(); scheduleBlockNotifications(); } });
 window.addEventListener('focus', render);
 window.addEventListener('pageshow', render);
 
@@ -810,62 +785,7 @@ document.addEventListener('click', e => {
 });
 document.getElementById('cal-prev').onclick = (e) => { e.stopPropagation(); calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCal(); };
 document.getElementById('cal-next').onclick = (e) => { e.stopPropagation(); calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCal(); };
-document.getElementById('legend-toggle').onclick = (e) => { e.stopPropagation(); document.getElementById('cal-legend').classList.toggle('open'); };
 
-const HUNGER_KEY = 'hunger_log';
-function loadHunger() { try { return JSON.parse(localStorage.getItem(HUNGER_KEY) || '[]'); } catch { return []; } }
-function saveHunger(arr) { localStorage.setItem(HUNGER_KEY, JSON.stringify(arr)); }
-function renderHungerRecommended() {
-  const el = document.getElementById('hunger-recommended');
-  if (!el) return;
-  const arr = loadHunger();
-  if (arr.length < 3) { el.innerHTML = `<div class="hunger-recommended-title">Recommended hunger times</div><div class="hunger-rec-empty">Log at least 3 times to see patterns (${arr.length}/3)</div>`; return; }
-  const buckets = new Array(48).fill(0);
-  for (const e of arr) { const idx = e.h * 2 + (e.m >= 30 ? 1 : 0); buckets[idx]++; }
-  const peaks = [];
-  for (let i = 0; i < 48; i++) {
-    if (buckets[i] < 2) continue;
-    if (buckets[i] >= buckets[(i-1+48)%48] && buckets[i] >= buckets[(i+1)%48]) peaks.push({ idx: i, count: buckets[i] });
-  }
-  peaks.sort((a,b) => a.idx - b.idx);
-  const merged = [];
-  for (const p of peaks) {
-    if (merged.length > 0 && p.idx - merged[merged.length-1].idx <= 2) { if (p.count > merged[merged.length-1].count) merged[merged.length-1] = p; } else merged.push(p);
-  }
-  const top = merged.sort((a,b) => b.count-a.count).slice(0,5).sort((a,b) => a.idx-b.idx);
-  const itemsHtml = top.map(p => { const h = Math.floor(p.idx/2); const m = (p.idx%2)*30; return `<span class="hunger-rec-item">${h}:${String(m).padStart(2,'0')}</span>`; }).join('');
-  el.innerHTML = `<div class="hunger-recommended-title">Recommended hunger times</div>${itemsHtml||'<div class="hunger-rec-empty">No clear patterns yet</div>'}<div class="hunger-count">Based on ${arr.length} logs</div>`;
-}
-document.getElementById('hunger-log').onclick = (e) => {
-  e.stopPropagation();
-  const val = document.getElementById('hunger-input').value;
-  if (!val || !val.includes(':')) return;
-  const [h, m] = val.split(':').map(Number);
-  if (isNaN(h) || isNaN(m)) return;
-  const arr = loadHunger();
-  arr.push({ t: Date.now(), h, m });
-  saveHunger(arr);
-  renderHungerRecommended();
-  const btn = document.getElementById('hunger-log');
-  btn.textContent = `✓ ${h}:${String(m).padStart(2,'0')}`;
-  setTimeout(() => { btn.textContent = 'Log'; }, 2000);
-};
-document.getElementById('hunger-clear').onclick = (e) => {
-  e.stopPropagation();
-  if (confirm('Clear all hunger logs?')) { saveHunger([]); renderHungerRecommended(); }
-};
-document.getElementById('notif-test').onclick = async (e) => {
-  e.stopPropagation();
-  if (!('Notification' in window)) { alert('Notifications not supported in this browser.'); return; }
-  if (Notification.permission === 'denied') { alert('Notifications are blocked. Allow them in browser site settings for this URL.'); return; }
-  if (Notification.permission !== 'granted') {
-    const result = await Notification.requestPermission();
-    if (result !== 'granted') { alert('Permission not granted.'); return; }
-  }
-  playPing();
-  new Notification('Shower', { body: '', silent: true });
-};
-renderHungerRecommended();
 
 // ── Reminders ─────────────────────────────────────────────────────────────────
 function renderReminders() {
@@ -887,7 +807,7 @@ function renderReminders() {
     let cls = 'reminder-item';
     let countdown;
     if (r.days === 0) { cls += ' due-today'; countdown = r.time ? r.time : 'Today'; }
-    else if (r.days <= 3) { cls += ' due-soon'; countdown = `${r.days}d${r.time ? ' · ' + r.time : ''}`; }
+    else if (r.days <= 2) { cls += ' due-soon'; countdown = `${r.days}d${r.time ? ' · ' + r.time : ''}`; }
     else { countdown = `${r.days}d${r.time ? ' · ' + r.time : ''}`; }
     return `<div class="${cls}"><span class="reminder-name">${r.name}</span><span class="reminder-countdown">${countdown}</span><button class="reminder-delete" data-id="${r.id}">×</button></div>`;
   }).join('');
@@ -1058,16 +978,34 @@ function updatePomoTimer(workBlock) {
     if (p) updatePomoTimer(workBlock);
   }, 1000);
 
-  // Auto-tick pomodoro circle when a work segment completes
-  // Check: at the exact moment posInCycle crosses WORK_MINS (within 1 sec)
-  if (!isWork && posInCycle >= WORK_MINS && posInCycle < WORK_MINS + 1/60) {
-    const completedCycles = Math.floor(elapsedMins / CYCLE_MINS);
+  // Auto-tick: compare how many full work segments have elapsed vs what's ticked
+  // This runs every second so catches all completions including the last cycle
+  {
     const dk = dayKey(new Date());
     const blockStart = workBlock.start;
-    const current = getTally(dk, blockStart);
     const maxPomos = 3;
-    if (completedCycles > current && current < maxPomos) {
-      saveTally(dk, blockStart, completedCycles);
+    const current = getTally(dk, blockStart);
+
+    // Count how many work segments are fully done
+    // A work segment is done when we are past (n * CYCLE_MINS + WORK_MINS) elapsed
+    let shouldTick = 0;
+    for (let n = 1; n <= maxPomos; n++) {
+      const workDoneAt = n * CYCLE_MINS - BREAK_MINS; // elapsed mins when nth work seg ends
+      if (elapsedMins >= workDoneAt) shouldTick = n;
+      else break;
+    }
+    // Also tick if we've reached end of block (last cycle may not have a break)
+    const blockDurMins = (workBlock.dispEndT - workBlock.dispStartT) * 60;
+    if (elapsedMins >= blockDurMins) {
+      // Count work segments that fit in the block
+      let count = 0;
+      let pos = 0;
+      while (pos + WORK_MINS <= blockDurMins) { count++; pos += CYCLE_MINS; }
+      shouldTick = Math.min(count, maxPomos);
+    }
+
+    if (shouldTick > current && shouldTick <= maxPomos) {
+      saveTally(dk, blockStart, shouldTick);
       render();
     }
   }
