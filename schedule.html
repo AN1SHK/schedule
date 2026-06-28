@@ -321,17 +321,17 @@ const TOP_PAD = 2;
 const MIN_BLOCK_HEIGHT = 36;
 
 const FIXED_BLOCKS = [
-  { start: '7:00', end: '7:45', label: 'MR', tags: ['Meditate · 10 min', 'Gratitude · 3 pts', 'Schedule Today'] },
-  { start: '7:45', end: '8:30', label: 'Exercise', tags: ['MORNING_EX_TAG', 'Hype Music'] },
+  { start: '7:00', end: '7:45', label: 'MR', tags: ['Meditate · 10 min', 'Gratitude · 3 pts'] },
+  { start: '7:45', end: '8:30', label: 'Exercise', tags: ['MORNING_EX_TAG', 'Music'] },
   { start: '8:30', end: '9:00', label: 'Cold Shower', grooming: true },
-  { start: '9:00', end: '13:00', label: 'Work', tags: ['Mobility', 'Chores', 'Messages'], pomodoro: { work: 50, break: 10, rotationKey: 'work', prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Body Scan', color: '#9333EA' }, { name: 'Breath Count', color: '#2563EB' }] } },
+  { start: '9:00', end: '13:00', label: 'Work', tags: [], pomodoro: { work: 50, break: 10, rotationKey: 'work', prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Body Scan', color: '#9333EA' }, { name: 'Breath Count', color: '#2563EB' }] } },
   { start: '13:00', end: '13:30', label: 'Eat', tags: ['Read', 'Podcasts', 'Mindful'] },
-  { start: '13:30', end: '14:00', label: 'Exercise', tags: ['AFTERNOON_EX_TAG', 'Read', 'Podcasts', 'Hype Music'] },
-  { start: '14:00', end: '17:00', label: 'Work', tags: ['Mobility', 'Chores', 'Messages'], pomodoro: { work: 50, break: 10, rotationKey: 'work', prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Body Scan', color: '#9333EA' }, { name: 'Breath Count', color: '#2563EB' }], lastBreakOverride: { name: 'Chores', color: '#16A34A' } } },
-  { start: '17:00', end: '19:00', label: 'Exercise', tags: ['PPL_TAGS', 'Hype Music'] },
-  { start: '19:00', end: '19:30', label: 'Shower' },
-  { start: '19:30', end: '20:00', label: 'Eat', tags: ['Read', 'Podcasts', 'Mindful'] },
-  { start: '20:00', end: '22:00', label: 'Relax', tags: ['Read', 'Podcasts', 'Mindful', 'Calm Music', 'Messages'], pomodoro: { work: 50, break: 10, prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Chores', color: '#16A34A' }] } },
+  { start: '13:30', end: '14:00', label: 'Exercise', tags: ['AFTERNOON_EX_TAG', 'Read', 'Podcasts', 'Music', 'Messages'] },
+  { start: '14:00', end: '16:00', label: 'Work', tags: [], pomodoro: { work: 50, break: 10, rotationKey: 'work', prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Body Scan', color: '#9333EA' }, { name: 'Breath Count', color: '#2563EB' }], lastBreakOverride: { name: 'Chores', color: '#16A34A' } } },
+  { start: '16:00', end: '18:00', label: 'Exercise', tags: ['PPL_TAGS', 'Music', 'Messages'] },
+  { start: '18:00', end: '18:30', label: 'Shower' },
+  { start: '18:30', end: '19:00', label: 'Eat', tags: ['Read', 'Podcasts', 'Mindful'] },
+  { start: '19:00', end: '22:00', label: 'Relax', tags: ['Read', 'Podcasts', 'Mindful', 'Chores', 'Calm Music', 'Messages'], pomodoro: { work: 50, break: 10, prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Chores', color: '#16A34A' }] } },
   { start: '22:00', end: '23:00', label: 'NR', tags: ['Plan Tomorrow', 'Read Fiction'] },
   { start: '23:00', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
 ];
@@ -455,7 +455,9 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
     const naturalTop = TOP_PAD + (layoutStart - startHour) * HOUR_HEIGHT;
     const naturalHeight = (layoutEnd - layoutStart) * HOUR_HEIGHT;
     const tagSpace = b.tags ? (b.tags.length <= 3 ? 28 : 52) : 0;
-    const minWithItems = 74 + tagSpace;
+    const naturalMins = (b.endT - b.startT) * 60;
+    const workExtra = b.label === 'Work' ? (naturalMins >= 240 ? 80 : 40) : 0; // scale with duration
+    const minWithItems = 74 + tagSpace + workExtra;
     let height = Math.max(naturalHeight, MIN_BLOCK_HEIGHT, minWithItems);
     if (b.capHeight) height = Math.min(height, 80);
     return { ...b, top: naturalTop, height };
@@ -476,7 +478,7 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
     block.style.height = `${b.height - 3}px`;
 
     const EXERCISE_TAGS = new Set(['Run','Walk','Cycle','Jump Rope','Kallisthenics','Yoga','Push','Pull','Legs','Swim','Sauna','Sprints','Basketball','Mobility','Rest']);
-    const DIGITAL_TAGS = new Set(['Music','Hype Music','Calm Music','Netflix','Socials','Gaming','Messages']);
+    const DIGITAL_TAGS = new Set(['Music','Music','Calm Music','Netflix','Socials','Gaming','Messages']);
     const READING_TAGS = new Set(['Read','Podcasts','Learn']);
     const MINDFUL_TAGS = new Set(['Mindful','Meditate · 10 min','Gratitude · 3 pts','Schedule Today']);
     const PLAN_TAGS = new Set(['Plan Tomorrow','Read Fiction']);
@@ -705,7 +707,7 @@ function render() {
   }).sort((a, b) => a.startT - b.startT);
 
   const SPLIT_1 = 13;
-  const SPLIT_2 = 19;
+  const SPLIT_2 = 18;
   const morning = enriched.filter(b => b.endT <= SPLIT_1);
   const afternoon = enriched.filter(b => b.endT > SPLIT_1 && b.endT <= SPLIT_2);
   const evening = enriched.filter(b => b.endT > SPLIT_2);
@@ -1127,7 +1129,7 @@ async function requestNotifPermission() {
   return result === 'granted';
 }
 
-const NOTIF_TIMES = ['7:00','7:45','8:30','9:00','13:00','13:30','14:00','17:00','19:00','19:30','20:00','22:00','23:00'];
+const NOTIF_TIMES = ['7:00','7:45','8:30','9:00','13:00','13:30','14:00','16:00','18:00','18:30','19:00','22:00','23:00'];
 let _notifTimer = null;
 
 function fireBlockNotif(label) {
