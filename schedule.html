@@ -136,6 +136,7 @@ body { padding: 12px; padding-bottom: 40px; }
 .tag-mindful { background: rgba(120, 60, 180, 0.12); color: #7B3DB5; }
 .tag-plan { background: rgba(51, 65, 85, 0.12); color: #334155; }
 .tag-grooming { background: rgba(240,240,238,0.9); color: #6E6D67; }
+.tag-cold { background: rgba(96, 165, 250, 0.15); color: #2563EB; }
 .marker { position: absolute; left: 0; right: 0; height: 1px; background: #C8413A; z-index: 5; pointer-events: none; }
 .marker-label { position: absolute; right: 8px; top: -8px; background: #C8413A; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
 .marker-shutdown-label { position: absolute; right: 8px; top: -8px; background: #1E3A5F; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
@@ -296,9 +297,9 @@ const TOP_PAD = 2;
 const MIN_BLOCK_HEIGHT = 36;
 
 const FIXED_BLOCKS = [
-  { start: '7:00', end: '7:45', label: 'MR', tags: ['Meditate · 10 min', 'Gratitude · 3 pts'] },
+  { start: '7:00', end: '7:45', label: 'MR', tags: ['Meditate · 10 min', 'Gratitude · 3 pts', 'First Principles'] },
   { start: '7:45', end: '8:30', label: 'Exercise', tags: ['Accessory', 'MORNING_EX_TAG'] },
-  { start: '8:30', end: '9:00', label: 'Shower' },
+  { start: '8:30', end: '9:00', label: 'Shower', tags: ['Cold'] },
   { start: '9:00', end: '12:00', label: 'Work', tags: [], pomodoro: { work: 50, break: 10, rotationKey: 'work', prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Body Scan', color: '#9333EA' }, { name: 'Breath Count', color: '#2563EB' }] } },
   { start: '12:00', end: '12:30', label: 'Eat', tags: ['Read', 'Podcasts', 'Mindful'] },
   { start: '12:30', end: '13:00', label: 'Exercise', tags: ['AFTERNOON_EX_TAG'] },
@@ -307,7 +308,7 @@ const FIXED_BLOCKS = [
   { start: '18:00', end: '18:30', label: 'Shower' },
   { start: '18:30', end: '19:00', label: 'Eat', tags: ['Read', 'Podcasts', 'Mindful'] },
   { start: '19:00', end: '22:00', label: 'Relax', tags: ['Read', 'Podcasts', 'Mindful'], pomodoro: { work: 50, break: 10, prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Chores', color: '#16A34A' }] } },
-  { start: '22:00', end: '23:00', label: 'NR', tags: ['Plan Tomorrow', 'Read Fiction'] },
+  { start: '22:00', end: '23:00', label: 'NR', tags: ['Plan Tomorrow'] },
   { start: '23:00', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
 ];
 
@@ -328,18 +329,29 @@ function formatTime(t) {
 const PPL_START = dayNum(new Date(2026, 5, 18));
 const PPL_CYCLE = [
   [['Push', 'Basketball'], 'Run', 'Walk'],
-  [['Pull', 'Basketball'], 'Cycle', 'Basketball'],
+  [['Pull', 'Basketball'], 'Run', 'Basketball'],
   [['Legs', 'Basketball'], 'Run', 'Walk'],
-  [['Jump Rope', 'Basketball'], 'Cycle', 'Basketball'],
+  [['Jump Rope', 'Basketball'], 'Run', 'Basketball'],
   [['Push', 'Basketball'], 'Run', 'Walk'],
-  [['Pull', 'Basketball'], 'Cycle', 'Basketball'],
+  [['Pull', 'Basketball'], 'Run', 'Basketball'],
   [['Legs', 'Basketball'], 'Run', 'Walk'],
-  [['Jump Rope', 'Basketball'], 'Cycle', 'Basketball'],
+  [['Jump Rope', 'Basketball'], 'Run', 'Basketball'],
   [['Push', 'Basketball'], 'Run', 'Walk'],
-  [['Pull', 'Basketball'], 'Cycle', 'Basketball'],
+  [['Pull', 'Basketball'], 'Run', 'Basketball'],
   [['Legs', 'Basketball'], 'Run', 'Walk'],
-  [['Jump Rope', 'Basketball'], 'Cycle', 'Basketball']
+  [['Jump Rope', 'Basketball'], 'Run', 'Basketball']
 ];
+
+// ── Morning Run Circle Sequence ───────────────────────────────────────────────
+const RUN_SEQ_START = dayNum(new Date(2026, 6, 5)); // July 5, 2026
+const RUN_SEQUENCE = [1,2,3,4,5,1,2,3,4,5,6,1,2,3,4,5,6,7,1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8,9,1,2,3,4,5,6,7,8,9,10,1,2,3,4,5,6,7,8,9,10,11,1,2,3,4,5,6,7,8,9,10,11,12,1,2,3,4,5,6,7,8,9,10,11,12,13,1,2,3,4,5,6,7,8,9,10,11,12,13,14,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18];
+function getRunCircles(d) {
+  const offset = dayNum(d) - RUN_SEQ_START;
+  if (offset < 0) return 1;
+  if (offset < RUN_SEQUENCE.length) return RUN_SEQUENCE[offset];
+  // After sequence, repeat 1-18
+  return ((offset - RUN_SEQUENCE.length) % 18) + 1;
+}
 function getCycleDay(d) {
   const n = dayNum(d);
   if (n < PPL_START) return [['Rest'], 'Walk', 'Walk'];
@@ -454,13 +466,14 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
 
     const EXERCISE_TAGS = new Set(['Run','Walk','Cycle','Jump Rope','Kallisthenics','Yoga','Push','Pull','Legs','Basketball','Basketball','Rest','Accessory']);
     const DIGITAL_TAGS = new Set(['Music','Music','Calm Music','Netflix','Socials','Gaming','Messages']);
-    const READING_TAGS = new Set(['Read','Podcasts','Learn']);
+    const READING_TAGS = new Set(['Read','Podcasts','Learn','First Principles']);
     const MINDFUL_TAGS = new Set(['Mindful','Meditate · 10 min','Gratitude · 3 pts','Schedule Today']);
-    const PLAN_TAGS = new Set(['Plan Tomorrow','Read Fiction']);
+    const PLAN_TAGS = new Set(['Plan Tomorrow',]);
     const CHORES_TAGS = new Set(['Chores']);
     const tagsHtml = b.tags ? `<div class="tag-row">${b.tags.map(t => {
       const GROOMING_TAGS = new Set(['Personal Grooming']);
-      const cls = GROOMING_TAGS.has(t) ? 'tag tag-grooming' : EXERCISE_TAGS.has(t) ? 'tag tag-exercise' : CHORES_TAGS.has(t) ? 'tag tag-chores' : DIGITAL_TAGS.has(t) ? 'tag tag-digital' : READING_TAGS.has(t) ? 'tag tag-reading' : MINDFUL_TAGS.has(t) ? 'tag tag-mindful' : PLAN_TAGS.has(t) ? 'tag tag-plan' : 'tag';
+      const COLD_TAGS = new Set(['Cold']);
+      const cls = COLD_TAGS.has(t) ? 'tag tag-cold' : GROOMING_TAGS.has(t) ? 'tag tag-grooming' : EXERCISE_TAGS.has(t) ? 'tag tag-exercise' : CHORES_TAGS.has(t) ? 'tag tag-chores' : DIGITAL_TAGS.has(t) ? 'tag tag-digital' : READING_TAGS.has(t) ? 'tag tag-reading' : MINDFUL_TAGS.has(t) ? 'tag tag-mindful' : PLAN_TAGS.has(t) ? 'tag tag-plan' : 'tag';
       return `<span class="${cls}">${t}</span>`;
     }).join('')}</div>` : '';
     const displayStart = b.displayStart || formatTime(b.dispStartT);
@@ -894,6 +907,7 @@ function applyShift(e) {
   updateShiftInfo(shift);
   shiftOverlay.classList.remove('show');
   render();
+  scheduleBlockNotifications();
 }
 function resetShift(e) {
   e.preventDefault(); e.stopPropagation();
@@ -906,6 +920,7 @@ function resetShift(e) {
   updateShiftInfo(0);
   shiftOverlay.classList.remove('show');
   render();
+  scheduleBlockNotifications();
 }
 document.getElementById('shift-apply').addEventListener('click', applyShift);
 document.getElementById('shift-apply').addEventListener('touchend', applyShift);
@@ -971,10 +986,8 @@ function updatePomoTimer(workBlock) {
   if (_pomoPhase !== null && _pomoPhase !== newPhase) {
     // Phase switched — play sound and notify
     if (newPhase === 'break') {
-      playPomoBreakSound();
       if (Notification.permission === 'granted') new Notification('Break', { body: '10 min', silent: true });
     } else {
-      playPomoWorkSound();
       if (Notification.permission === 'granted') new Notification('Work', { body: '50 min', silent: true });
     }
   }
@@ -1024,69 +1037,7 @@ function updatePomoTimer(workBlock) {
 
 // ── Block-start notifications ─────────────────────────────────────────────────
 
-let _audioCtx = null;
-function getAudioCtx() {
-  if (!_audioCtx || _audioCtx.state === 'closed') {
-    _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  if (_audioCtx.state === 'suspended') _audioCtx.resume();
-  return _audioCtx;
-}
-// Unlock AudioContext on first user interaction
-document.addEventListener('click', () => getAudioCtx(), { once: true });
-document.addEventListener('touchend', () => getAudioCtx(), { once: true });
 
-function playPing() {
-  try {
-    const ctx = getAudioCtx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(880, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.15);
-    gain.gain.setValueAtTime(0.4, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.5);
-  } catch(e) {}
-}
-
-function playPomoWorkSound() {
-  // Two ascending chimes — signals back to work
-  try {
-    const ctx = getAudioCtx();
-    [0, 0.18].forEach((delay, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(i === 0 ? 660 : 880, ctx.currentTime + delay);
-      gain.gain.setValueAtTime(0.35, ctx.currentTime + delay);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.4);
-      osc.start(ctx.currentTime + delay);
-      osc.stop(ctx.currentTime + delay + 0.4);
-    });
-  } catch(e) {}
-}
-
-function playPomoBreakSound() {
-  // Single soft lower tone — signals rest
-  try {
-    const ctx = getAudioCtx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain); gain.connect(ctx.destination);
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(440, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(330, ctx.currentTime + 0.3);
-    gain.gain.setValueAtTime(0.35, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.6);
-  } catch(e) {}
-}
 
 async function requestNotifPermission() {
   if (!('Notification' in window)) return false;
@@ -1101,7 +1052,6 @@ let _notifTimer = null;
 
 function fireBlockNotif(label) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
-  playPing();
   new Notification(label, {
     body: '',
     icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='42' fill='none' stroke='%231F1E1C' stroke-width='7'/><line x1='50' y1='50' x2='50' y2='12' stroke='%231F1E1C' stroke-width='7' stroke-linecap='round'/><line x1='50' y1='50' x2='77' y2='68' stroke='%231D9E75' stroke-width='7' stroke-linecap='round'/><circle cx='50' cy='50' r='5' fill='%231F1E1C'/></svg>",
