@@ -275,6 +275,13 @@ function fbSetTasks(dayKey, blockStart, tasks) {
     .catch(() => showSync('error', 'Sync failed'));
 }
 
+function fbSetShift(dk, hours) {
+  showSync('syncing', 'Syncing…');
+  set(ref(db, `shifts/${dk}`), hours)
+    .then(() => showSync('synced', 'Synced'))
+    .catch(() => showSync('error', 'Sync failed'));
+}
+
 function fbSetTally(dayKey, blockStart, val) {
   showSync('syncing', 'Syncing…');
   set(ref(db, `tallies/${dayKey}/${blockStart.replace(':','_')}`), val)
@@ -372,7 +379,8 @@ let calYear = new Date().getFullYear();
 const fbCache = {
   tasks: {},   // { [dayKey_blockStart]: [{text,done}] }
   tallies: {}, // { [dayKey_blockStart]: number }
-  reminders: null
+  reminders: null,
+  shifts: {}   // { [dayKey]: hours }
 };
 
 // Listen to today + tomorrow tasks/tallies
@@ -399,6 +407,19 @@ onValue(ref(db, 'reminders'), snap => {
   fbCache.reminders = val || [];
   renderReminders();
   render(); // re-render reminder pills
+});
+
+// Listen to shifts globally — sync wake-time adjustments across devices
+onValue(ref(db, 'shifts'), snap => {
+  const val = snap.val() || {};
+  fbCache.shifts = val;
+  // Mirror to localStorage so synchronous reads in render() work
+  for (const [dk, hours] of Object.entries(val)) {
+    if (hours > 0) localStorage.setItem('shift_' + dk, String(hours));
+    else localStorage.removeItem('shift_' + dk);
+  }
+  render();
+  scheduleBlockNotifications();
 });
 
 // Start listening for today
@@ -900,6 +921,7 @@ function applyShift(e) {
   const key = dayKey(d);
   if (shift > 0) { localStorage.setItem(`shift_${key}`, String(shift)); shiftBtn.classList.add('active'); }
   else { localStorage.removeItem(`shift_${key}`); shiftBtn.classList.remove('active'); }
+  fbSetShift(key, shift > 0 ? shift : 0);
   const histRaw = localStorage.getItem(`shift_history_${key}`);
   const hist = histRaw ? JSON.parse(histRaw) : [];
   hist.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
@@ -915,6 +937,7 @@ function resetShift(e) {
   const key = dayKey(d);
   localStorage.removeItem(`shift_${key}`);
   localStorage.removeItem(`shift_history_${key}`);
+  fbSetShift(key, 0);
   shiftBtn.classList.remove('active');
   shiftInput.value = '07:00';
   updateShiftInfo(0);
