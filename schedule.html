@@ -305,17 +305,17 @@ const MIN_BLOCK_HEIGHT = 36;
 
 const FIXED_BLOCKS = [
   { start: '7:00', end: '7:45', label: 'MR', tags: ['Meditate · 10 min', 'Gratitude · 3 pts', 'First Principles'] },
-  { start: '7:45', end: '8:30', label: 'Exercise', tags: ['Accessory', 'MORNING_EX_TAG'] },
-  { start: '8:30', end: '9:00', label: 'Shower', tags: ['Cold'] },
+  { start: '7:45', end: '8:30', label: 'Exercise', tags: ['Accessory', 'Run', 'Cycle', 'Skip Rope', 'Sprint'] },
+  { start: '8:30', end: '9:00', label: 'Shower', tags: ['WHM', 'Cold'] },
   { start: '9:00', end: '12:00', label: 'Work', tags: [], pomodoro: { work: 50, break: 10, rotationKey: 'work', prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Body Scan', color: '#9333EA' }, { name: 'Breath Count', color: '#2563EB' }] } },
   { start: '12:00', end: '12:30', label: 'Eat', tags: ['Read', 'Podcasts', 'Mindful'] },
-  { start: '12:30', end: '13:00', label: 'Exercise', tags: ['AFTERNOON_EX_TAG'] },
+  { start: '12:30', end: '13:00', label: 'Exercise', tags: ['Walk', 'Yoga', 'Basketball'] },
   { start: '13:00', end: '16:00', label: 'Work', tags: [], pomodoro: { work: 50, break: 10, rotationKey: 'work', prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Body Scan', color: '#9333EA' }, { name: 'Breath Count', color: '#2563EB' }], lastBreakOverride: { name: 'Chores', color: '#16A34A' } } },
   { start: '16:00', end: '18:00', label: 'Exercise', tags: ['PPL_TAGS'] },
   { start: '18:00', end: '18:30', label: 'Shower' },
   { start: '18:30', end: '19:00', label: 'Eat', tags: ['Read', 'Podcasts', 'Mindful'] },
-  { start: '19:00', end: '22:00', label: 'Relax', tags: ['Read', 'Podcasts', 'Mindful'], pomodoro: { work: 50, break: 10, prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Chores', color: '#16A34A' }] } },
-  { start: '22:00', end: '23:00', label: 'NR', tags: ['Plan Tomorrow'] },
+  { start: '19:00', end: '22:00', label: 'Relax', tags: ['Read', 'Podcasts', 'Mindful', 'Plan Tomorrow'], pomodoro: { work: 50, break: 10, prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Chores', color: '#16A34A' }] } },
+  { start: '22:00', end: '23:00', label: 'NR', tags: [] },
   { start: '23:00', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
 ];
 
@@ -335,18 +335,9 @@ function formatTime(t) {
 
 const PPL_START = dayNum(new Date(2026, 5, 18));
 const PPL_CYCLE = [
-  [['Push', 'Basketball'], 'Run', 'Walk'],
-  [['Pull', 'Basketball'], 'Run', 'Basketball'],
-  [['Legs', 'Basketball'], 'Run', 'Walk'],
-  [['Jump Rope', 'Basketball'], 'Run', 'Basketball'],
-  [['Push', 'Basketball'], 'Run', 'Walk'],
-  [['Pull', 'Basketball'], 'Run', 'Basketball'],
-  [['Legs', 'Basketball'], 'Run', 'Walk'],
-  [['Jump Rope', 'Basketball'], 'Run', 'Basketball'],
-  [['Push', 'Basketball'], 'Run', 'Walk'],
-  [['Pull', 'Basketball'], 'Run', 'Basketball'],
-  [['Legs', 'Basketball'], 'Run', 'Walk'],
-  [['Jump Rope', 'Basketball'], 'Run', 'Basketball']
+  [['Push', 'Basketball', 'Swim', 'Sauna', 'Yoga'], 'Run', 'Walk'],
+  [['Pull', 'Basketball', 'Swim', 'Sauna', 'Yoga'], 'Run', 'Basketball'],
+  [['Legs', 'Basketball', 'Swim', 'Sauna', 'Yoga'], 'Run', 'Walk']
 ];
 
 // ── Morning Run Circle Sequence ───────────────────────────────────────────────
@@ -362,7 +353,7 @@ function getRunCircles(d) {
 function getCycleDay(d) {
   const n = dayNum(d);
   if (n < PPL_START) return [['Rest'], 'Walk', 'Walk'];
-  const idx = ((n - PPL_START) % 12 + 12) % 12;
+  const idx = ((n - PPL_START) % 3 + 3) % 3;
   return PPL_CYCLE[idx];
 }
 function getPPLLabel(d) { return getCycleDay(d)[0]; }
@@ -485,7 +476,7 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
     block.style.top = `${b.top + 1}px`;
     block.style.height = `${b.height - 3}px`;
 
-    const EXERCISE_TAGS = new Set(['Run','Walk','Cycle','Jump Rope','Kallisthenics','Yoga','Push','Pull','Legs','Basketball','Basketball','Rest','Accessory']);
+    const EXERCISE_TAGS = new Set(['Run','Running','Walk','Cycle','Cycling','Jump Rope','Skip Rope','Kallisthenics','Yoga','Push','Pull','Legs','Basketball','Swim','Sauna','Sprint','Rest','Accessory']);
     const DIGITAL_TAGS = new Set(['Music','Music','Calm Music','Netflix','Socials','Gaming','Messages']);
     const READING_TAGS = new Set(['Read','Podcasts','Learn','First Principles']);
     const MINDFUL_TAGS = new Set(['Mindful','Meditate · 10 min','Gratitude · 3 pts','Schedule Today']);
@@ -493,7 +484,7 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
     const CHORES_TAGS = new Set(['Chores']);
     const tagsHtml = b.tags ? `<div class="tag-row">${b.tags.map(t => {
       const GROOMING_TAGS = new Set(['Personal Grooming']);
-      const COLD_TAGS = new Set(['Cold']);
+      const COLD_TAGS = new Set(['Cold','WHM']);
       const cls = COLD_TAGS.has(t) ? 'tag tag-cold' : GROOMING_TAGS.has(t) ? 'tag tag-grooming' : EXERCISE_TAGS.has(t) ? 'tag tag-exercise' : CHORES_TAGS.has(t) ? 'tag tag-chores' : DIGITAL_TAGS.has(t) ? 'tag tag-digital' : READING_TAGS.has(t) ? 'tag tag-reading' : MINDFUL_TAGS.has(t) ? 'tag tag-mindful' : PLAN_TAGS.has(t) ? 'tag tag-plan' : 'tag';
       return `<span class="${cls}">${t}</span>`;
     }).join('')}</div>` : '';
