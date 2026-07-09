@@ -129,6 +129,8 @@ body { padding: 12px; padding-bottom: 40px; }
 .subitem.done::after { content: ''; position: absolute; left: 5.5px; top: 8.5px; width: 4px; height: 2px; border-left: 1.5px solid white; border-bottom: 1.5px solid white; transform: rotate(-45deg); }
 .tag-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
 .tag { display: inline-block; background: #EEEDE7; color: #6E6D67; font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.02em; text-transform: uppercase; }
+.tag-toggle { position: absolute; top: 10px; right: 10px; width: 20px; height: 20px; border-radius: 5px; border: 0.5px solid var(--border-strong); background: var(--surface); color: var(--text-tertiary); font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1; z-index: 3; font-family: inherit; }
+.tag-toggle:active { background: rgba(0,0,0,0.05); }
 .tag-exercise { background: rgba(184, 84, 80, 0.12); color: #B85450; }
 .tag-chores { background: rgba(22, 163, 74, 0.12); color: #15803D; }
 .tag-digital { background: rgba(74, 111, 165, 0.12); color: #4A6FA5; }
@@ -312,15 +314,16 @@ const POMO_SEGMENTS = [
 const POMO_SUPER_MINS = POMO_SEGMENTS.reduce((s, seg) => s + (seg.work || seg.break), 0);
 
 const FIXED_BLOCKS = [
-  { start: '7:00', end: '7:45', label: 'MR', tags: ['Meditate - 1 HR', 'Gratitude - 3 Pts'] },
-  { start: '7:45', end: '8:30', label: 'Exercise', tags: ['Accessory', 'Run', 'Cycle', 'Skip', 'Sprint'] },
-  { start: '8:30', end: '9:00', label: 'Shower', tags: ['WHM', 'Cold'] },
-  { start: '9:00', end: '13:00', label: 'Open', tags: [] },
-  { start: '13:00', end: '13:30', label: 'Exercise', tags: ['Walk', 'Yoga', 'Basketball'] },
-  { start: '13:30', end: '16:30', label: 'Open', tags: [] },
-  { start: '16:30', end: '18:30', label: 'Exercise', tags: ['PPL_TAGS'] },
-  { start: '18:30', end: '19:00', label: 'Shower' },
-  { start: '19:00', end: '22:00', label: 'Open', tags: [] },
+  { start: '7:00', end: '8:00', label: 'MR', tags: ['MEDITATE_TAG', 'Gratitude - 3 Pts'] },
+  { start: '8:00', end: '9:00', label: 'Exercise', tags: ['Accessory', 'Run', 'Cycle', 'Skip', 'Sprint'] },
+  { start: '9:00', end: '9:30', label: 'Shower', tags: ['WHM', 'Cold'] },
+  { start: '9:30', end: '10:30', label: 'Read', tags: [] },
+  { start: '10:30', end: '13:30', label: 'Open', tags: [] },
+  { start: '13:30', end: '14:00', label: 'Exercise', tags: ['Walk', 'Yoga', 'Basketball'] },
+  { start: '14:00', end: '17:00', label: 'Open', tags: [] },
+  { start: '17:00', end: '19:00', label: 'Exercise', tags: ['PPL_TAGS'] },
+  { start: '19:00', end: '19:30', label: 'Shower' },
+  { start: '19:30', end: '22:00', label: 'Open', tags: [] },
   { start: '22:00', end: '23:00', label: 'NR', tags: [] },
   { start: '23:00', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
 ];
@@ -340,6 +343,13 @@ function formatTime(t) {
 }
 
 const PPL_START = dayNum(new Date(2026, 5, 18));
+// Meditation ramps +10 min/day from 10 min up to 1 hour, starting July 8 2026
+const MEDITATE_START = dayNum(new Date(2026, 6, 8));
+function getMeditationTag(d) {
+  const offset = Math.max(0, dayNum(d) - MEDITATE_START);
+  const mins = Math.min(60, 10 + offset * 10);
+  return mins >= 60 ? 'Meditate - 1 HR' : 'Meditate - ' + mins + ' MINS';
+}
 const PPL_CYCLE = [
   [['Push', 'Basketball', 'Swim', 'Sauna', 'Yoga'], 'Run', 'Walk'],
   [['Pull', 'Basketball', 'Swim', 'Sauna', 'Yoga'], 'Run', 'Basketball'],
@@ -367,6 +377,7 @@ function getMorningExTag(d) { return getCycleDay(d)[1]; }
 function getAfternoonExTag(d) { return getCycleDay(d)[2]; }
 
 let cur = dayNum(new Date());
+const expandedBlocks = new Set(); // block.start values whose pills are revealed
 let nowScrub = null;
 let calMonth = new Date().getMonth();
 let calYear = new Date().getFullYear();
@@ -453,7 +464,7 @@ function computeBlockHeight(b) {
   const layoutStart = b.label === 'Relax' ? b.dispStartT : b.startT;
   const layoutEnd = b.label === 'Relax' ? b.dispEndT : b.endT;
   const naturalHeight = (layoutEnd - layoutStart) * HOUR_HEIGHT;
-  const tagSpace = b.tags ? (b.tags.length <= 3 ? 28 : 52) : 0;
+  const tagSpace = (b.tags && b.tags.length && expandedBlocks.has(b.start)) ? (b.tags.length <= 3 ? 28 : 52) : 0;
   const naturalMins = (b.endT - b.startT) * 60;
   const workExtra = b.label === 'Work' ? (naturalMins >= 240 ? 80 : 40) : 0;
   const minWithItems = 74 + tagSpace + workExtra;
@@ -507,7 +518,7 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
     const EXERCISE_TAGS = new Set(['Run','Running','Walk','Cycle','Cycling','Jump Rope','Skip','Kallisthenics','Yoga','Push','Pull','Legs','Basketball','Swim','Sauna','Sprint','Rest','Accessory']);
     const DIGITAL_TAGS = new Set(['Music','Music','Calm Music','Netflix','Socials','Gaming','Messages']);
     const READING_TAGS = new Set(['Read','Podcasts','Learn','First Principles']);
-    const MINDFUL_TAGS = new Set(['Mindful','Meditate','Gratitude','Meditate - 1 HR','Gratitude - 3 Pts','Schedule Today','Breathwork','Do Nothing']);
+    const MINDFUL_TAGS = new Set(['Mindful','Meditate','Gratitude','Meditate - 10 MINS','Meditate - 20 MINS','Meditate - 30 MINS','Meditate - 40 MINS','Meditate - 50 MINS','Meditate - 1 HR','Gratitude - 3 Pts','Schedule Today','Breathwork','Do Nothing']);
     const PLAN_TAGS = new Set(['Plan Tomorrow',]);
     const CHORES_TAGS = new Set(['Chores']);
     const tagsHtml = b.tags ? `<div class="tag-row">${b.tags.map(t => {
@@ -519,15 +530,29 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
     const displayStart = b.displayStart || formatTime(b.dispStartT);
     const displayEnd = b.displayEnd || formatTime(b.dispEndT);
     const noteHtml = b.note ? `<div class="b-note">${b.note}</div>` : '';
+    const hasTags = !!(b.tags && b.tags.length);
+    const isExpanded = expandedBlocks.has(b.start);
     block.innerHTML = `
       <div class="block-content">
         <div class="b-label">${b.label}</div>
         <div class="b-time">${displayStart} – ${displayEnd}</div>
         ${noteHtml}
-        ${tagsHtml}
+        ${isExpanded ? tagsHtml : ''}
       </div>
+      ${hasTags ? `<button class="tag-toggle" title="Show details">${isExpanded ? '\u25B4' : '\u25BE'}</button>` : ''}
     `;
     tl.appendChild(block);
+    if (hasTags) {
+      const _tgl = block.querySelector('.tag-toggle');
+      const _doToggle = (e) => {
+        e.stopPropagation(); e.preventDefault();
+        if (expandedBlocks.has(b.start)) expandedBlocks.delete(b.start);
+        else expandedBlocks.add(b.start);
+        render();
+      };
+      _tgl.addEventListener('click', _doToggle);
+      _tgl.addEventListener('touchend', _doToggle);
+    }
 
     // Task checklist for Work blocks — Firebase backed
     if (b.label === 'Work') {
@@ -695,6 +720,7 @@ function render() {
       if (t === 'PPL_TAGS') return pplTags;
       if (t === 'MORNING_EX_TAG') return [morningExTag];
       if (t === 'AFTERNOON_EX_TAG') return [afternoonExTag];
+      if (t === 'MEDITATE_TAG') return [getMeditationTag(d)];
       return [t];
     }), ...extraTags] : (extraTags.length ? extraTags : b.tags);
     const startT = parseTime(b.start);
@@ -713,8 +739,8 @@ function render() {
     return { ...b, tags, i, startT, endT, dispStartT, dispEndT, done: !!(doneState && doneState[i]) };
   }).sort((a, b) => a.startT - b.startT);
 
-  const SPLIT_1 = 13;
-  const SPLIT_2 = 18.5;
+  const SPLIT_1 = 10.5;
+  const SPLIT_2 = 19;
   const morning = enriched.filter(b => b.endT <= SPLIT_1);
   const afternoon = enriched.filter(b => b.endT > SPLIT_1 && b.endT <= SPLIT_2);
   const evening = enriched.filter(b => b.endT > SPLIT_2);
@@ -1027,7 +1053,6 @@ async function requestNotifPermission() {
   return result === 'granted';
 }
 
-const NOTIF_TIMES = ['7:00','7:45','8:30','9:00','12:00','12:30','13:00','16:00','18:00','18:30','19:00','22:00','23:00'];
 let _notifTimer = null;
 
 function fireBlockNotif(label) {
@@ -1043,31 +1068,35 @@ function scheduleBlockNotifications() {
   clearTimeout(_notifTimer);
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
 
-  const now = new Date();
-  const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const today = new Date();
+  const todayKey = dayKey(today);
+  const shiftHours = parseFloat(localStorage.getItem('shift_' + todayKey) || '0');
+  const midnight = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
   const nowMs = Date.now();
 
-  // Find the next upcoming block time
+  // Next upcoming block start (times derived from the schedule, shifted with wake time)
   let nextDelay = null;
   let nextLabel = null;
 
-  for (const timeStr of NOTIF_TIMES) {
-    const t = parseTime(timeStr);
-    const blockMs = midnight + t * 3600 * 1000;
+  FIXED_BLOCKS.forEach(b => {
+    if (b.label === 'Sleep') return;
+    const startT = parseTime(b.start);
+    let bStart = startT;
+    if (shiftHours > 0 && b.label !== 'NR' && b.label !== 'Sleep' && startT >= 7 && startT < 19) {
+      bStart = startT + shiftHours;
+    }
+    const blockMs = midnight + bStart * 3600 * 1000;
     const delay = blockMs - nowMs;
     if (delay > 500 && (nextDelay === null || delay < nextDelay)) {
       nextDelay = delay;
-      // Find matching block label
-      const block = FIXED_BLOCKS.find(b => b.start === timeStr);
-      nextLabel = block ? block.label : timeStr;
+      nextLabel = b.label;
     }
-  }
+  });
 
   if (nextDelay === null || nextLabel === null) return;
 
   _notifTimer = setTimeout(() => {
     fireBlockNotif(nextLabel);
-    // Schedule the one after that
     scheduleBlockNotifications();
   }, nextDelay);
 }
