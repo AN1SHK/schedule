@@ -693,6 +693,7 @@ function render() {
   const dow = d.getDay();
   const reminderWrap = document.getElementById('reminder-wrap');
   let pillsHtml = '';
+  if (dow === 2 || dow === 5) pillsHtml += `<div class="reminder-pill">Personal Grooming</div>`;
 
   const viewDate = new Date(cur * 86400000 + new Date(2026,0,1).getTime());
   viewDate.setHours(0,0,0,0);
@@ -791,7 +792,8 @@ function render() {
     { time: 15, cls: 'marker-nap', labelCls: 'marker-nap-label', label: 'Last Nap · 15:00' }
   ];
   const eveningMarkers = [
-    { time: 20, cls: 'marker', labelCls: 'marker-label', label: 'Last Meal · 20:00' }
+    { time: 20, cls: 'marker', labelCls: 'marker-label', label: 'Last Meal · 20:00' },
+    { time: 22, cls: 'marker-shutdown', labelCls: 'marker-shutdown-label', label: 'All Devices Off · 22:00' }
   ];
 
   if (showNow) {
@@ -1124,13 +1126,12 @@ function scheduleBlockNotifications() {
   if (granted) scheduleBlockNotifications();
 })();
 
-// Re-schedule at midnight for the new day
-const now = new Date();
-const msTillMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).getTime() - now.getTime();
-setTimeout(() => {
-  notifScheduledForDate = null;
-  scheduleBlockNotifications();
-}, msTillMidnight);
+// Re-schedule notifications and refresh at each midnight for the new day
+(function armMidnight() {
+  const n = new Date();
+  const ms = new Date(n.getFullYear(), n.getMonth(), n.getDate() + 1).getTime() - n.getTime() + 1000;
+  setTimeout(() => { render(); scheduleBlockNotifications(); armMidnight(); }, ms);
+})();
 
 render();
 </script>
