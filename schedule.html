@@ -33,6 +33,10 @@ body { padding: 12px; padding-bottom: 40px; }
 .date-header { display: flex; align-items: center; justify-content: center; margin-bottom: 14px; overflow: visible; }
 .reminders-panel { max-width: 1000px; margin: 32px auto 0; padding: 18px 20px; background: var(--surface); border-radius: 0; }
 .reminders-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 0.5px solid var(--border-strong); }
+.reminders-overlay { display: none; position: absolute; top: calc(100% + 6px); right: 0; background: var(--surface); border-radius: 10px; padding: 14px 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.14); z-index: 100; width: 300px; max-width: 86vw; }
+.reminders-overlay.show { display: block; }
+.reminders-overlay .reminders-add { flex-direction: column; align-items: stretch; }
+.reminders-overlay #reminder-name { min-width: 0; }
 .reminders-title { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.08em; }
 .reminders-toggle { background: none; border: 0.5px solid var(--border-strong); border-radius: 6px; padding: 3px 10px; cursor: pointer; font-size: 11px; font-family: inherit; color: var(--text-primary); }
 .reminders-toggle:active { background: rgba(0,0,0,0.04); }
@@ -52,7 +56,7 @@ body { padding: 12px; padding-bottom: 40px; }
 .reminder-input { font-size: 12px; padding: 5px 10px; border: 0.5px solid var(--border-strong); border-radius: 6px; font-family: inherit; color: var(--text-primary); background: transparent; }
 #reminder-name { flex: 1; min-width: 140px; }
 .reminder-save-btn { background: var(--text-primary); color: var(--surface); border: 0; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
-.date-nav { display: flex; align-items: center; gap: 8px; position: relative; padding-right: 44px; padding-left: 44px; overflow: visible; }
+.date-nav { display: flex; align-items: center; gap: 8px; position: relative; padding-right: 88px; padding-left: 88px; overflow: visible; }
 .date-nav button { background: none; border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 4px 10px; cursor: pointer; font-size: 14px; color: var(--text-primary); font-family: inherit; }
 .date-nav button:active { background: rgba(0,0,0,0.04); }
 .date-label { font-size: 15px; font-weight: 500; color: var(--text-primary); min-width: 220px; text-align: center; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border-strong); }
@@ -192,6 +196,7 @@ body { padding: 12px; padding-bottom: 40px; }
       <button id="next-btn">→</button>
       <div class="shift-wrap">
         <button id="shift-btn" class="shift-btn" title="Shift schedule">⟲</button>
+        <button id="reminders-btn" class="shift-btn" title="Reminders"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
         <div class="shift-overlay" id="shift-overlay">
           <span class="shift-title">Woke up at</span>
           <input type="time" id="shift-input" value="07:00" class="shift-input">
@@ -201,6 +206,19 @@ body { padding: 12px; padding-bottom: 40px; }
           </div>
           <div class="shift-info" id="shift-info"></div>
           <div class="shift-history" id="shift-history"></div>
+        </div>
+        <div class="reminders-overlay" id="reminders-overlay">
+          <div class="reminders-header">
+            <span class="reminders-title">Reminders</span>
+            <button id="reminders-toggle" class="reminders-toggle">+ Add</button>
+          </div>
+          <div class="reminders-list" id="reminders-list"></div>
+          <div class="reminders-add" id="reminders-add">
+            <input type="text" id="reminder-name" class="reminder-input" placeholder="Reminder name">
+            <input type="date" id="reminder-date" class="reminder-input">
+            <input type="time" id="reminder-time" class="reminder-input">
+            <button id="reminder-save" class="reminder-save-btn">Add</button>
+          </div>
         </div>
       </div>
     </div>
@@ -220,19 +238,6 @@ body { padding: 12px; padding-bottom: 40px; }
       <div>
         <div class="column-label">Evening</div>
         <div class="timeline" id="timeline-evening"></div>
-      </div>
-    </div>
-    <div class="reminders-panel" id="reminders-panel">
-      <div class="reminders-header">
-        <span class="reminders-title">Reminders</span>
-        <button id="reminders-toggle" class="reminders-toggle">+ Add</button>
-      </div>
-      <div class="reminders-list" id="reminders-list"></div>
-      <div class="reminders-add" id="reminders-add">
-        <input type="text" id="reminder-name" class="reminder-input" placeholder="Reminder name">
-        <input type="date" id="reminder-date" class="reminder-input">
-        <input type="time" id="reminder-time" class="reminder-input">
-        <button id="reminder-save" class="reminder-save-btn">Add</button>
       </div>
     </div>
   </div>
@@ -905,8 +910,19 @@ shiftBtn.onclick = (e) => {
   shiftInput.value = `${String(Math.floor(wakeH)).padStart(2,'0')}:${String(Math.round((wakeH % 1) * 60)).padStart(2,'0')}`;
   updateShiftInfo(cur_shift);
   renderShiftHistory(key);
+  remindersOverlay.classList.remove('show');
   shiftOverlay.classList.toggle('show');
 };
+const remindersBtn = document.getElementById('reminders-btn');
+const remindersOverlay = document.getElementById('reminders-overlay');
+remindersBtn.onclick = (e) => {
+  e.stopPropagation();
+  shiftOverlay.classList.remove('show');
+  remindersOverlay.classList.toggle('show');
+};
+document.addEventListener('click', e => {
+  if (!remindersOverlay.contains(e.target) && !remindersBtn.contains(e.target)) remindersOverlay.classList.remove('show');
+});
 function renderShiftHistory(key) {
   const el = document.getElementById('shift-history');
   const raw = localStorage.getItem(`shift_history_${key}`);
