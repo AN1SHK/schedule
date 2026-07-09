@@ -305,18 +305,22 @@ const HOUR_HEIGHT = 50;
 const TOP_PAD = 2;
 const MIN_BLOCK_HEIGHT = 36;
 
+// Pomodoro: 25min work / 5min break, repeating
+const POMO_SEGMENTS = [
+  { work: 25 }, { break: 5 }
+];
+const POMO_SUPER_MINS = POMO_SEGMENTS.reduce((s, seg) => s + (seg.work || seg.break), 0);
+
 const FIXED_BLOCKS = [
-  { start: '7:00', end: '7:45', label: 'MR', tags: ['Meditate · 10 min', 'Gratitude · 3 pts', 'First Principles'] },
+  { start: '7:00', end: '7:45', label: 'MR', tags: ['Meditate - 1 HR', 'Gratitude - 3 Pts'] },
   { start: '7:45', end: '8:30', label: 'Exercise', tags: ['Accessory', 'Run', 'Cycle', 'Skip', 'Sprint'] },
   { start: '8:30', end: '9:00', label: 'Shower', tags: ['WHM', 'Cold'] },
-  { start: '9:00', end: '12:00', label: 'Work', tags: [], pomodoro: { work: 50, break: 10, rotationKey: 'work', prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Body Scan', color: '#9333EA' }, { name: 'Breath Count', color: '#2563EB' }] } },
-  { start: '12:00', end: '12:30', label: 'Eat', tags: ['Read', 'Podcasts', 'Mindful'] },
-  { start: '12:30', end: '13:00', label: 'Exercise', tags: ['Walk', 'Yoga', 'Basketball'] },
-  { start: '13:00', end: '16:00', label: 'Work', tags: [], pomodoro: { work: 50, break: 10, rotationKey: 'work', prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Body Scan', color: '#9333EA' }, { name: 'Breath Count', color: '#2563EB' }], lastBreakOverride: { name: 'Chores', color: '#16A34A' } } },
-  { start: '16:00', end: '18:00', label: 'Exercise', tags: ['PPL_TAGS'] },
-  { start: '18:00', end: '18:30', label: 'Shower' },
-  { start: '18:30', end: '19:00', label: 'Eat', tags: ['Read', 'Podcasts', 'Mindful'] },
-  { start: '19:00', end: '22:00', label: 'Relax', tags: ['Read', 'Podcasts', 'Mindful', 'Plan Tomorrow'], pomodoro: { work: 50, break: 10, prefix: { name: 'Stretch', color: '#F59E0B', mins: 5 }, activities: [{ name: 'Chores', color: '#16A34A' }] } },
+  { start: '9:00', end: '13:00', label: 'Open', tags: [] },
+  { start: '13:00', end: '13:30', label: 'Exercise', tags: ['Walk', 'Yoga', 'Basketball'] },
+  { start: '13:30', end: '16:30', label: 'Open', tags: [] },
+  { start: '16:30', end: '18:30', label: 'Exercise', tags: ['PPL_TAGS'] },
+  { start: '18:30', end: '19:00', label: 'Shower' },
+  { start: '19:00', end: '22:00', label: 'Open', tags: [] },
   { start: '22:00', end: '23:00', label: 'NR', tags: [] },
   { start: '23:00', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
 ];
@@ -444,29 +448,51 @@ function saveReminders(arr) {
 }
 
 // ── Rendering ─────────────────────────────────────────────────────────────────
-function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey, nowTime) {
+function computeBlockHeight(b) {
+  if (b.label === 'Relax' && b.dispStartT !== undefined && b.dispStartT >= b.dispEndT) return null;
+  const layoutStart = b.label === 'Relax' ? b.dispStartT : b.startT;
+  const layoutEnd = b.label === 'Relax' ? b.dispEndT : b.endT;
+  const naturalHeight = (layoutEnd - layoutStart) * HOUR_HEIGHT;
+  const tagSpace = b.tags ? (b.tags.length <= 3 ? 28 : 52) : 0;
+  const naturalMins = (b.endT - b.startT) * 60;
+  const workExtra = b.label === 'Work' ? (naturalMins >= 240 ? 80 : 40) : 0;
+  const minWithItems = 74 + tagSpace + workExtra;
+  let height = Math.max(naturalHeight, MIN_BLOCK_HEIGHT, minWithItems);
+  if (b.capHeight) height = Math.min(height, 80);
+  return height;
+}
+function columnNaturalHeight(blocks) {
+  let sum = 0, n = 0;
+  blocks.forEach(b => { const h = computeBlockHeight(b); if (h !== null) { sum += h + 3; n++; } });
+  return 2 * TOP_PAD + (n ? sum - 3 : 0);
+}
+function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey, nowTime, targetHeight) {
   const tl = document.getElementById(elId);
   tl.innerHTML = '';
   const endHour = blocks.length ? Math.max(...blocks.map(b => b.endT)) : startHour + 10;
   tl._endHour = endHour;
   const layout = blocks.map(b => {
-    if (b.label === 'Relax' && b.dispStartT !== undefined && b.dispStartT >= b.dispEndT) return null;
-    const layoutStart = b.label === 'Relax' ? b.dispStartT : b.startT;
-    const layoutEnd = b.label === 'Relax' ? b.dispEndT : b.endT;
-    const naturalTop = TOP_PAD + (layoutStart - startHour) * HOUR_HEIGHT;
-    const naturalHeight = (layoutEnd - layoutStart) * HOUR_HEIGHT;
-    const tagSpace = b.tags ? (b.tags.length <= 3 ? 28 : 52) : 0;
-    const naturalMins = (b.endT - b.startT) * 60;
-    const workExtra = b.label === 'Work' ? (naturalMins >= 240 ? 80 : 40) : 0; // scale with duration
-    const minWithItems = 74 + tagSpace + workExtra;
-    let height = Math.max(naturalHeight, MIN_BLOCK_HEIGHT, minWithItems);
-    if (b.capHeight) height = Math.min(height, 80);
-    return { ...b, top: naturalTop, height };
+    const h = computeBlockHeight(b);
+    if (h === null) return null;
+    return { ...b, height: h };
   }).filter(b => b !== null);
-  for (let k = 1; k < layout.length; k++) {
-    if (!layout[k] || !layout[k-1]) continue;
-    const prevBottom = layout[k-1].top + layout[k-1].height;
-    if (layout[k].top < prevBottom + 3) layout[k].top = prevBottom + 3;
+  // Align column bottoms: absorb extra space into non-Work blocks so Work blocks keep their size
+  if (targetHeight && layout.length) {
+    const naturalBottom = 2 * TOP_PAD + layout.reduce((s, b) => s + b.height + 3, 0) - 3;
+    const extra = targetHeight - naturalBottom;
+    if (extra > 0.5) {
+      let growable = layout.filter(b => b.label !== 'Work' && !b.capHeight);
+      if (!growable.length) growable = layout.filter(b => !b.capHeight);
+      if (!growable.length) growable = layout;
+      const totalGrowH = growable.reduce((s, b) => s + b.height, 0) || 1;
+      growable.forEach(b => { b.height += extra * (b.height / totalGrowH); });
+    }
+  }
+  // Stack blocks contiguously (flush), sized by duration — no time-gap spacing
+  let _cursor = TOP_PAD;
+  for (let k = 0; k < layout.length; k++) {
+    layout[k].top = _cursor;
+    _cursor += layout[k].height + 3;
   }
   const lastBottom = layout.length ? layout[layout.length - 1].top + layout[layout.length - 1].height : 0;
   tl.style.height = `${lastBottom + TOP_PAD}px`;
@@ -481,7 +507,7 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
     const EXERCISE_TAGS = new Set(['Run','Running','Walk','Cycle','Cycling','Jump Rope','Skip','Kallisthenics','Yoga','Push','Pull','Legs','Basketball','Swim','Sauna','Sprint','Rest','Accessory']);
     const DIGITAL_TAGS = new Set(['Music','Music','Calm Music','Netflix','Socials','Gaming','Messages']);
     const READING_TAGS = new Set(['Read','Podcasts','Learn','First Principles']);
-    const MINDFUL_TAGS = new Set(['Mindful','Meditate · 10 min','Gratitude · 3 pts','Schedule Today']);
+    const MINDFUL_TAGS = new Set(['Mindful','Meditate','Gratitude','Meditate - 1 HR','Gratitude - 3 Pts','Schedule Today','Breathwork','Do Nothing']);
     const PLAN_TAGS = new Set(['Plan Tomorrow',]);
     const CHORES_TAGS = new Set(['Chores']);
     const tagsHtml = b.tags ? `<div class="tag-row">${b.tags.map(t => {
@@ -564,27 +590,6 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
       const tagRow = blockContent.querySelector('.tag-row');
       blockContent.insertBefore(taskContainer, tagRow || blockContent.lastChild);
 
-      // Pomodoro tally — Firebase backed
-      const maxPomos = 3; // both work blocks are 3h
-      const tallyEl = document.createElement('div');
-      tallyEl.className = 'pomo-tally';
-      function renderTally() {
-        const done = getTally(currentDayKey, b.start);
-        tallyEl.innerHTML = Array.from({length: maxPomos}, (_, i) =>
-          `<div class="pomo-mark${i < done ? ' done' : ''}" data-i="${i}"></div>`
-        ).join('') + `<button class="pomo-tally-reset" title="Reset">↺</button>`;
-        tallyEl.querySelectorAll('.pomo-mark').forEach(m => {
-          const tap = e => { e.stopPropagation(); const d = getTally(currentDayKey, b.start); const i = parseInt(m.dataset.i); saveTally(currentDayKey, b.start, i < d ? i : i+1); renderTally(); };
-          m.addEventListener('click', tap);
-          m.addEventListener('touchend', e => { e.preventDefault(); tap(e); });
-        });
-        const resetBtn = tallyEl.querySelector('.pomo-tally-reset');
-        const rst = e => { e.stopPropagation(); saveTally(currentDayKey, b.start, 0); renderTally(); };
-        resetBtn.addEventListener('click', rst);
-        resetBtn.addEventListener('touchend', e => { e.preventDefault(); rst(e); });
-      }
-      renderTally();
-      blockContent.insertBefore(tallyEl, tagRow || blockContent.lastChild);
     }
 
     block.querySelectorAll('.subitem').forEach(el => {
@@ -708,8 +713,8 @@ function render() {
     return { ...b, tags, i, startT, endT, dispStartT, dispEndT, done: !!(doneState && doneState[i]) };
   }).sort((a, b) => a.startT - b.startT);
 
-  const SPLIT_1 = 12;
-  const SPLIT_2 = 18;
+  const SPLIT_1 = 13;
+  const SPLIT_2 = 18.5;
   const morning = enriched.filter(b => b.endT <= SPLIT_1);
   const afternoon = enriched.filter(b => b.endT > SPLIT_1 && b.endT <= SPLIT_2);
   const evening = enriched.filter(b => b.endT > SPLIT_2);
@@ -754,13 +759,15 @@ function render() {
     { time: 15, cls: 'marker-nap', labelCls: 'marker-nap-label', label: 'Last Nap · 15:00' }
   ];
   const eveningMarkers = [
+    { time: 20, cls: 'marker', labelCls: 'marker-label', label: 'Last Meal · 20:00' }
   ];
 
   if (showNow) {
     const nowMarker = { time: visualNowTime, cls: 'now-line', labelCls: 'now-label', label: `Now · ${hh}:${mm}` };
-    if (visualNowTime < SPLIT_1) morningMarkers.push(nowMarker);
-    else if (visualNowTime < SPLIT_2) afternoonMarkers.push(nowMarker);
-    else eveningMarkers.push(nowMarker);
+    const _inCol = (arr) => arr.some(b => b.startT <= visualNowTime && b.endT > visualNowTime);
+    if (_inCol(morning)) morningMarkers.push(nowMarker);
+    else if (_inCol(afternoon)) afternoonMarkers.push(nowMarker);
+    else if (_inCol(evening)) eveningMarkers.push(nowMarker);
   }
 
   // Timed reminders due on the viewed day → show as markers on the timeline
@@ -770,47 +777,23 @@ function render() {
     if (isNaN(rh) || isNaN(rm)) return;
     const rt = rh + rm / 60;
     const marker = { time: rt, cls: 'marker-reminder', labelCls: 'marker-reminder-label', label: `${r.name} · ${r.time}` };
-    if (rt < SPLIT_1) morningMarkers.push(marker);
-    else if (rt < SPLIT_2) afternoonMarkers.push(marker);
-    else eveningMarkers.push(marker);
+    const _rInCol = (arr) => arr.some(b => b.startT <= rt && b.endT > rt);
+    if (_rInCol(morning)) morningMarkers.push(marker);
+    else if (_rInCol(afternoon)) afternoonMarkers.push(marker);
+    else if (_rInCol(evening)) eveningMarkers.push(marker);
   });
 
-  renderColumn('timeline-morning', morning, START_HOUR, morningMarkers, doneState, key, nowTime);
-  renderColumn('timeline-afternoon', afternoon, SPLIT_1, afternoonMarkers, doneState, key, nowTime);
-  renderColumn('timeline-evening', evening, SPLIT_2, eveningMarkers, doneState, key, nowTime);
+  const _maxColH = Math.max(columnNaturalHeight(morning), columnNaturalHeight(afternoon), columnNaturalHeight(evening));
+  renderColumn('timeline-morning', morning, START_HOUR, morningMarkers, doneState, key, nowTime, _maxColH);
+  renderColumn('timeline-afternoon', afternoon, SPLIT_1, afternoonMarkers, doneState, key, nowTime, _maxColH);
+  renderColumn('timeline-evening', evening, SPLIT_2, eveningMarkers, doneState, key, nowTime, _maxColH);
 
-  // Auto-tick all pomos for any fully elapsed work block today
-  if (showNow && nowTime !== null) {
-    enriched.forEach(b => {
-      if (b.label !== 'Work') return;
-      const blockEnd = b.dispEndT !== undefined ? b.dispEndT : b.endT;
-      if (nowTime < blockEnd) return; // not fully past
-      const current = getTally(key, b.start);
-      if (current < 3) saveTally(key, b.start, 3);
-    });
-  }
-
-  // Equal column bottoms while keeping blocks proportional within each column.
-  // Scale each shorter column up uniformly so its content fills the tallest height.
+  // Column bottoms: set all columns to the tallest natural height (empty space fills
+  // shorter columns) so blocks stay proportional and same-duration blocks match across columns.
   requestAnimationFrame(() => {
     const tls = ['timeline-morning','timeline-afternoon','timeline-evening'].map(id => document.getElementById(id));
-    const naturalHeights = tls.map(t => parseInt(t.style.height) || 0);
-    const maxH = Math.max(...naturalHeights);
-    tls.forEach((t, i) => {
-      const nh = naturalHeights[i];
-      if (nh > 0 && nh < maxH) {
-        const scale = maxH / nh;
-        Array.from(t.children).forEach(el => {
-          const top = parseFloat(el.style.top);
-          if (!isNaN(top)) el.style.top = (top * scale) + 'px';
-          if (el.classList.contains('block')) {
-            const h = parseFloat(el.style.height) || 0;
-            el.style.height = (h * scale) + 'px';
-          }
-        });
-      }
-      t.style.height = maxH + 'px';
-    });
+    const maxH = Math.max(...tls.map(t => parseInt(t.style.height) || 0));
+    tls.forEach(t => { t.style.height = maxH + 'px'; });
   });
 }
 
@@ -989,10 +972,6 @@ function updatePomoTimer(workBlock) {
   const pill = document.getElementById('pomo-timer-pill');
   if (!pill) return;
 
-  const WORK_MINS = 50;
-  const BREAK_MINS = 10;
-  const CYCLE_MINS = WORK_MINS + BREAK_MINS;
-
   const now = new Date();
   const blockStartH = Math.floor(workBlock.dispStartT);
   const blockStartM = Math.round((workBlock.dispStartT - blockStartH) * 60);
@@ -1001,12 +980,16 @@ function updatePomoTimer(workBlock) {
   if (elapsedMins < 0) { pill.style.display = 'none'; return; }
   pill.style.display = '';
 
-  const posInCycle = elapsedMins % CYCLE_MINS;
-  const isWork = posInCycle < WORK_MINS;
-  const secsLeft = isWork
-    ? Math.ceil((WORK_MINS - posInCycle) * 60)
-    : Math.ceil((CYCLE_MINS - posInCycle) * 60);
-
+  // Walk the segment sequence to find the current phase within the super-cycle
+  const posInSuper = elapsedMins % POMO_SUPER_MINS;
+  let acc = 0, curSeg = POMO_SEGMENTS[POMO_SEGMENTS.length - 1], segRemaining = 0;
+  for (const seg of POMO_SEGMENTS) {
+    const len = seg.work || seg.break;
+    if (posInSuper < acc + len) { curSeg = seg; segRemaining = (acc + len) - posInSuper; break; }
+    acc += len;
+  }
+  const isWork = !!curSeg.work;
+  const secsLeft = Math.ceil(segRemaining * 60);
   const mm = String(Math.floor(secsLeft / 60)).padStart(2, '0');
   const ss = String(secsLeft % 60).padStart(2, '0');
 
@@ -1014,9 +997,9 @@ function updatePomoTimer(workBlock) {
   if (_pomoPhase !== null && _pomoPhase !== newPhase) {
     // Phase switched — play sound and notify
     if (newPhase === 'break') {
-      if (Notification.permission === 'granted') new Notification('Break', { body: '10 min', silent: true });
+      if (Notification.permission === 'granted') new Notification('Break', { body: (curSeg.break || 5) + ' min', silent: true });
     } else {
-      if (Notification.permission === 'granted') new Notification('Work', { body: '50 min', silent: true });
+      if (Notification.permission === 'granted') new Notification('Work', { body: '10 min', silent: true });
     }
   }
   _pomoPhase = newPhase;
@@ -1030,37 +1013,6 @@ function updatePomoTimer(workBlock) {
     if (p) updatePomoTimer(workBlock);
   }, 1000);
 
-  // Auto-tick: compare how many full work segments have elapsed vs what's ticked
-  // This runs every second so catches all completions including the last cycle
-  {
-    const dk = dayKey(new Date());
-    const blockStart = workBlock.start;
-    const maxPomos = 3;
-    const current = getTally(dk, blockStart);
-
-    // Count how many work segments are fully done
-    // A work segment is done when we are past (n * CYCLE_MINS + WORK_MINS) elapsed
-    let shouldTick = 0;
-    for (let n = 1; n <= maxPomos; n++) {
-      const workDoneAt = n * CYCLE_MINS - BREAK_MINS; // elapsed mins when nth work seg ends
-      if (elapsedMins >= workDoneAt) shouldTick = n;
-      else break;
-    }
-    // Also tick if we've reached end of block (last cycle may not have a break)
-    const blockDurMins = (workBlock.dispEndT - workBlock.dispStartT) * 60;
-    if (elapsedMins >= blockDurMins) {
-      // Count work segments that fit in the block
-      let count = 0;
-      let pos = 0;
-      while (pos + WORK_MINS <= blockDurMins) { count++; pos += CYCLE_MINS; }
-      shouldTick = Math.min(count, maxPomos);
-    }
-
-    if (shouldTick > current && shouldTick <= maxPomos) {
-      saveTally(dk, blockStart, shouldTick);
-      render();
-    }
-  }
 }
 
 // ── Block-start notifications ─────────────────────────────────────────────────
