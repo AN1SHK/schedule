@@ -329,10 +329,10 @@ const FIXED_BLOCKS = [
   { start: '9:30', end: '10:30', label: 'Read', tags: [] },
   { start: '10:30', end: '13:30', label: 'Open', tags: [] },
   { start: '13:30', end: '14:00', label: 'Exercise', tags: ['Walk', 'Yoga', 'Basketball'] },
-  { start: '14:00', end: '17:00', label: 'Open', tags: [] },
+  { start: '14:00', end: '17:00', label: 'Open', tags: [], buffer: true, bufferPriority: 2 },
   { start: '17:00', end: '19:00', label: 'Exercise', tags: ['PPL_TAGS'] },
   { start: '19:00', end: '19:30', label: 'Shower' },
-  { start: '19:30', end: '21:00', label: 'Open', tags: [] },
+  { start: '19:30', end: '21:00', label: 'Open', tags: [], buffer: true, bufferPriority: 1 },
   { start: '21:00', end: '22:00', label: 'Reflection', tags: ['Plan Tomorrow'] },
   { start: '22:00', end: '23:00', label: 'NR', tags: [] },
   { start: '23:00', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
@@ -437,7 +437,6 @@ onValue(ref(db, 'shifts'), snap => {
     else localStorage.removeItem('shift_' + dk);
   }
   render();
-  scheduleBlockNotifications();
 });
 
 // Start listening for today
@@ -469,10 +468,44 @@ function saveReminders(arr) {
 }
 
 // ── Rendering ─────────────────────────────────────────────────────────────────
+// Wake-time shift: re-pack the day so blocks flow continuously from the wake time.
+// Buffers (evening Open first, then afternoon Open) shrink in priority order to absorb
+// the delay, so the fixed evening anchors (Reflection/NR/Sleep) stay put.
+// Returns { startT, endT, dispStartT, dispEndT } per FIXED_BLOCKS index.
+function computeShiftedTimes(shiftHours) {
+  const shift = shiftHours > 0 ? shiftHours : 0;
+  // Allocate how much each buffer shrinks, consuming buffers by priority.
+  const bufferShrink = {};
+  let toRemove = shift;
+  FIXED_BLOCKS.filter(b => b.buffer)
+    .sort((a, b) => (a.bufferPriority || 99) - (b.bufferPriority || 99))
+    .forEach(bb => {
+      const cap = parseTime(bb.end) - parseTime(bb.start);
+      const take = Math.max(0, Math.min(toRemove, cap));
+      bufferShrink[bb.start] = take;
+      toRemove -= take;
+    });
+  // Pack blocks end-to-end from the wake time; anchors keep their original times.
+  let cursor = START_HOUR + shift;
+  return FIXED_BLOCKS.map(b => {
+    const startT = parseTime(b.start);
+    const endT = parseTime(b.end);
+    let dispStartT = startT;
+    let dispEndT = endT;
+    if (shift > 0 && b.label !== 'NR' && b.label !== 'Sleep' && startT < 21) {
+      const effDur = Math.max(0, (endT - startT) - (bufferShrink[b.start] || 0));
+      dispStartT = cursor;
+      dispEndT = cursor + effDur;
+      cursor = dispEndT;
+    }
+    return { startT, endT, dispStartT, dispEndT };
+  });
+}
+
 function computeBlockHeight(b) {
-  if (b.label === 'Relax' && b.dispStartT !== undefined && b.dispStartT >= b.dispEndT) return null;
-  const layoutStart = b.label === 'Relax' ? b.dispStartT : b.startT;
-  const layoutEnd = b.label === 'Relax' ? b.dispEndT : b.endT;
+  if (b.buffer && b.dispStartT !== undefined && b.dispStartT >= b.dispEndT) return null;
+  const layoutStart = b.buffer ? b.dispStartT : b.startT;
+  const layoutEnd = b.buffer ? b.dispEndT : b.endT;
   const naturalHeight = (layoutEnd - layoutStart) * HOUR_HEIGHT;
   const tagSpace = (b.tags && b.tags.length && expandedBlocks.has(b.start)) ? (b.tags.length <= 3 ? 28 : 52) : 0;
   const naturalMins = (b.endT - b.startT) * 60;
@@ -643,9 +676,13 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
   markers.forEach(m => {
     let markerTop;
     if (m.cls === 'now-line' || m.cls === 'marker-shutdown' || m.cls === 'marker' || m.cls === 'marker-device' || m.cls === 'marker-nap' || m.cls === 'marker-reminder') {
-      const containing = layout.find(b => b && b.startT <= m.time && b.endT > m.time);
+      const dS = bl => (bl.dispStartT !== undefined ? bl.dispStartT : bl.startT);
+      const dE = bl => (bl.dispEndT !== undefined ? bl.dispEndT : bl.endT);
+      let mt = m.time;
+      let containing = layout.find(bl => bl && dS(bl) <= mt && mt < dE(bl));
+      if (!containing) { mt = m.time + 24; containing = layout.find(bl => bl && dS(bl) <= mt && mt < dE(bl)); }
       if (containing) {
-        const frac = (m.time - containing.startT) / (containing.endT - containing.startT);
+        const frac = (mt - dS(containing)) / (dE(containing) - dS(containing));
         markerTop = containing.top + frac * containing.height;
       } else {
         markerTop = TOP_PAD + (m.time - startHour) * HOUR_HEIGHT;
@@ -723,6 +760,8 @@ function render() {
     else shiftBtnEl.classList.remove('active');
   }
 
+  const packed = computeShiftedTimes(shiftHours);
+
   const enriched = FIXED_BLOCKS.map((b, i) => {
     // Inject Personal Grooming tag into Cold Shower on Tue/Fri
     let extraTags = [];
@@ -736,17 +775,8 @@ function render() {
     }), ...extraTags] : (extraTags.length ? extraTags : b.tags);
     const startT = parseTime(b.start);
     const endT = parseTime(b.end);
-    let dispStartT = startT;
-    let dispEndT = endT;
-    if (shiftHours > 0) {
-      if (b.label === 'NR' || b.label === 'Sleep') {
-      } else if (b.label === 'Relax') {
-        dispStartT = Math.min(startT + shiftHours, endT);
-      } else if (startT >= 7 && startT < 19) {
-        dispStartT = startT + shiftHours;
-        dispEndT = endT + shiftHours;
-      }
-    }
+    const dispStartT = packed[i].dispStartT;
+    const dispEndT = packed[i].dispEndT;
     return { ...b, tags, i, startT, endT, dispStartT, dispEndT, done: !!(doneState && doneState[i]) };
   }).sort((a, b) => a.startT - b.startT);
 
@@ -759,7 +789,6 @@ function render() {
   const today = new Date();
   const showNow = dayNum(today) === cur;
   const nowTime = showNow ? (nowScrub !== null ? nowScrub : today.getHours() + today.getMinutes() / 60) : null;
-  const visualNowTime = (showNow && shiftHours > 0 && nowTime < 22) ? nowTime - shiftHours : nowTime;
   const hh = showNow ? String(today.getHours()).padStart(2,'0') : '';
   const mm = showNow ? String(today.getMinutes()).padStart(2,'0') : '';
 
@@ -790,35 +819,40 @@ function render() {
     nowBanner.innerHTML = '';
   }
 
-  const morningMarkers = [
-  ];
-  const afternoonMarkers = [
-    { time: 15, cls: 'marker-nap', labelCls: 'marker-nap-label', label: 'Last Nap · 15:00' }
-  ];
-  const eveningMarkers = [
+  // Fixed clock-time markers + reminders + the now-line, each placed in the column whose
+  // (packed) displayed range contains its time — so they track the re-packed day.
+  const morningMarkers = [];
+  const afternoonMarkers = [];
+  const eveningMarkers = [];
+
+  const timelineMarkers = [
+    { time: 15, cls: 'marker-nap', labelCls: 'marker-nap-label', label: 'Last Nap · 15:00' },
     { time: 20, cls: 'marker', labelCls: 'marker-label', label: 'Last Meal · 20:00' },
     { time: 22, cls: 'marker-shutdown', labelCls: 'marker-shutdown-label', label: 'All Devices Off · 22:00' }
   ];
 
-  if (showNow) {
-    const nowMarker = { time: visualNowTime, cls: 'now-line', labelCls: 'now-label', label: `Now · ${hh}:${mm}` };
-    const _inCol = (arr) => arr.some(b => b.startT <= visualNowTime && b.endT > visualNowTime);
-    if (_inCol(morning)) morningMarkers.push(nowMarker);
-    else if (_inCol(afternoon)) afternoonMarkers.push(nowMarker);
-    else if (_inCol(evening)) eveningMarkers.push(nowMarker);
-  }
-
-  // Timed reminders due on the viewed day → show as markers on the timeline
+  // Timed reminders due on the viewed day
   const viewedDayReminders = loadReminders().filter(r => r.date === key && r.time);
   viewedDayReminders.forEach(r => {
     const [rh, rm] = r.time.split(':').map(Number);
     if (isNaN(rh) || isNaN(rm)) return;
-    const rt = rh + rm / 60;
-    const marker = { time: rt, cls: 'marker-reminder', labelCls: 'marker-reminder-label', label: `${r.name} · ${r.time}` };
-    const _rInCol = (arr) => arr.some(b => b.startT <= rt && b.endT > rt);
-    if (_rInCol(morning)) morningMarkers.push(marker);
-    else if (_rInCol(afternoon)) afternoonMarkers.push(marker);
-    else if (_rInCol(evening)) eveningMarkers.push(marker);
+    timelineMarkers.push({ time: rh + rm / 60, cls: 'marker-reminder', labelCls: 'marker-reminder-label', label: `${r.name} · ${r.time}` });
+  });
+
+  // Now-line at the real current time, positioned within the packed schedule
+  if (showNow) {
+    timelineMarkers.push({ time: nowTime, cls: 'now-line', labelCls: 'now-label', label: `Now · ${hh}:${mm}` });
+  }
+
+  const dispHas = (blocks, t) => blocks.some(b => {
+    const s = b.dispStartT !== undefined ? b.dispStartT : b.startT;
+    const e = b.dispEndT !== undefined ? b.dispEndT : b.endT;
+    return (s <= t && t < e) || (s <= t + 24 && t + 24 < e); // +24 handles the wrapped Sleep block
+  });
+  timelineMarkers.forEach(m => {
+    if (dispHas(morning, m.time)) morningMarkers.push(m);
+    else if (dispHas(afternoon, m.time)) afternoonMarkers.push(m);
+    else if (dispHas(evening, m.time)) eveningMarkers.push(m);
   });
 
   const _maxColH = Math.max(columnNaturalHeight(morning), columnNaturalHeight(afternoon), columnNaturalHeight(evening));
@@ -836,7 +870,7 @@ function render() {
 }
 
 setInterval(render, 10000);
-document.addEventListener('visibilitychange', () => { if (!document.hidden) { render(); scheduleBlockNotifications(); } });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { render(); } });
 window.addEventListener('focus', render);
 window.addEventListener('pageshow', render);
 
@@ -966,7 +1000,6 @@ function applyShift(e) {
   updateShiftInfo(shift);
   shiftOverlay.classList.remove('show');
   render();
-  scheduleBlockNotifications();
 }
 function resetShift(e) {
   e.preventDefault(); e.stopPropagation();
@@ -980,7 +1013,6 @@ function resetShift(e) {
   updateShiftInfo(0);
   shiftOverlay.classList.remove('show');
   render();
-  scheduleBlockNotifications();
 }
 document.getElementById('shift-apply').addEventListener('click', applyShift);
 document.getElementById('shift-apply').addEventListener('touchend', applyShift);
@@ -1043,14 +1075,6 @@ function updatePomoTimer(workBlock) {
   const ss = String(secsLeft % 60).padStart(2, '0');
 
   const newPhase = isWork ? 'work' : 'break';
-  if (_pomoPhase !== null && _pomoPhase !== newPhase) {
-    // Phase switched — play sound and notify
-    if (newPhase === 'break') {
-      if (Notification.permission === 'granted') new Notification('Break', { body: (curSeg.break || 5) + ' min', silent: true });
-    } else {
-      if (Notification.permission === 'granted') new Notification('Work', { body: '10 min', silent: true });
-    }
-  }
   _pomoPhase = newPhase;
   pill.className = isWork ? 'pomo-timer-pill' : 'pomo-timer-pill break';
   pill.innerHTML = `${isWork ? 'Work' : 'Break'}<span class="pomo-timer-time">${mm}:${ss}</span>`;
@@ -1064,77 +1088,11 @@ function updatePomoTimer(workBlock) {
 
 }
 
-// ── Block-start notifications ─────────────────────────────────────────────────
-
-
-
-async function requestNotifPermission() {
-  if (!('Notification' in window)) return false;
-  if (Notification.permission === 'granted') return true;
-  if (Notification.permission === 'denied') return false;
-  const result = await Notification.requestPermission();
-  return result === 'granted';
-}
-
-let _notifTimer = null;
-
-function fireBlockNotif(label) {
-  if (!('Notification' in window) || Notification.permission !== 'granted') return;
-  new Notification(label, {
-    body: '',
-    icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='42' fill='none' stroke='%231F1E1C' stroke-width='7'/><line x1='50' y1='50' x2='50' y2='12' stroke='%231F1E1C' stroke-width='7' stroke-linecap='round'/><line x1='50' y1='50' x2='77' y2='68' stroke='%231D9E75' stroke-width='7' stroke-linecap='round'/><circle cx='50' cy='50' r='5' fill='%231F1E1C'/></svg>",
-    silent: true
-  });
-}
-
-function scheduleBlockNotifications() {
-  clearTimeout(_notifTimer);
-  if (!('Notification' in window) || Notification.permission !== 'granted') return;
-
-  const today = new Date();
-  const todayKey = dayKey(today);
-  const shiftHours = parseFloat(localStorage.getItem('shift_' + todayKey) || '0');
-  const midnight = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-  const nowMs = Date.now();
-
-  // Next upcoming block start (times derived from the schedule, shifted with wake time)
-  let nextDelay = null;
-  let nextLabel = null;
-
-  FIXED_BLOCKS.forEach(b => {
-    if (b.label === 'Sleep') return;
-    const startT = parseTime(b.start);
-    let bStart = startT;
-    if (shiftHours > 0 && b.label !== 'NR' && b.label !== 'Sleep' && startT >= 7 && startT < 19) {
-      bStart = startT + shiftHours;
-    }
-    const blockMs = midnight + bStart * 3600 * 1000;
-    const delay = blockMs - nowMs;
-    if (delay > 500 && (nextDelay === null || delay < nextDelay)) {
-      nextDelay = delay;
-      nextLabel = b.label;
-    }
-  });
-
-  if (nextDelay === null || nextLabel === null) return;
-
-  _notifTimer = setTimeout(() => {
-    fireBlockNotif(nextLabel);
-    scheduleBlockNotifications();
-  }, nextDelay);
-}
-
-// Init notifications — request permission then schedule
-(async () => {
-  const granted = await requestNotifPermission();
-  if (granted) scheduleBlockNotifications();
-})();
-
-// Re-schedule notifications and refresh at each midnight for the new day
+// Refresh the schedule at each midnight so the new day rolls over
 (function armMidnight() {
   const n = new Date();
   const ms = new Date(n.getFullYear(), n.getMonth(), n.getDate() + 1).getTime() - n.getTime() + 1000;
-  setTimeout(() => { render(); scheduleBlockNotifications(); armMidnight(); }, ms);
+  setTimeout(() => { render(); armMidnight(); }, ms);
 })();
 
 render();
