@@ -88,10 +88,6 @@ body { padding: 12px; padding-bottom: 40px; }
 .shift-apply { background: var(--text-primary); color: var(--surface); border: none; }
 .shift-reset { background: none; border: 0.5px solid var(--border-strong); color: var(--text-secondary); }
 .shift-info { display: none; }
-.shift-history { display: none; }
-.shift-history.has-items { display: block; }
-.shift-history-title { font-size: 9px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
-.shift-history-item { font-size: 11px; color: var(--text-secondary); font-variant-numeric: tabular-nums; padding: 1px 0; }
 
 .sync-indicator { position: fixed; bottom: 12px; right: 12px; font-size: 9px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
 .sync-indicator.show { opacity: 1; }
@@ -209,7 +205,6 @@ body { padding: 12px; padding-bottom: 40px; }
             <button id="shift-reset" class="shift-reset">Reset</button>
           </div>
           <div class="shift-info" id="shift-info"></div>
-          <div class="shift-history" id="shift-history"></div>
         </div>
       </div>
     </div>
@@ -950,7 +945,6 @@ shiftBtn.onclick = (e) => {
   const wakeH = 7 + cur_shift;
   shiftInput.value = `${String(Math.floor(wakeH)).padStart(2,'0')}:${String(Math.round((wakeH % 1) * 60)).padStart(2,'0')}`;
   updateShiftInfo(cur_shift);
-  renderShiftHistory(key);
   remindersOverlay.classList.remove('show');
   shiftOverlay.classList.toggle('show');
 };
@@ -964,14 +958,6 @@ remindersBtn.onclick = (e) => {
 document.addEventListener('click', e => {
   if (!remindersOverlay.contains(e.target) && !remindersBtn.contains(e.target)) remindersOverlay.classList.remove('show');
 });
-function renderShiftHistory(key) {
-  const el = document.getElementById('shift-history');
-  const raw = localStorage.getItem(`shift_history_${key}`);
-  const list = raw ? JSON.parse(raw) : [];
-  if (list.length === 0) { el.classList.remove('has-items'); el.innerHTML = ''; return; }
-  el.classList.add('has-items');
-  el.innerHTML = `<div class="shift-history-title">Today's wake history</div>${list.slice(-5).reverse().map(t => `<div class="shift-history-item">${t}</div>`).join('')}`;
-}
 function updateShiftInfo(shift) {
   if (shift <= 0) { shiftInfo.textContent = 'On schedule'; return; }
   const relaxStart = 20 + shift;
@@ -993,10 +979,6 @@ function applyShift(e) {
   if (shift > 0) { localStorage.setItem(`shift_${key}`, String(shift)); shiftBtn.classList.add('active'); }
   else { localStorage.removeItem(`shift_${key}`); shiftBtn.classList.remove('active'); }
   fbSetShift(key, shift > 0 ? shift : 0);
-  const histRaw = localStorage.getItem(`shift_history_${key}`);
-  const hist = histRaw ? JSON.parse(histRaw) : [];
-  hist.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
-  localStorage.setItem(`shift_history_${key}`, JSON.stringify(hist));
   updateShiftInfo(shift);
   shiftOverlay.classList.remove('show');
   render();
@@ -1006,7 +988,6 @@ function resetShift(e) {
   const d = new Date(cur * 86400000 + new Date(2026,0,1).getTime());
   const key = dayKey(d);
   localStorage.removeItem(`shift_${key}`);
-  localStorage.removeItem(`shift_history_${key}`);
   fbSetShift(key, 0);
   shiftBtn.classList.remove('active');
   shiftInput.value = '07:00';
