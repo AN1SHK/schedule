@@ -345,11 +345,11 @@ function formatTime(t) {
 
 const PPL_START = dayNum(new Date(2026, 5, 18));
 // Meditation ramps +10 min/day from 10 min up to 1 hour, starting July 8 2026
-const MEDITATE_START = dayNum(new Date(2026, 6, 8));
+const MEDITATE_START = dayNum(new Date(2026, 6, 13));
 function getMeditationTag(d) {
   const offset = Math.max(0, dayNum(d) - MEDITATE_START);
-  const mins = Math.min(60, 10 + offset * 10);
-  return mins >= 60 ? 'Meditate - 1 HR' : 'Meditate - ' + mins + ' MINS';
+  const mins = Math.min(30, 1 + offset);
+  return 'Meditate - ' + mins + (mins === 1 ? ' MIN' : ' MINS');
 }
 const PPL_CYCLE = [
   [['Push', 'Basketball', 'Swim', 'Sauna', 'Yoga'], 'Run', 'Walk'],
@@ -559,7 +559,7 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
     const tagsHtml = b.tags ? `<div class="tag-row">${b.tags.map(t => {
       const GROOMING_TAGS = new Set(['Personal Grooming']);
       const COLD_TAGS = new Set(['Cold','WHM']);
-      const cls = COLD_TAGS.has(t) ? 'tag tag-cold' : GROOMING_TAGS.has(t) ? 'tag tag-grooming' : EXERCISE_TAGS.has(t) ? 'tag tag-exercise' : CHORES_TAGS.has(t) ? 'tag tag-chores' : DIGITAL_TAGS.has(t) ? 'tag tag-digital' : READING_TAGS.has(t) ? 'tag tag-reading' : MINDFUL_TAGS.has(t) ? 'tag tag-mindful' : PLAN_TAGS.has(t) ? 'tag tag-plan' : 'tag';
+      const cls = COLD_TAGS.has(t) ? 'tag tag-cold' : GROOMING_TAGS.has(t) ? 'tag tag-grooming' : EXERCISE_TAGS.has(t) ? 'tag tag-exercise' : CHORES_TAGS.has(t) ? 'tag tag-chores' : DIGITAL_TAGS.has(t) ? 'tag tag-digital' : READING_TAGS.has(t) ? 'tag tag-reading' : (MINDFUL_TAGS.has(t) || t.startsWith('Meditate')) ? 'tag tag-mindful' : PLAN_TAGS.has(t) ? 'tag tag-plan' : 'tag';
       return `<span class="${cls}">${t}</span>`;
     }).join('')}</div>` : '';
     const displayStart = b.displayStart || formatTime(b.dispStartT);
