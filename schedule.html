@@ -132,15 +132,7 @@ body { padding: 12px; padding-bottom: 40px; }
 .subitem.done::before { background: #1D9E75; border-color: #1D9E75; }
 .subitem.done::after { content: ''; position: absolute; left: 5.5px; top: 8.5px; width: 4px; height: 2px; border-left: 1.5px solid white; border-bottom: 1.5px solid white; transform: rotate(-45deg); }
 .tag-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
-.tag { display: inline-block; background: #EEEDE7; color: #6E6D67; font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.02em; text-transform: uppercase; }
-.tag-exercise { background: rgba(184, 84, 80, 0.12); color: #B85450; }
-.tag-chores { background: rgba(22, 163, 74, 0.12); color: #15803D; }
-.tag-digital { background: rgba(74, 111, 165, 0.12); color: #4A6FA5; }
-.tag-reading { background: rgba(234, 179, 8, 0.12); color: #CA8A04; }
-.tag-mindful { background: rgba(120, 60, 180, 0.12); color: #7B3DB5; }
-.tag-plan { background: rgba(51, 65, 85, 0.12); color: #334155; }
-.tag-grooming { background: rgba(240,240,238,0.9); color: #6E6D67; }
-.tag-cold { background: rgba(96, 165, 250, 0.15); color: #2563EB; }
+.tag { display: inline-block; background: #E8ECF1; color: #556274; font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.02em; text-transform: uppercase; }
 .marker { position: absolute; left: 0; right: 0; height: 1px; background: #C8413A; z-index: 5; pointer-events: none; }
 .marker-label { position: absolute; right: 8px; top: -8px; background: #C8413A; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
 .marker-shutdown-label { position: absolute; right: 8px; top: -8px; background: #1E3A5F; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
@@ -318,11 +310,11 @@ const POMO_SUPER_MINS = POMO_SEGMENTS.reduce((s, seg) => s + (seg.work || seg.br
 const FIXED_BLOCKS = [
   { start: '7:00', end: '7:30', label: 'MR', tags: ['MEDITATE_TAG', 'Gratitude - 3 Pts'] },
   { start: '7:30', end: '9:30', label: 'Deep Work', tags: [] },
-  { start: '9:30', end: '11:00', label: 'Exercise', tags: ['Lift', 'Run', 'Basketball'] },
+  { start: '9:30', end: '11:00', label: 'Exercise', tags: ['EX_TAG'] },
   { start: '11:00', end: '11:30', label: 'Shower' },
   { start: '11:30', end: '13:30', label: 'Shallow Work', tags: [] },
   { start: '13:30', end: '14:00', label: 'Reflect', tags: [] },
-  { start: '14:00', end: '22:00', label: 'Open', tags: [], buffer: true, bufferPriority: 1 },
+  { start: '14:00', end: '22:00', label: 'Open', tags: ['Read', 'Journal', 'Yoga', 'Socialize', 'Touch Grass'], buffer: true, bufferPriority: 1 },
   { start: '22:00', end: '23:00', label: 'NR', tags: [] },
   { start: '23:00', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
 ];
@@ -341,19 +333,21 @@ function formatTime(t) {
   return `${dispH}:${String(m).padStart(2,'0')}`;
 }
 
-const PPL_START = dayNum(new Date(2026, 5, 18));
-// Meditation ramps +10 min/day from 10 min up to 1 hour, starting July 8 2026
+// Exercise rotates on an 8-day cycle, starting July 15 2026
+const EX_START = dayNum(new Date(2026, 6, 15));
+const EX_CYCLE = ['Push', 'Run', 'Pull', 'Basketball', 'Legs', 'Run', 'Lift', 'Basketball'];
+function getExerciseTag(d) {
+  const n = EX_CYCLE.length;
+  return EX_CYCLE[(((dayNum(d) - EX_START) % n) + n) % n];
+}
+// Meditation ramps +1 min/day from 1 min up to 30 min, starting July 13 2026
 const MEDITATE_START = dayNum(new Date(2026, 6, 13));
 function getMeditationTag(d) {
   const offset = Math.max(0, dayNum(d) - MEDITATE_START);
   const mins = Math.min(30, 1 + offset);
   return 'Meditate - ' + mins + (mins === 1 ? ' MIN' : ' MINS');
 }
-const PPL_CYCLE = [
-  [['Push', 'Basketball', 'Swim', 'Sauna', 'Yoga'], 'Run', 'Walk'],
-  [['Pull', 'Basketball', 'Swim', 'Sauna', 'Yoga'], 'Run', 'Basketball'],
-  [['Legs', 'Basketball', 'Swim', 'Sauna', 'Yoga'], 'Run', 'Walk']
-];
+
 
 // ── Morning Run Circle Sequence ───────────────────────────────────────────────
 const RUN_SEQ_START = dayNum(new Date(2026, 6, 5)); // July 5, 2026
@@ -365,15 +359,7 @@ function getRunCircles(d) {
   // After sequence, repeat 1-18
   return ((offset - RUN_SEQUENCE.length) % 18) + 1;
 }
-function getCycleDay(d) {
-  const n = dayNum(d);
-  if (n < PPL_START) return [['Rest'], 'Walk', 'Walk'];
-  const idx = ((n - PPL_START) % 3 + 3) % 3;
-  return PPL_CYCLE[idx];
-}
-function getPPLLabel(d) { return getCycleDay(d)[0]; }
-function getMorningExTag(d) { return getCycleDay(d)[1]; }
-function getAfternoonExTag(d) { return getCycleDay(d)[2]; }
+
 
 let cur = dayNum(new Date());
 let nowScrub = null;
@@ -548,18 +534,7 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
     block.style.top = `${b.top + 1}px`;
     block.style.height = `${b.height - 3}px`;
 
-    const EXERCISE_TAGS = new Set(['Run','Running','Walk','Cycle','Cycling','Jump Rope','Skip','Kallisthenics','Yoga','Lift','Push','Pull','Legs','Basketball','Swim','Sauna','Sprint','Rest','Accessory']);
-    const DIGITAL_TAGS = new Set(['Music','Music','Calm Music','Netflix','Socials','Gaming','Messages']);
-    const READING_TAGS = new Set(['Read','Podcasts','Learn','First Principles']);
-    const MINDFUL_TAGS = new Set(['Mindful','Meditate','Gratitude','Meditate - 10 MINS','Meditate - 20 MINS','Meditate - 30 MINS','Meditate - 40 MINS','Meditate - 50 MINS','Meditate - 1 HR','Gratitude - 3 Pts','Schedule Today','Breathwork','Do Nothing']);
-    const PLAN_TAGS = new Set(['Plan Tomorrow',]);
-    const CHORES_TAGS = new Set(['Chores']);
-    const tagsHtml = b.tags ? `<div class="tag-row">${b.tags.map(t => {
-      const GROOMING_TAGS = new Set(['Personal Grooming']);
-      const COLD_TAGS = new Set(['Cold','WHM']);
-      const cls = COLD_TAGS.has(t) ? 'tag tag-cold' : GROOMING_TAGS.has(t) ? 'tag tag-grooming' : EXERCISE_TAGS.has(t) ? 'tag tag-exercise' : CHORES_TAGS.has(t) ? 'tag tag-chores' : DIGITAL_TAGS.has(t) ? 'tag tag-digital' : READING_TAGS.has(t) ? 'tag tag-reading' : (MINDFUL_TAGS.has(t) || t.startsWith('Meditate')) ? 'tag tag-mindful' : PLAN_TAGS.has(t) ? 'tag tag-plan' : 'tag';
-      return `<span class="${cls}">${t}</span>`;
-    }).join('')}</div>` : '';
+    const tagsHtml = b.tags ? `<div class="tag-row">${b.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>` : '';
     const displayStart = b.displayStart || formatTime(b.dispStartT);
     const displayEnd = b.displayEnd || formatTime(b.dispEndT);
     const noteHtml = b.note ? `<div class="b-note">${b.note}</div>` : '';
@@ -725,9 +700,6 @@ function render() {
   }
   reminderWrap.innerHTML = pillsHtml;
 
-  const pplTags = getPPLLabel(d);
-  const morningExTag = getMorningExTag(d);
-  const afternoonExTag = getAfternoonExTag(d);
   const shiftKey = `shift_${key}`;
   const shiftHours = parseFloat(localStorage.getItem(shiftKey) || '0');
   const shiftBtnEl = document.getElementById('shift-btn');
@@ -743,9 +715,7 @@ function render() {
     let extraTags = [];
     if (b.grooming && (dow === 2 || dow === 5)) extraTags = ['Personal Grooming'];
     const tags = b.tags ? [...b.tags.flatMap(t => {
-      if (t === 'PPL_TAGS') return pplTags;
-      if (t === 'MORNING_EX_TAG') return [morningExTag];
-      if (t === 'AFTERNOON_EX_TAG') return [afternoonExTag];
+      if (t === 'EX_TAG') return [getExerciseTag(d)];
       if (t === 'MEDITATE_TAG') return [getMeditationTag(d)];
       return [t];
     }), ...extraTags] : (extraTags.length ? extraTags : b.tags);
@@ -804,7 +774,7 @@ function render() {
   const timelineMarkers = [
     { time: 15, cls: 'marker-nap', labelCls: 'marker-nap-label', label: 'Last Nap · 15:00' },
     { time: 20, cls: 'marker', labelCls: 'marker-label', label: 'Last Meal · 20:00' },
-    { time: 22, cls: 'marker-shutdown', labelCls: 'marker-shutdown-label', label: 'All Devices Off · 22:00' }
+    { time: 14, cls: 'marker-shutdown', labelCls: 'marker-shutdown-label', label: 'All Devices Off · 14:00' }
   ];
 
   // Timed reminders due on the viewed day
