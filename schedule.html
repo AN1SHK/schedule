@@ -225,22 +225,27 @@ body { padding: 12px; padding-bottom: 40px; }
 <div class="sync-indicator" id="sync-indicator"></div>
 
 <script type="module">
-// ── Firebase ──────────────────────────────────────────────────────────────────
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getDatabase, ref, set, onValue, get } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
-
-const firebaseConfig = {
-  apiKey: "AIzaSyAIlMRgVKpN_xe48WKJihiQ1ZgiVLRouMs",
-  authDomain: "my-schedule-a0ded.firebaseapp.com",
-  databaseURL: "https://my-schedule-a0ded-default-rtdb.firebaseio.com",
-  projectId: "my-schedule-a0ded",
-  storageBucket: "my-schedule-a0ded.firebasestorage.app",
-  messagingSenderId: "941701290759",
-  appId: "1:941701290759:web:86d0c144ee0425fad983a2"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+// ── PREVIEW BUILD: localStorage shim (no Firebase, renders standalone) ────────
+const db = {};
+function ref(_db, path) { return { path: path || '' }; }
+function set(r, val) {
+  try { localStorage.setItem('fb_' + r.path, JSON.stringify(val)); } catch (e) {}
+  return Promise.resolve();
+}
+function get(r) {
+  let v = null;
+  try { const raw = localStorage.getItem('fb_' + r.path); v = raw ? JSON.parse(raw) : null; } catch (e) {}
+  return Promise.resolve({ val: () => v, exists: () => v != null });
+}
+function onValue(r, cb) {
+  // Defer like real Firebase: fire after the full module script has run,
+  // so later `let`/`const` bindings are initialized.
+  setTimeout(() => {
+    let v = null;
+    try { const raw = localStorage.getItem('fb_' + r.path); v = raw ? JSON.parse(raw) : null; } catch (e) {}
+    cb({ val: () => v, exists: () => v != null });
+  }, 0);
+}
 
 // Sync indicator
 const syncEl = document.getElementById('sync-indicator');
@@ -301,10 +306,11 @@ const POMO_SUPER_MINS = POMO_SEGMENTS.reduce((s, seg) => s + (seg.work || seg.br
 const FIXED_BLOCKS = [
   { start: '7:00', end: '7:30', label: 'MR', tags: ['MEDITATE_TAG', 'Gratitude - 3 Pts'] },
   { start: '7:30', end: '9:30', label: 'Deep Work', tags: [] },
-  { start: '9:30', end: '11:00', label: 'Exercise', tags: ['EX_TAG'] },
-  { start: '11:00', end: '11:30', label: 'Shower' },
-  { start: '11:30', end: '13:30', label: 'Shallow Work', tags: [] },
-  { start: '13:30', end: '22:00', label: 'Open', tags: ['Read', 'Journal', 'Yoga', 'Socialize', 'Touch Grass Gang'], buffer: true, bufferPriority: 1 },
+  { start: '9:30', end: '10:00', label: 'Walk' },
+  { start: '10:00', end: '12:00', label: 'Shallow Work', tags: [] },
+  { start: '12:00', end: '13:30', label: 'Exercise', tags: ['EX_TAG'] },
+  { start: '13:30', end: '14:00', label: 'Shower' },
+  { start: '14:00', end: '22:00', label: 'Open', tags: ['Read', 'Journal', 'Yoga', 'Socialize', 'Touch Grass Gang'], buffer: true, bufferPriority: 1 },
   { start: '22:00', end: '23:00', label: 'NR', tags: [] },
   { start: '23:00', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
 ];
