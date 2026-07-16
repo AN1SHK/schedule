@@ -225,27 +225,22 @@ body { padding: 12px; padding-bottom: 40px; }
 <div class="sync-indicator" id="sync-indicator"></div>
 
 <script type="module">
-// ── PREVIEW BUILD: localStorage shim (no Firebase, renders standalone) ────────
-const db = {};
-function ref(_db, path) { return { path: path || '' }; }
-function set(r, val) {
-  try { localStorage.setItem('fb_' + r.path, JSON.stringify(val)); } catch (e) {}
-  return Promise.resolve();
-}
-function get(r) {
-  let v = null;
-  try { const raw = localStorage.getItem('fb_' + r.path); v = raw ? JSON.parse(raw) : null; } catch (e) {}
-  return Promise.resolve({ val: () => v, exists: () => v != null });
-}
-function onValue(r, cb) {
-  // Defer like real Firebase: fire after the full module script has run,
-  // so later `let`/`const` bindings are initialized.
-  setTimeout(() => {
-    let v = null;
-    try { const raw = localStorage.getItem('fb_' + r.path); v = raw ? JSON.parse(raw) : null; } catch (e) {}
-    cb({ val: () => v, exists: () => v != null });
-  }, 0);
-}
+// ── Firebase ──────────────────────────────────────────────────────────────────
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getDatabase, ref, set, onValue, get } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAIlMRgVKpN_xe48WKJihiQ1ZgiVLRouMs",
+  authDomain: "my-schedule-a0ded.firebaseapp.com",
+  databaseURL: "https://my-schedule-a0ded-default-rtdb.firebaseio.com",
+  projectId: "my-schedule-a0ded",
+  storageBucket: "my-schedule-a0ded.firebasestorage.app",
+  messagingSenderId: "941701290759",
+  appId: "1:941701290759:web:86d0c144ee0425fad983a2"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
 // Sync indicator
 const syncEl = document.getElementById('sync-indicator');
@@ -310,7 +305,7 @@ const FIXED_BLOCKS = [
   { start: '10:00', end: '12:00', label: 'Shallow Work', tags: [] },
   { start: '12:00', end: '13:30', label: 'Exercise', tags: ['EX_TAG'] },
   { start: '13:30', end: '14:00', label: 'Shower' },
-  { start: '14:00', end: '22:00', label: 'Open', tags: ['Read', 'Journal', 'Yoga', 'Socialize', 'Touch Grass Gang'], buffer: true, bufferPriority: 1 },
+  { start: '14:00', end: '22:00', label: 'Open', tags: ['Read', 'Journal', 'Yoga', 'Socialize', 'Touch Grass'], buffer: true, bufferPriority: 1 },
   { start: '22:00', end: '23:00', label: 'NR', tags: [] },
   { start: '23:00', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
 ];
@@ -336,11 +331,11 @@ function getExerciseTag(d) {
   const n = EX_CYCLE.length;
   return EX_CYCLE[(((dayNum(d) - EX_START) % n) + n) % n];
 }
-// Meditation ramps +1 min/day from 1 min up to 30 min, starting July 13 2026
+// Meditation ramps +2 min/day from 1 min up to 25 min, starting July 13 2026
 const MEDITATE_START = dayNum(new Date(2026, 6, 13));
 function getMeditationTag(d) {
   const offset = Math.max(0, dayNum(d) - MEDITATE_START);
-  const mins = Math.min(30, 1 + offset);
+  const mins = Math.min(25, 1 + offset * 2);
   return 'Meditate - ' + mins + (mins === 1 ? ' MIN' : ' MINS');
 }
 
