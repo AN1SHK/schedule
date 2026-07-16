@@ -324,9 +324,9 @@ function formatTime(t) {
   return `${dispH}:${String(m).padStart(2,'0')}`;
 }
 
-// Exercise rotates on an 8-day cycle, starting July 15 2026
+// Exercise rotates on a 12-day cycle, starting July 15 2026
 const EX_START = dayNum(new Date(2026, 6, 15));
-const EX_CYCLE = ['Push', 'Run', 'Pull', 'Basketball', 'Legs', 'Run', 'Lift', 'Basketball'];
+const EX_CYCLE = ['Push', 'Run', 'Pull', 'Basketball', 'Legs', 'Run', 'Push', 'Basketball', 'Pull', 'Run', 'Legs', 'Basketball'];
 function getExerciseTag(d) {
   const n = EX_CYCLE.length;
   return EX_CYCLE[(((dayNum(d) - EX_START) % n) + n) % n];
