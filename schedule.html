@@ -64,8 +64,7 @@ body { padding: 12px; padding-bottom: 40px; }
 .date-nav button { background: none; border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 4px 10px; cursor: pointer; font-size: 14px; color: var(--text-primary); font-family: inherit; }
 .date-nav button:active { background: rgba(0,0,0,0.04); }
 .date-label { font-size: 15px; font-weight: 500; color: var(--text-primary); min-width: 220px; text-align: center; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border-strong); }
-.reminder-pill { display: inline-block; background: #C8413A; color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
-.reminder-pill-blue { display: inline-block; background: #2B6CB0; color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+.reminder-pill { display: inline-block; background: #556274; color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
 .reminder-wrap { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .reminder-wrap:not(:empty) { margin-top: 6px; }
 .now-banner-wrap { text-align: center; display: flex; align-items: center; justify-content: center; gap: 0; }
@@ -136,8 +135,6 @@ body { padding: 12px; padding-bottom: 40px; }
 .marker { position: absolute; left: 0; right: 0; height: 1px; background: #556274; z-index: 5; pointer-events: none; }
 .marker-label { position: absolute; right: 8px; top: -8px; background: #556274; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
 .now-label { position: absolute; right: 8px; top: -8px; background: #1E293B; color: #FFFFFF; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
-.marker-reminder { position: absolute; left: 0; right: 0; height: 1px; background: #2B6CB0; z-index: 5; pointer-events: none; }
-.marker-reminder-label { position: absolute; right: 8px; top: -8px; background: #2B6CB0; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
 .now-line { position: absolute; left: 0; right: 0; height: 1px; background: #1E293B; z-index: 6; pointer-events: none; }
 .chk { width: 20px; height: 20px; border-radius: 50%; border: 0.5px solid var(--border-strong); background: transparent; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; transition: background 0.15s, border-color 0.15s; pointer-events: none; margin-top: 1px; }
 .chk.done { background: var(--green); border-color: var(--green); }
@@ -308,7 +305,7 @@ const FIXED_BLOCKS = [
   { start: '11:00', end: '11:30', label: 'Shower' },
   { start: '11:30', end: '13:30', label: 'Shallow Work', tags: [] },
   { start: '13:30', end: '14:00', label: 'Reflect', tags: [] },
-  { start: '14:00', end: '22:00', label: 'Open', tags: ['Read', 'Journal', 'Yoga', 'Socialize', 'Touch Grass'], buffer: true, bufferPriority: 1 },
+  { start: '14:00', end: '22:00', label: 'Open', tags: ['Read', 'Journal', 'Yoga', 'Socialize', 'Touch Grass Bro'], buffer: true, bufferPriority: 1 },
   { start: '22:00', end: '23:00', label: 'NR', tags: [] },
   { start: '23:00', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
 ];
@@ -620,7 +617,7 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
 
   markers.forEach(m => {
     let markerTop;
-    if (m.cls === 'now-line' || m.cls === 'marker' || m.cls === 'marker-reminder') {
+    if (m.cls === 'now-line' || m.cls === 'marker') {
       const dS = bl => (bl.dispStartT !== undefined ? bl.dispStartT : bl.startT);
       const dE = bl => (bl.dispEndT !== undefined ? bl.dispEndT : bl.endT);
       let mt = m.time;
@@ -689,7 +686,7 @@ function render() {
     const daysAway = Math.round((rd - viewDate) / 86400000);
     if (daysAway >= 0 && daysAway <= 3) {
       const label = daysAway === 0 ? r.name : `${r.name} · ${daysAway}d`;
-      pillsHtml += `<div class="reminder-pill-blue">${label}</div>`;
+      pillsHtml += `<div class="reminder-pill">${label}</div>`;
     }
   }
   reminderWrap.innerHTML = pillsHtml;
@@ -776,7 +773,7 @@ function render() {
   viewedDayReminders.forEach(r => {
     const [rh, rm] = r.time.split(':').map(Number);
     if (isNaN(rh) || isNaN(rm)) return;
-    timelineMarkers.push({ time: rh + rm / 60, cls: 'marker-reminder', labelCls: 'marker-reminder-label', label: `${r.name} · ${r.time}` });
+    timelineMarkers.push({ time: rh + rm / 60, cls: 'marker', labelCls: 'marker-label', label: `${r.name} · ${r.time}` });
   });
 
   // Now-line at the real current time, positioned within the packed schedule
