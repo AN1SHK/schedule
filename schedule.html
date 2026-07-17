@@ -304,7 +304,7 @@ const FIXED_BLOCKS = [
   { start: '10:00', end: '10:30', label: 'Exercise', tags: ['EX_AM_TAG'] },
   { start: '10:30', end: '12:30', label: 'Shallow Work', tags: [] },
   { start: '12:30', end: '13:30', label: 'Exercise', tags: ['EX_TAG'] },
-  { start: '13:30', end: '14:00', label: 'Shower' },
+  { start: '13:30', end: '14:00', label: 'Shower', tags: ['SHOWER_TAG'] },
   { start: '14:00', end: '22:00', label: 'Open', tags: ['Read', 'Journal', 'Yoga', 'Socialize', 'Touch Grass'], buffer: true, bufferPriority: 1 },
   { start: '22:00', end: '23:00', label: 'NR', tags: [] },
   { start: '23:00', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
@@ -332,6 +332,13 @@ const EX_AM_CYCLE = ['Basketball', 'Walk', 'Skip'];
 function getAmExerciseTag(d) {
   const n = EX_AM_CYCLE.length;
   return EX_AM_CYCLE[(((dayNum(d) - EX_START) % n) + n) % n];
+}
+// Shower alternates Blue / nothing / Black / nothing — 4-day cycle from Fri July 17 2026
+const SHOWER_START = dayNum(new Date(2026, 6, 17));
+const SHOWER_CYCLE = ['Blue', null, 'Black', null];
+function getShowerTag(d) {
+  const n = SHOWER_CYCLE.length;
+  return SHOWER_CYCLE[(((dayNum(d) - SHOWER_START) % n) + n) % n];
 }
 function getExerciseTag(d) {
   const n = EX_CYCLE.length;
@@ -714,6 +721,7 @@ function render() {
     const tags = b.tags ? [...b.tags.flatMap(t => {
       if (t === 'EX_TAG') return [getExerciseTag(d)];
       if (t === 'EX_AM_TAG') return [getAmExerciseTag(d)];
+      if (t === 'SHOWER_TAG') { const s = getShowerTag(d); return s ? [s] : []; }
       if (t === 'MEDITATE_TAG') return [getMeditationTag(d)];
       return [t];
     }), ...extraTags] : (extraTags.length ? extraTags : b.tags);
