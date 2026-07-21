@@ -303,7 +303,7 @@ const FIXED_BLOCKS = [
   { start: '7:30', end: '11:30', label: 'Work', tags: [] },
   { start: '11:30', end: '12:00', label: 'Exercise', tags: ['EX_AM_TAG'] },
   { start: '12:00', end: '14:00', label: 'Work', tags: [] },
-  { start: '14:00', end: '14:30', label: 'Exercise' },
+  { start: '14:00', end: '14:30', label: 'Exercise', tags: ['EX_MID_TAG'] },
   { start: '14:30', end: '16:30', label: 'Work', tags: [] },
   { start: '16:30', end: '17:30', label: 'Exercise', tags: ['EX_TAG'] },
   { start: '17:30', end: '18:00', label: 'Shower', tags: ['SHOWER_TAG'] },
@@ -341,6 +341,13 @@ const SHOWER_CYCLE = ['Blue', null, 'Black', null];
 function getShowerTag(d) {
   const n = SHOWER_CYCLE.length;
   return SHOWER_CYCLE[(((dayNum(d) - SHOWER_START) % n) + n) % n];
+}
+// Midday exercise (14:00) rotates on its own 3-day cycle from Tue July 21 2026
+const EX_MID_START = dayNum(new Date(2026, 6, 21));
+const EX_MID_CYCLE = ['Walk', 'Skip', 'Basketball'];
+function getMidExerciseTag(d) {
+  const n = EX_MID_CYCLE.length;
+  return EX_MID_CYCLE[(((dayNum(d) - EX_MID_START) % n) + n) % n];
 }
 function getExerciseTag(d) {
   const n = EX_CYCLE.length;
@@ -723,6 +730,7 @@ function render() {
     const tags = b.tags ? [...b.tags.flatMap(t => {
       if (t === 'EX_TAG') return [getExerciseTag(d)];
       if (t === 'EX_AM_TAG') return [getAmExerciseTag(d)];
+      if (t === 'EX_MID_TAG') return [getMidExerciseTag(d)];
       if (t === 'SHOWER_TAG') { const s = getShowerTag(d); return s ? [s] : []; }
       if (t === 'MEDITATE_TAG') return [getMeditationTag(d)];
       return [t];
