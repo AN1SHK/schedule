@@ -300,12 +300,13 @@ const POMO_SUPER_MINS = POMO_SEGMENTS.reduce((s, seg) => s + (seg.work || seg.br
 
 const FIXED_BLOCKS = [
   { start: '7:00', end: '7:30', label: 'MR', tags: ['MEDITATE_TAG', 'Gratitude - 3 Pts'] },
-  { start: '7:30', end: '10:00', label: 'Deep Work', tags: [] },
-  { start: '10:00', end: '10:30', label: 'Exercise', tags: ['EX_AM_TAG'] },
-  { start: '10:30', end: '12:30', label: 'Shallow Work', tags: [] },
-  { start: '12:30', end: '13:30', label: 'Exercise', tags: ['EX_TAG'] },
-  { start: '13:30', end: '14:00', label: 'Shower', tags: ['SHOWER_TAG'] },
-  { start: '14:00', end: '22:00', label: 'Open', tags: ['Read', 'Journal', 'Yoga', 'Socialize', 'Touch Grass', 'Comedy'], buffer: true, bufferPriority: 1 },
+  { start: '7:30', end: '11:30', label: 'Work', tags: [] },
+  { start: '11:30', end: '12:00', label: 'Exercise', tags: ['EX_AM_TAG'] },
+  { start: '12:00', end: '14:00', label: 'Work', tags: [] },
+  { start: '14:00', end: '15:00', label: 'Exercise', tags: ['EX_TAG'] },
+  { start: '15:00', end: '15:30', label: 'Shower', tags: ['SHOWER_TAG'] },
+  { start: '15:30', end: '17:30', label: 'Work', tags: [] },
+  { start: '17:30', end: '22:00', label: 'Open', tags: ['Read', 'Journal', 'Yoga', 'Socialize', 'Touch Grass'], buffer: true, bufferPriority: 1 },
   { start: '22:00', end: '23:00', label: 'NR', tags: [] },
   { start: '23:00', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
 ];
@@ -553,7 +554,7 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
     tl.appendChild(block);
 
     // Task checklist for Work blocks — Firebase backed
-    if (b.label === 'Work') {
+    if (b.pomodoro) {
       const taskContainer = document.createElement('div');
       taskContainer.className = 'task-list';
       function renderTasks() {
@@ -732,7 +733,7 @@ function render() {
     return { ...b, tags, i, startT, endT, dispStartT, dispEndT, done: !!(doneState && doneState[i]) };
   }).sort((a, b) => a.startT - b.startT);
 
-  const SPLIT_1 = 10.5;
+  const SPLIT_1 = 12;
   const SPLIT_2 = 19;
   const morning = enriched.filter(b => b.endT <= SPLIT_1);
   const afternoon = enriched.filter(b => b.endT > SPLIT_1 && b.endT <= SPLIT_2);
@@ -759,7 +760,7 @@ function render() {
       const remH = Math.floor(segRemaining / 60);
       const remM = Math.round(segRemaining % 60);
       const remStr = remH > 0 ? `${remH}h ${remM}m left` : `${remM} min left`;
-      const isWorkBlock = cur_block.label === 'Work';
+      const isWorkBlock = cur_block.pomodoro;
       const pomoHtml = isWorkBlock ? `<div class="pomo-timer-pill" id="pomo-timer-pill"></div>` : '';
       nowBanner.innerHTML = `<div class="now-banner" id="now-banner-pill" style="${isScrubbing ? 'opacity:0.75;' : ''}">${isScrubbing ? '⟳ ' : ''}Now: ${cur_block.label}<span class="now-banner-time">${isScrubbing ? 'tap to reset' : remStr}</span></div>${pomoHtml}`;
       document.getElementById('now-banner-pill').onclick = () => { nowScrub = null; cur = dayNum(new Date()); render(); };
