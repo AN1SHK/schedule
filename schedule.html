@@ -97,7 +97,7 @@ body { padding: 12px; padding-bottom: 40px; }
 .timeline-wrap { padding-top: 24px; padding-bottom: 12px; }
 .timeline { position: relative; }
 
-.block { position: absolute; left: 0; right: 0; background: var(--surface); border-radius: 0; overflow: hidden; user-select: none; -webkit-user-select: none; padding: 14px 14px; display: flex; align-items: center; gap: 10px; transition: opacity 0.3s; }
+.block { position: absolute; left: 0; right: 0; background: var(--surface); border-radius: 0; overflow: hidden; user-select: none; -webkit-user-select: none; padding: 14px 14px; display: flex; align-items: flex-start; gap: 10px; transition: opacity 0.3s; }
 .block.past { opacity: 0.35; }
 .block-content { flex: 1; min-width: 0; }
 .task-list { margin-top: 8px; margin-bottom: 4px; display: flex; flex-direction: column; gap: 2px; }
@@ -306,9 +306,9 @@ const FIXED_BLOCKS = [
   { start: '12:30', end: '13:00', label: 'Exercise', tags: ['EX_AM_TAG'] },
   { start: '13:00', end: '15:00', label: 'Work', tags: [] },
   { start: '15:00', end: '15:30', label: 'Exercise', tags: ['EX_MID_TAG'] },
-  { start: '15:30', end: '17:30', label: 'Work', tags: [] },
+  { start: '15:30', end: '17:30', label: 'Work', tags: ['Plan Tomorrow'] },
   { start: '17:30', end: '18:30', label: 'Exercise', tags: ['EX_TAG'] },
-  { start: '18:30', end: '19:00', label: 'Shower', tags: ['SHOWER_TAG'] },
+  { start: '18:30', end: '19:00', label: 'Shower', tags: ['SHOWER_TAG'], grooming: true },
   { start: '19:00', end: '20:00', label: 'Read', tags: [] },
   { start: '20:00', end: '22:00', label: 'Open', tags: ['Do Nothing', 'Journal'], buffer: true, bufferPriority: 1 },
   { start: '22:00', end: '23:00', label: 'NR', tags: [] },
@@ -708,7 +708,7 @@ function render() {
   const dow = d.getDay();
   const reminderWrap = document.getElementById('reminder-wrap');
   let pillsHtml = '';
-  if (dow === 2 || dow === 5) pillsHtml += `<div class="reminder-pill">Personal Grooming</div>`;
+  if (dow === 2 || dow === 5) {}
 
   const viewDate = new Date(cur * 86400000 + new Date(2026,0,1).getTime());
   viewDate.setHours(0,0,0,0);
