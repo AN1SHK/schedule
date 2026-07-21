@@ -300,14 +300,16 @@ const POMO_SUPER_MINS = POMO_SEGMENTS.reduce((s, seg) => s + (seg.work || seg.br
 
 const FIXED_BLOCKS = [
   { start: '7:00', end: '7:30', label: 'MR', tags: ['MEDITATE_TAG', 'Gratitude - 3 Pts'] },
-  { start: '7:30', end: '11:30', label: 'Work', tags: [] },
-  { start: '11:30', end: '12:00', label: 'Exercise', tags: ['EX_AM_TAG'] },
-  { start: '12:00', end: '14:00', label: 'Work', tags: [] },
-  { start: '14:00', end: '14:30', label: 'Exercise', tags: ['EX_MID_TAG'] },
-  { start: '14:30', end: '16:30', label: 'Work', tags: [] },
-  { start: '16:30', end: '17:30', label: 'Exercise', tags: ['EX_TAG'] },
-  { start: '17:30', end: '18:00', label: 'Shower', tags: ['SHOWER_TAG'] },
-  { start: '18:00', end: '22:00', label: 'Open', tags: ['Read', 'Journal', 'Yoga', 'Socialize', 'Touch Grass'], buffer: true, bufferPriority: 1 },
+  { start: '7:30', end: '8:00', label: 'Exercise', tags: ['EX_EARLY_TAG'] },
+  { start: '8:00', end: '8:30', label: 'Cold Shower' },
+  { start: '8:30', end: '12:30', label: 'Work', tags: [] },
+  { start: '12:30', end: '13:00', label: 'Exercise', tags: ['EX_AM_TAG'] },
+  { start: '13:00', end: '15:00', label: 'Work', tags: [] },
+  { start: '15:00', end: '15:30', label: 'Exercise', tags: ['EX_MID_TAG'] },
+  { start: '15:30', end: '17:30', label: 'Work', tags: [] },
+  { start: '17:30', end: '18:30', label: 'Exercise', tags: ['EX_TAG'] },
+  { start: '18:30', end: '19:00', label: 'Shower', tags: ['SHOWER_TAG'] },
+  { start: '19:00', end: '22:00', label: 'Open', tags: ['Read', 'Journal', 'Yoga', 'Socialize'], buffer: true, bufferPriority: 1 },
   { start: '22:00', end: '23:00', label: 'NR', tags: [] },
   { start: '23:00', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
 ];
@@ -329,8 +331,15 @@ function formatTime(t) {
 // Main exercise rotates on a 12-day cycle, starting July 15 2026
 const EX_START = dayNum(new Date(2026, 6, 15));
 const EX_CYCLE = ['Push', 'Run', 'Pull', 'Basketball', 'Legs', 'Run', 'Push', 'Basketball', 'Pull', 'Run', 'Legs', 'Basketball'];
-// Morning exercise rotates on its own 3-day cycle, same start date
-const EX_AM_CYCLE = ['Basketball', 'Walk', 'Skip'];
+// Early exercise (right after MR) rotates on a 3-day cycle from Fri July 17 2026
+const EX_EARLY_START = dayNum(new Date(2026, 6, 17));
+const EX_EARLY_CYCLE = ['Run', 'Skip'];
+function getEarlyExerciseTag(d) {
+  const n = EX_EARLY_CYCLE.length;
+  return EX_EARLY_CYCLE[(((dayNum(d) - EX_EARLY_START) % n) + n) % n];
+}
+// Late-morning exercise rotates on its own 2-day cycle, same start date
+const EX_AM_CYCLE = ['Basketball', 'Walk'];
 function getAmExerciseTag(d) {
   const n = EX_AM_CYCLE.length;
   return EX_AM_CYCLE[(((dayNum(d) - EX_START) % n) + n) % n];
@@ -344,7 +353,7 @@ function getShowerTag(d) {
 }
 // Midday exercise (14:00) rotates on its own 3-day cycle from Tue July 21 2026
 const EX_MID_START = dayNum(new Date(2026, 6, 21));
-const EX_MID_CYCLE = ['Walk', 'Skip', 'Basketball'];
+const EX_MID_CYCLE = ['Walk', 'Basketball'];
 function getMidExerciseTag(d) {
   const n = EX_MID_CYCLE.length;
   return EX_MID_CYCLE[(((dayNum(d) - EX_MID_START) % n) + n) % n];
@@ -729,6 +738,7 @@ function render() {
     if (b.grooming && (dow === 2 || dow === 5)) extraTags = ['Personal Grooming'];
     const tags = b.tags ? [...b.tags.flatMap(t => {
       if (t === 'EX_TAG') return [getExerciseTag(d)];
+      if (t === 'EX_EARLY_TAG') return [getEarlyExerciseTag(d)];
       if (t === 'EX_AM_TAG') return [getAmExerciseTag(d)];
       if (t === 'EX_MID_TAG') return [getMidExerciseTag(d)];
       if (t === 'SHOWER_TAG') { const s = getShowerTag(d); return s ? [s] : []; }
@@ -742,8 +752,8 @@ function render() {
     return { ...b, tags, i, startT, endT, dispStartT, dispEndT, done: !!(doneState && doneState[i]) };
   }).sort((a, b) => a.startT - b.startT);
 
-  const SPLIT_1 = 12;
-  const SPLIT_2 = 19;
+  const SPLIT_1 = 12.5;
+  const SPLIT_2 = 17.5;
   const morning = enriched.filter(b => b.endT <= SPLIT_1);
   const afternoon = enriched.filter(b => b.endT > SPLIT_1 && b.endT <= SPLIT_2);
   const evening = enriched.filter(b => b.endT > SPLIT_2);
