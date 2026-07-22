@@ -132,6 +132,8 @@ body { padding: 12px; padding-bottom: 40px; }
 .subitem.done::after { content: ''; position: absolute; left: 5.5px; top: 8.5px; width: 4px; height: 2px; border-left: 1.5px solid white; border-bottom: 1.5px solid white; transform: rotate(-45deg); }
 .tag-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
 .tag { display: inline-block; background: #E8ECF1; color: #556274; font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.02em; text-transform: uppercase; }
+.tag-med { cursor: pointer; user-select: none; -webkit-user-select: none; }
+.tag-med.med-done { background: #1E293B; color: #FFFFFF; }
 .marker { position: absolute; left: 0; right: 0; height: 1px; background: #556274; z-index: 5; pointer-events: none; }
 .marker-label { position: absolute; right: 8px; top: -8px; background: #556274; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
 .now-label { position: absolute; right: 8px; top: -8px; background: #1E293B; color: #FFFFFF; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
@@ -285,6 +287,13 @@ function fbSetReminders(arr) {
     .catch(() => showSync('error', 'Sync failed'));
 }
 
+function fbSetMeditation(med) {
+  showSync('syncing', 'Syncing…');
+  set(ref(db, 'meditation'), med)
+    .then(() => showSync('synced', 'Synced'))
+    .catch(() => showSync('error', 'Sync failed'));
+}
+
 // ── Schedule constants ────────────────────────────────────────────────────────
 const KEY = 'schedule_v2';
 const START_HOUR = 7;
@@ -364,10 +373,52 @@ function getExerciseTag(d) {
   return EX_CYCLE[(((dayNum(d) - EX_START) % n) + n) % n];
 }
 // Meditation ramps +2 min/day from 1 min up to 25 min, starting July 13 2026
+// Meditation is adaptive: mark a day done -> +2 next day; any untapped day -> -1.
+// Range clamped to 1..25. MEDITATE_START only seeds the very first value for continuity.
 const MEDITATE_START = dayNum(new Date(2026, 6, 13));
-function getMeditationTag(d) {
+function legacyMedMinutes(d) {
   const offset = Math.max(0, dayNum(d) - MEDITATE_START);
-  const mins = Math.min(25, 1 + offset * 2);
+  return Math.min(25, 1 + offset * 2);
+}
+function nextDayKey(k) {
+  const [y, m, dd] = k.split('-').map(Number);
+  return dayKey(new Date(y, m - 1, dd + 1));
+}
+function ensureMeditation() {
+  const today = dayKey(new Date());
+  let med = fbCache.meditation;
+  if (!med || typeof med.minutes !== 'number') {
+    med = { minutes: legacyMedMinutes(new Date()), lastEval: today, done: {} };
+    fbCache.meditation = med;
+    fbSetMeditation(med);
+    return med;
+  }
+  // Close out every full day since the last evaluation: done -> +2, missed -> -1.
+  if (med.lastEval && med.lastEval < today) {
+    let cur = med.lastEval, changed = false, guard = 0;
+    while (cur < today && guard < 500) {
+      med.minutes += (med.done && med.done[cur]) ? 2 : -1;
+      if (med.minutes > 25) med.minutes = 25;
+      if (med.minutes < 1) med.minutes = 1;
+      cur = nextDayKey(cur);
+      changed = true; guard++;
+    }
+    med.lastEval = today;
+    if (changed) { fbCache.meditation = med; fbSetMeditation(med); }
+  }
+  return med;
+}
+function toggleMedDone() {
+  const med = ensureMeditation();
+  const tk = dayKey(new Date());
+  med.done = med.done || {};
+  med.done[tk] = !med.done[tk];
+  fbCache.meditation = med;
+  fbSetMeditation(med);
+  render();
+}
+function getMeditationTag(d) {
+  const mins = ensureMeditation().minutes;
   return 'Meditate - ' + mins + (mins === 1 ? ' MIN' : ' MINS');
 }
 
@@ -395,7 +446,8 @@ const fbCache = {
   tasks: {},   // { [dayKey_blockStart]: [{text,done}] }
   tallies: {}, // { [dayKey_blockStart]: number }
   reminders: null,
-  shifts: {}   // { [dayKey]: hours }
+  shifts: {},  // { [dayKey]: hours }
+  meditation: null  // { minutes, lastEval:'YYYY-MM-DD', done:{ 'YYYY-MM-DD':true } }
 };
 
 // Listen to today + tomorrow tasks/tallies
@@ -433,6 +485,13 @@ onValue(ref(db, 'shifts'), snap => {
     if (hours > 0) localStorage.setItem('shift_' + dk, String(hours));
     else localStorage.removeItem('shift_' + dk);
   }
+  render();
+});
+
+// Listen to meditation state globally — adaptive minutes sync across devices
+onValue(ref(db, 'meditation'), snap => {
+  const v = snap.val();
+  if (v) fbCache.meditation = v; // don't clobber a locally-seeded value with an empty snapshot
   render();
 });
 
@@ -557,7 +616,14 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
     block.style.top = `${b.top + 1}px`;
     block.style.height = `${b.height - 3}px`;
 
-    const tagsHtml = b.tags ? `<div class="tag-row">${b.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>` : '';
+    const _isToday = currentDayKey === dayKey(new Date());
+    const _medDone = _isToday && fbCache.meditation && fbCache.meditation.done && fbCache.meditation.done[currentDayKey];
+    const tagsHtml = b.tags ? `<div class="tag-row">${b.tags.map(t => {
+      if (t.indexOf('Meditate') === 0 && _isToday) {
+        return `<span class="tag tag-med${_medDone ? ' med-done' : ''}" data-med="1">${t}${_medDone ? ' ✓' : ''}</span>`;
+      }
+      return `<span class="tag">${t}</span>`;
+    }).join('')}</div>` : '';
     const displayStart = b.displayStart || formatTime(b.dispStartT);
     const displayEnd = b.displayEnd || formatTime(b.dispEndT);
     const noteHtml = b.note ? `<div class="b-note">${b.note}</div>` : '';
@@ -570,6 +636,12 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
       </div>
     `;
     tl.appendChild(block);
+
+    // Meditation pill: tap to mark today done (adaptive minutes)
+    const _medEl = block.querySelector('[data-med]');
+    if (_medEl) {
+      _medEl.addEventListener('click', (e) => { e.stopPropagation(); toggleMedDone(); });
+    }
 
     // Task checklist for Work blocks — Firebase backed
     if (b.pomodoro) {
