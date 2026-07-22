@@ -376,6 +376,7 @@ function getExerciseTag(d) {
 // Meditation is adaptive: mark a day done -> +2 next day; any untapped day -> -1.
 // Range clamped to 1..25. MEDITATE_START only seeds the very first value for continuity.
 const MEDITATE_START = dayNum(new Date(2026, 6, 13));
+let medLoaded = false; // flips true after the first Firebase meditation snapshot
 function legacyMedMinutes(d) {
   const offset = Math.max(0, dayNum(d) - MEDITATE_START);
   return Math.min(25, 1 + offset * 2);
@@ -384,9 +385,15 @@ function nextDayKey(k) {
   const [y, m, dd] = k.split('-').map(Number);
   return dayKey(new Date(y, m - 1, dd + 1));
 }
+// Only seeds / rolls over / writes once Firebase has reported in (medLoaded), so an
+// early render before the snapshot arrives can never overwrite stored progress.
 function ensureMeditation() {
   const today = dayKey(new Date());
   let med = fbCache.meditation;
+  if (!medLoaded) {
+    return (med && typeof med.minutes === 'number') ? med
+      : { minutes: legacyMedMinutes(new Date()), lastEval: today, done: {} };
+  }
   if (!med || typeof med.minutes !== 'number') {
     med = { minutes: legacyMedMinutes(new Date()), lastEval: today, done: {} };
     fbCache.meditation = med;
@@ -409,6 +416,7 @@ function ensureMeditation() {
   return med;
 }
 function toggleMedDone() {
+  if (!medLoaded) return; // wait until the stored state is known
   const med = ensureMeditation();
   const tk = dayKey(new Date());
   med.done = med.done || {};
@@ -492,6 +500,7 @@ onValue(ref(db, 'shifts'), snap => {
 onValue(ref(db, 'meditation'), snap => {
   const v = snap.val();
   if (v) fbCache.meditation = v; // don't clobber a locally-seeded value with an empty snapshot
+  medLoaded = true; // Firebase has reported in — safe to seed / roll over now
   render();
 });
 
