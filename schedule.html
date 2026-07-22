@@ -425,8 +425,17 @@ function toggleMedDone() {
   fbSetMeditation(med);
   render();
 }
+function projectedMedMinutes(viewedDate) {
+  const med = ensureMeditation();          // current value, rolled over to the real today
+  const today = dayKey(new Date());
+  const viewed = dayKey(viewedDate);
+  if (viewed <= today) return med.minutes; // today or past: the real current value
+  // Future days preview the effect of today's choice: done -> +2, otherwise the -1 miss.
+  const delta = (med.done && med.done[today]) ? 2 : -1;
+  return Math.max(1, Math.min(25, med.minutes + delta));
+}
 function getMeditationTag(d) {
-  const mins = ensureMeditation().minutes;
+  const mins = projectedMedMinutes(d);
   return 'Meditate - ' + mins + (mins === 1 ? ' MIN' : ' MINS');
 }
 
