@@ -228,22 +228,27 @@ body { padding: 12px; padding-bottom: 40px; }
 <div class="sync-indicator" id="sync-indicator"></div>
 
 <script type="module">
-// ── Firebase ──────────────────────────────────────────────────────────────────
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getDatabase, ref, set, onValue, get } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
-
-const firebaseConfig = {
-  apiKey: "AIzaSyAIlMRgVKpN_xe48WKJihiQ1ZgiVLRouMs",
-  authDomain: "my-schedule-a0ded.firebaseapp.com",
-  databaseURL: "https://my-schedule-a0ded-default-rtdb.firebaseio.com",
-  projectId: "my-schedule-a0ded",
-  storageBucket: "my-schedule-a0ded.firebasestorage.app",
-  messagingSenderId: "941701290759",
-  appId: "1:941701290759:web:86d0c144ee0425fad983a2"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+// ── PREVIEW BUILD: localStorage shim (no Firebase, renders standalone) ────────
+const db = {};
+function ref(_db, path) { return { path: path || '' }; }
+function set(r, val) {
+  try { localStorage.setItem('fb_' + r.path, JSON.stringify(val)); } catch (e) {}
+  return Promise.resolve();
+}
+function get(r) {
+  let v = null;
+  try { const raw = localStorage.getItem('fb_' + r.path); v = raw ? JSON.parse(raw) : null; } catch (e) {}
+  return Promise.resolve({ val: () => v, exists: () => v != null });
+}
+function onValue(r, cb) {
+  // Defer like real Firebase: fire after the full module script has run,
+  // so later `let`/`const` bindings are initialized.
+  setTimeout(() => {
+    let v = null;
+    try { const raw = localStorage.getItem('fb_' + r.path); v = raw ? JSON.parse(raw) : null; } catch (e) {}
+    cb({ val: () => v, exists: () => v != null });
+  }, 0);
+}
 
 // Sync indicator
 const syncEl = document.getElementById('sync-indicator');
@@ -313,9 +318,10 @@ const MIN_BLOCK_HEIGHT = 36;
 
 const FIXED_BLOCKS = [
   { start: '7:00', end: '7:30', label: 'MR', tags: ['MEDITATE_TAG', 'Gratitude - 3 Pts'] },
-  { start: '7:30', end: '8:00', label: 'Exercise', tags: ['EX_EARLY_TAG'] },
-  { start: '8:00', end: '8:30', label: 'Cold Shower' },
-  { start: '8:30', end: '12:30', label: 'Work', tags: [] },
+  { start: '7:30', end: '9:30', label: 'Work', tags: [] },
+  { start: '9:30', end: '10:00', label: 'Exercise', tags: ['EX_EARLY_TAG'] },
+  { start: '10:00', end: '10:30', label: 'Cold Shower' },
+  { start: '10:30', end: '12:30', label: 'Work', tags: [] },
   { start: '12:30', end: '13:00', label: 'Exercise', tags: ['EX_AM_TAG'] },
   { start: '13:00', end: '15:00', label: 'Work', tags: [] },
   { start: '15:00', end: '15:30', label: 'Exercise', tags: ['EX_MID_TAG'] },
@@ -343,10 +349,10 @@ function formatTime(t) {
 
 // Main exercise rotates on a 12-day cycle, starting July 15 2026
 const EX_START = dayNum(new Date(2026, 6, 15));
-const EX_CYCLE = ['Push', 'Run', 'Pull', 'Basketball', 'Legs', 'Run', 'Push', 'Basketball', 'Pull', 'Run', 'Legs', 'Basketball'];
+const EX_CYCLE = ['Push', 'Mobility', 'Pull', 'Basketball', 'Legs', 'Mobility', 'Push', 'Basketball', 'Pull', 'Mobility', 'Legs', 'Basketball'];
 // Early exercise (right after MR) rotates on a 3-day cycle from Fri July 17 2026
 const EX_EARLY_START = dayNum(new Date(2026, 6, 17));
-const EX_EARLY_CYCLE = ['Run', 'Skip'];
+const EX_EARLY_CYCLE = ['Sprint', 'Skip', 'Run'];
 function getEarlyExerciseTag(d) {
   const n = EX_EARLY_CYCLE.length;
   return EX_EARLY_CYCLE[(((dayNum(d) - EX_EARLY_START) % n) + n) % n];
