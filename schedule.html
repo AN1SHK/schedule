@@ -295,6 +295,13 @@ function fbSetMeditation(med) {
     .catch(() => showSync('error', 'Sync failed'));
 }
 
+function fbSetExDone(map) {
+  showSync('syncing', 'Syncing…');
+  set(ref(db, 'exdone'), map)
+    .then(() => showSync('synced', 'Synced'))
+    .catch(() => showSync('error', 'Sync failed'));
+}
+
 function fbSetImpulses(arr) {
   showSync('syncing', 'Syncing…');
   set(ref(db, 'impulses'), arr)
@@ -410,6 +417,16 @@ function ensureMeditation() {
   }
   return med;
 }
+function exKey(dk, start) { return dk + '_' + start; }
+function isExDone(dk, start) { return !!(fbCache.exdone && fbCache.exdone[exKey(dk, start)]); }
+function toggleExDone(dk, start) {
+  const map = Object.assign({}, fbCache.exdone || {});
+  const k = exKey(dk, start);
+  if (map[k]) delete map[k]; else map[k] = true;
+  fbCache.exdone = map;
+  fbSetExDone(map);
+  render();
+}
 function toggleMedDone() {
   if (!medLoaded) return; // wait until the stored state is known
   const med = ensureMeditation();
@@ -460,7 +477,8 @@ const fbCache = {
   reminders: null,
   shifts: {},  // { [dayKey]: hours }
   meditation: null,  // { minutes, lastEval:'YYYY-MM-DD', done:{ 'YYYY-MM-DD':true } }
-  impulses: null     // [{ id, text, ts, block, dayKey }]
+  impulses: null,    // [{ id, text, ts, block, dayKey }]
+  exdone: null       // { 'YYYY-MM-DD_H:MM': true } — exercise blocks ticked done
 };
 let currentBlockLabel = ''; // set by render(); declared here so render can't hit a TDZ
 
@@ -507,6 +525,12 @@ onValue(ref(db, 'meditation'), snap => {
   const v = snap.val();
   if (v) fbCache.meditation = v; // don't clobber a locally-seeded value with an empty snapshot
   medLoaded = true; // Firebase has reported in — safe to seed / roll over now
+  render();
+});
+
+// Exercise completions — synced across devices
+onValue(ref(db, 'exdone'), snap => {
+  fbCache.exdone = snap.val() || {};
   render();
 });
 
@@ -640,9 +664,14 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
 
     const _isToday = currentDayKey === dayKey(new Date());
     const _medDone = _isToday && fbCache.meditation && fbCache.meditation.done && fbCache.meditation.done[currentDayKey];
+    const _exDone = _isToday && isExDone(currentDayKey, b.start);
+    const _isExercise = b.label === 'Exercise';
     const tagsHtml = b.tags ? `<div class="tag-row">${b.tags.map(t => {
       if (t.indexOf('Meditate') === 0 && _isToday) {
         return `<span class="tag tag-med${_medDone ? ' med-done' : ''}" data-med="1">${t}${_medDone ? ' ✓' : ''}</span>`;
+      }
+      if (_isExercise && _isToday) {
+        return `<span class="tag tag-med${_exDone ? ' med-done' : ''}" data-exdone="${b.start}">${t}${_exDone ? ' ✓' : ''}</span>`;
       }
       return `<span class="tag">${t}</span>`;
     }).join('')}</div>` : '';
@@ -658,6 +687,11 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
       </div>
     `;
     tl.appendChild(block);
+
+    const _exEl = block.querySelector('[data-exdone]');
+    if (_exEl) {
+      _exEl.addEventListener('click', (e) => { e.stopPropagation(); toggleExDone(currentDayKey, _exEl.dataset.exdone); });
+    }
 
     // Meditation pill: tap to mark today done (adaptive minutes)
     const _medEl = block.querySelector('[data-med]');
