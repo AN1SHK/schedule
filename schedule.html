@@ -539,6 +539,7 @@ onValue(ref(db, 'parked'), snap => {
 // Impulse log — synced across devices
 onValue(ref(db, 'impulses'), snap => {
   fbCache.impulses = snap.val() || [];
+  normalizeImpulses();
   renderImpulses();
 });
 
@@ -998,6 +999,24 @@ document.addEventListener('click', e => {
 // Capture an urge instead of acting on it. Auto-stamps the time and the block you
 // were in, so patterns (which blocks generate urges) become visible over time.
 function loadImpulses() { return fbCache.impulses || []; }
+// Entries can arrive from Siri/Shortcuts as { text } under a push key. Fold those
+// into the shape the app uses, stamping id/ts/day so they sort and prune correctly.
+function normalizeImpulses() {
+  const v = fbCache.impulses;
+  if (!v) return [];
+  const wasObject = !Array.isArray(v);
+  const arr = (wasObject ? Object.keys(v).map(k => v[k]) : v.slice()).filter(x => x && x.text);
+  let changed = false;
+  arr.forEach((i, n) => {
+    if (!i.id) { i.id = String(Date.now() + n); changed = true; }
+    if (!i.ts) { i.ts = Date.now(); changed = true; }
+    if (!i.dk) { i.dk = dayKey(new Date(i.ts)); changed = true; }
+    if (typeof i.done !== 'boolean') { i.done = false; changed = true; }
+  });
+  fbCache.impulses = arr;
+  if (wasObject || changed) fbSetImpulses(arr);
+  return arr;
+}
 function saveImpulses(arr) { fbCache.impulses = arr; fbSetImpulses(arr); renderImpulses(); }
 // Carry-forward rule: unchecked impulses roll into the next day; checked ones drop
 // off once that day is over (a checked item stays visible for the rest of today).
