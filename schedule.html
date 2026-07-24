@@ -35,6 +35,20 @@ body { padding: 12px; padding-bottom: 40px; }
 .reminders-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 0.5px solid var(--border-strong); }
 .reminders-overlay { display: none; position: fixed; top: 70px; right: 20px; background: var(--surface); border-radius: 12px; padding: 16px 18px; box-shadow: 0 8px 28px rgba(0,0,0,0.18); z-index: 2000; width: 320px; max-width: calc(100vw - 40px); }
 .reminders-overlay.show { display: block; }
+.impulse-overlay .reminders-list { max-height: 300px; overflow-y: auto; }
+.impulse-capture { display: flex; gap: 6px; margin-top: 10px; }
+.impulse-capture .reminder-input { flex: 1; min-width: 0; }
+.impulse-count { font-size: 10px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
+.impulse-item { display: flex; align-items: flex-start; gap: 8px; background: var(--surface); border-radius: 6px; padding: 6px 10px; border: 0.5px solid var(--border-strong); width: 100%; box-sizing: border-box; }
+.impulse-cb { width: 11px; height: 11px; border-radius: 50%; border: 1.5px solid rgba(110,109,103,0.35); flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-top: 3px; }
+.impulse-item.done .impulse-cb { background: rgba(110,109,103,0.15); border-color: rgba(110,109,103,0.4); }
+.impulse-item.done .impulse-cb::after { content: ''; display: block; width: 3px; height: 2px; border-left: 1.5px solid var(--text-secondary); border-bottom: 1.5px solid var(--text-secondary); transform: rotate(-45deg) translateY(-0.5px); }
+.impulse-item.done .impulse-text { text-decoration: line-through; opacity: 0.4; }
+.impulse-item.done .impulse-meta { opacity: 0.5; }
+.impulse-body { flex: 1; min-width: 0; }
+.impulse-text { font-size: 12px; color: var(--text-primary); word-break: break-word; }
+.impulse-meta { font-size: 10px; color: var(--text-tertiary); margin-top: 2px; font-variant-numeric: tabular-nums; text-transform: uppercase; letter-spacing: 0.04em; }
+.impulse-daylabel { font-size: 10px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; }
 .reminders-overlay .reminders-list { display: flex; flex-direction: column; flex-wrap: nowrap; gap: 6px; margin-top: 10px; }
 .reminders-overlay .reminder-item { width: 100%; box-sizing: border-box; }
 .reminders-overlay .reminder-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -60,7 +74,7 @@ body { padding: 12px; padding-bottom: 40px; }
 .reminder-input { font-size: 12px; padding: 5px 10px; border: 0.5px solid var(--border-strong); border-radius: 6px; font-family: inherit; color: var(--text-primary); background: transparent; }
 #reminder-name { flex: 1; min-width: 140px; }
 .reminder-save-btn { background: var(--text-primary); color: var(--surface); border: 0; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
-.date-nav { display: flex; align-items: center; gap: 8px; position: relative; padding-right: 88px; padding-left: 88px; overflow: visible; }
+.date-nav { display: flex; align-items: center; gap: 8px; position: relative; padding-right: 126px; padding-left: 126px; overflow: visible; }
 .date-nav button { background: none; border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 4px 10px; cursor: pointer; font-size: 14px; color: var(--text-primary); font-family: inherit; }
 .date-nav button:active { background: rgba(0,0,0,0.04); }
 .date-label { font-size: 15px; font-weight: 500; color: var(--text-primary); min-width: 220px; text-align: center; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border-strong); }
@@ -74,7 +88,7 @@ body { padding: 12px; padding-bottom: 40px; }
 .pomo-timer-pill { display: inline-block; background: #4A6FA5; color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; margin-left: 8px; font-variant-numeric: tabular-nums; }
 .pomo-timer-pill.break { background: #7B3DB5; }
 .pomo-timer-time { font-size: 10px; opacity: 0.85; margin-left: 8px; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; font-weight: 500; }
-.shift-wrap { position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
+.shift-wrap { position: absolute; right: 0; top: 50%; transform: translateY(-50%); white-space: nowrap; }
 .shift-btn { background: none; border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 4px 10px; cursor: pointer; font-size: 14px; color: var(--text-primary); font-family: inherit; margin-left: 4px; }
 .shift-btn:active { background: rgba(0,0,0,0.04); }
 .shift-btn.active { background: rgba(220, 60, 60, 0.08); border-color: rgba(200, 65, 58, 0.5); color: #C8413A; }
@@ -180,6 +194,7 @@ body { padding: 12px; padding-bottom: 40px; }
       <div class="shift-wrap">
         <button id="shift-btn" class="shift-btn" title="Shift schedule">⟲</button>
         <button id="reminders-btn" class="shift-btn" title="Reminders"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
+        <button id="impulse-btn" class="shift-btn" title="Impulses"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button>
         <div class="shift-overlay" id="shift-overlay">
           <span class="shift-title">Woke up at</span>
           <input type="time" id="shift-input" value="07:00" class="shift-input">
@@ -223,6 +238,17 @@ body { padding: 12px; padding-bottom: 40px; }
     <input type="time" id="reminder-time" class="reminder-input">
     <button id="reminder-save" class="reminder-save-btn">Add</button>
   </div>
+</div>
+<div class="reminders-overlay impulse-overlay" id="impulse-overlay">
+  <div class="reminders-header">
+    <span class="reminders-title">Impulses</span>
+    <span class="impulse-count" id="impulse-count"></span>
+  </div>
+  <div class="impulse-capture">
+    <input type="text" id="impulse-text" class="reminder-input" autocomplete="off">
+    <button id="impulse-save" class="reminder-save-btn">Log</button>
+  </div>
+  <div class="reminders-list" id="impulse-list"></div>
 </div>
 <div class="sync-indicator" id="sync-indicator"></div>
 
@@ -290,6 +316,13 @@ function fbSetReminders(arr) {
 function fbSetMeditation(med) {
   showSync('syncing', 'Syncing…');
   set(ref(db, 'meditation'), med)
+    .then(() => showSync('synced', 'Synced'))
+    .catch(() => showSync('error', 'Sync failed'));
+}
+
+function fbSetImpulses(arr) {
+  showSync('syncing', 'Syncing…');
+  set(ref(db, 'impulses'), arr)
     .then(() => showSync('synced', 'Synced'))
     .catch(() => showSync('error', 'Sync failed'));
 }
@@ -463,8 +496,10 @@ const fbCache = {
   tallies: {}, // { [dayKey_blockStart]: number }
   reminders: null,
   shifts: {},  // { [dayKey]: hours }
-  meditation: null  // { minutes, lastEval:'YYYY-MM-DD', done:{ 'YYYY-MM-DD':true } }
+  meditation: null,  // { minutes, lastEval:'YYYY-MM-DD', done:{ 'YYYY-MM-DD':true } }
+  impulses: null     // [{ id, text, ts, block, dayKey }]
 };
+let currentBlockLabel = ''; // set by render(); declared here so render can't hit a TDZ
 
 // Listen to today + tomorrow tasks/tallies
 function listenToDay(dk) {
@@ -510,6 +545,12 @@ onValue(ref(db, 'meditation'), snap => {
   if (v) fbCache.meditation = v; // don't clobber a locally-seeded value with an empty snapshot
   medLoaded = true; // Firebase has reported in — safe to seed / roll over now
   render();
+});
+
+// Impulse log — synced across devices
+onValue(ref(db, 'impulses'), snap => {
+  fbCache.impulses = snap.val() || [];
+  renderImpulses();
 });
 
 // Start listening for today
@@ -870,6 +911,7 @@ function render() {
       const remM = Math.round(segRemaining % 60);
       const remStr = remH > 0 ? `${remH}h ${remM}m left` : `${remM} min left`;
       const isWorkBlock = cur_block.pomodoro;
+      currentBlockLabel = cur_block.label;
       const pomoHtml = isWorkBlock ? `<div class="pomo-timer-pill" id="pomo-timer-pill"></div>` : '';
       nowBanner.innerHTML = `<div class="now-banner" id="now-banner-pill" style="${isScrubbing ? 'opacity:0.75;' : ''}">${isScrubbing ? '⟳ ' : ''}Now: ${cur_block.label}<span class="now-banner-time">${isScrubbing ? 'tap to reset' : remStr}</span></div>${pomoHtml}`;
       document.getElementById('now-banner-pill').onclick = () => { nowScrub = null; cur = dayNum(new Date()); render(); };
@@ -1020,11 +1062,106 @@ const remindersOverlay = document.getElementById('reminders-overlay');
 remindersBtn.onclick = (e) => {
   e.stopPropagation();
   shiftOverlay.classList.remove('show');
+  const imp = document.getElementById('impulse-overlay');
+  if (imp) imp.classList.remove('show');
   remindersOverlay.classList.toggle('show');
 };
 document.addEventListener('click', e => {
   if (!remindersOverlay.contains(e.target) && !remindersBtn.contains(e.target)) remindersOverlay.classList.remove('show');
 });
+// ── Impulse log ───────────────────────────────────────────────────────────────
+// Capture an urge instead of acting on it. Auto-stamps the time and the block you
+// were in, so patterns (which blocks generate urges) become visible over time.
+function loadImpulses() { return fbCache.impulses || []; }
+function saveImpulses(arr) { fbCache.impulses = arr; fbSetImpulses(arr); renderImpulses(); }
+// Carry-forward rule: unchecked impulses roll into the next day; checked ones drop
+// off once that day is over (a checked item stays visible for the rest of today).
+function pruneImpulses() {
+  const today = dayKey(new Date());
+  const arr = loadImpulses();
+  const kept = arr.filter(i => !(i.done && i.dk < today));
+  if (kept.length !== arr.length) {
+    fbCache.impulses = kept;
+    fbSetImpulses(kept);
+    return kept;
+  }
+  return arr;
+}
+function toggleImpulse(id) {
+  saveImpulses(loadImpulses().map(i => i.id === id ? { ...i, done: !i.done } : i));
+}
+function logImpulse() {
+  const inp = document.getElementById('impulse-text');
+  const text = inp.value.trim();
+  if (!text) return;
+  const now = new Date();
+  const arr = loadImpulses();
+  arr.push({
+    id: String(Date.now()),
+    text,
+    ts: now.getTime(),
+    block: currentBlockLabel || '',
+    dk: dayKey(now),
+    done: false
+  });
+  saveImpulses(arr);
+  inp.value = '';
+  inp.focus();
+}
+function renderImpulses() {
+  const list = document.getElementById('impulse-list');
+  if (!list) return;
+  const arr = pruneImpulses().slice().sort((a, b) => b.ts - a.ts);
+  const todayKey = dayKey(new Date());
+  const openCount = arr.filter(i => !i.done).length;
+  const countEl = document.getElementById('impulse-count');
+  if (countEl) countEl.textContent = openCount ? `${openCount} open` : '';
+  if (arr.length === 0) {
+    list.innerHTML = '<div class="reminders-empty">Nothing logged yet</div>';
+    return;
+  }
+  let html = '', lastDay = null;
+  arr.slice(0, 50).forEach(i => {
+    if (i.dk !== lastDay) {
+      lastDay = i.dk;
+      html += `<div class="impulse-daylabel">${i.dk === todayKey ? 'Today' : i.dk}</div>`;
+    }
+    const t = new Date(i.ts);
+    const hh = String(t.getHours()).padStart(2, '0');
+    const mm = String(t.getMinutes()).padStart(2, '0');
+    const meta = i.block ? `${hh}:${mm} · ${i.block}` : `${hh}:${mm}`;
+    const safe = String(i.text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    html += `<div class="impulse-item${i.done ? ' done' : ''}"><div class="impulse-cb" data-toggle="${i.id}"></div><div class="impulse-body"><div class="impulse-text">${safe}</div><div class="impulse-meta">${meta}</div></div><button class="reminder-delete" data-imp="${i.id}">×</button></div>`;
+  });
+  list.innerHTML = html;
+  list.querySelectorAll('[data-toggle]').forEach(cb => {
+    cb.onclick = (e) => { e.stopPropagation(); toggleImpulse(cb.dataset.toggle); };
+  });
+  list.querySelectorAll('[data-imp]').forEach(btn => {
+    btn.onclick = (e) => { e.stopPropagation(); saveImpulses(loadImpulses().filter(x => x.id !== btn.dataset.imp)); };
+  });
+}
+const impulseBtn = document.getElementById('impulse-btn');
+const impulseOverlay = document.getElementById('impulse-overlay');
+impulseBtn.onclick = (e) => {
+  e.stopPropagation();
+  shiftOverlay.classList.remove('show');
+  remindersOverlay.classList.remove('show');
+  impulseOverlay.classList.toggle('show');
+  if (impulseOverlay.classList.contains('show')) {
+    renderImpulses();
+    setTimeout(() => document.getElementById('impulse-text').focus(), 0);
+  }
+};
+document.addEventListener('click', e => {
+  if (!impulseOverlay.contains(e.target) && !impulseBtn.contains(e.target)) impulseOverlay.classList.remove('show');
+});
+document.getElementById('impulse-save').onclick = (e) => { e.stopPropagation(); logImpulse(); };
+document.getElementById('impulse-text').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); logImpulse(); }
+});
+renderImpulses();
+
 function updateShiftInfo(shift) {
   if (shift <= 0) { shiftInfo.textContent = 'On schedule'; return; }
   const relaxStart = 20 + shift;
