@@ -44,10 +44,8 @@ body { padding: 12px; padding-bottom: 40px; }
 .impulse-item.done .impulse-cb { background: rgba(110,109,103,0.15); border-color: rgba(110,109,103,0.4); }
 .impulse-item.done .impulse-cb::after { content: ''; display: block; width: 3px; height: 2px; border-left: 1.5px solid var(--text-secondary); border-bottom: 1.5px solid var(--text-secondary); transform: rotate(-45deg) translateY(-0.5px); }
 .impulse-item.done .impulse-text { text-decoration: line-through; opacity: 0.4; }
-.impulse-item.done .impulse-meta { opacity: 0.5; }
 .impulse-body { flex: 1; min-width: 0; }
 .impulse-text { font-size: 12px; color: var(--text-primary); word-break: break-word; }
-.impulse-meta { font-size: 10px; color: var(--text-tertiary); margin-top: 2px; font-variant-numeric: tabular-nums; text-transform: uppercase; letter-spacing: 0.04em; }
 .impulse-daylabel { font-size: 10px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; }
 .reminders-overlay .reminders-list { display: flex; flex-direction: column; flex-wrap: nowrap; gap: 6px; margin-top: 10px; }
 .reminders-overlay .reminder-item { width: 100%; box-sizing: border-box; }
@@ -971,6 +969,8 @@ function render() {
     const maxH = Math.max(...tls.map(t => parseInt(t.style.height) || 0));
     tls.forEach(t => { t.style.height = maxH + 'px'; });
   });
+
+  renderImpulses(); // keep the impulse panel in sync with the viewed day
 }
 
 setInterval(render, 10000);
@@ -1111,8 +1111,15 @@ function logImpulse() {
 function renderImpulses() {
   const list = document.getElementById('impulse-list');
   if (!list) return;
-  const arr = pruneImpulses().slice().sort((a, b) => b.ts - a.ts);
+  // pruneImpulses() only ever deletes relative to the REAL today, so navigating to a
+  // future day can never destroy data. The viewed day is applied as a display filter.
+  const stored = pruneImpulses();
+  const viewed = dayKey(dateFromNum(cur));
   const todayKey = dayKey(new Date());
+  const arr = stored
+    .filter(i => !(i.done && i.dk < viewed))
+    .slice()
+    .sort((a, b) => b.ts - a.ts);
   const openCount = arr.filter(i => !i.done).length;
   const countEl = document.getElementById('impulse-count');
   if (countEl) countEl.textContent = openCount ? `${openCount} open` : '';
@@ -1126,12 +1133,8 @@ function renderImpulses() {
       lastDay = i.dk;
       html += `<div class="impulse-daylabel">${i.dk === todayKey ? 'Today' : i.dk}</div>`;
     }
-    const t = new Date(i.ts);
-    const hh = String(t.getHours()).padStart(2, '0');
-    const mm = String(t.getMinutes()).padStart(2, '0');
-    const meta = i.block ? `${hh}:${mm} · ${i.block}` : `${hh}:${mm}`;
     const safe = String(i.text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    html += `<div class="impulse-item${i.done ? ' done' : ''}"><div class="impulse-cb" data-toggle="${i.id}"></div><div class="impulse-body"><div class="impulse-text">${safe}</div><div class="impulse-meta">${meta}</div></div><button class="reminder-delete" data-imp="${i.id}">×</button></div>`;
+    html += `<div class="impulse-item${i.done ? ' done' : ''}"><div class="impulse-cb" data-toggle="${i.id}"></div><div class="impulse-body"><div class="impulse-text">${safe}</div></div><button class="reminder-delete" data-imp="${i.id}">×</button></div>`;
   });
   list.innerHTML = html;
   list.querySelectorAll('[data-toggle]').forEach(cb => {
