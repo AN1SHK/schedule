@@ -36,9 +36,6 @@ body { padding: 12px; padding-bottom: 40px; }
 .reminders-overlay { display: none; position: fixed; top: 70px; right: 20px; background: var(--surface); border-radius: 12px; padding: 16px 18px; box-shadow: 0 8px 28px rgba(0,0,0,0.18); z-index: 2000; width: 320px; max-width: calc(100vw - 40px); }
 .reminders-overlay.show { display: block; }
 .impulse-overlay .reminders-list { max-height: 300px; overflow-y: auto; }
-.parked-text { width: 100%; box-sizing: border-box; margin-top: 10px; padding: 8px 10px; border: 0.5px solid var(--border-strong); border-radius: 6px; font-family: inherit; font-size: 12px; line-height: 1.5; color: var(--text-primary); background: var(--surface); resize: vertical; }
-.parked-text:focus { outline: none; border-color: #556274; }
-.parked-clear { margin-top: 8px; background: none; border: 0; padding: 0; font-family: inherit; font-size: 10px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-tertiary); cursor: pointer; }
 .impulse-capture { display: flex; gap: 6px; margin-top: 10px; }
 .impulse-capture .reminder-input { flex: 1; min-width: 0; }
 .impulse-count { font-size: 10px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
@@ -75,7 +72,7 @@ body { padding: 12px; padding-bottom: 40px; }
 .reminder-input { font-size: 12px; padding: 5px 10px; border: 0.5px solid var(--border-strong); border-radius: 6px; font-family: inherit; color: var(--text-primary); background: transparent; }
 #reminder-name { flex: 1; min-width: 140px; }
 .reminder-save-btn { background: var(--text-primary); color: var(--surface); border: 0; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
-.date-nav { display: flex; align-items: center; gap: 8px; position: relative; padding-right: 164px; padding-left: 164px; overflow: visible; }
+.date-nav { display: flex; align-items: center; gap: 8px; position: relative; padding-right: 126px; padding-left: 126px; overflow: visible; }
 .date-nav button { background: none; border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 4px 10px; cursor: pointer; font-size: 14px; color: var(--text-primary); font-family: inherit; }
 .date-nav button:active { background: rgba(0,0,0,0.04); }
 .date-label { font-size: 15px; font-weight: 500; color: var(--text-primary); min-width: 220px; text-align: center; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border-strong); }
@@ -172,7 +169,6 @@ body { padding: 12px; padding-bottom: 40px; }
       <div class="shift-wrap">
         <button id="shift-btn" class="shift-btn" title="Shift schedule">⟲</button>
         <button id="reminders-btn" class="shift-btn" title="Reminders"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
-        <button id="parked-btn" class="shift-btn" title="Parked note"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;"><circle cx="12" cy="12" r="10"/><path d="M10 16.5v-9h3.2a2.6 2.6 0 0 1 0 5.2H10"/></svg></button>
         <button id="impulse-btn" class="shift-btn" title="Impulses"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button>
         <div class="shift-overlay" id="shift-overlay">
           <span class="shift-title">Woke up at</span>
@@ -217,14 +213,6 @@ body { padding: 12px; padding-bottom: 40px; }
     <input type="time" id="reminder-time" class="reminder-input">
     <button id="reminder-save" class="reminder-save-btn">Add</button>
   </div>
-</div>
-<div class="reminders-overlay impulse-overlay" id="parked-overlay">
-  <div class="reminders-header">
-    <span class="reminders-title">Parked</span>
-    <span class="impulse-count" id="parked-when"></span>
-  </div>
-  <textarea id="parked-text" class="parked-text" rows="4" placeholder="Where exactly did you leave off?"></textarea>
-  <button id="parked-clear" class="parked-clear">Clear</button>
 </div>
 <div class="reminders-overlay impulse-overlay" id="impulse-overlay">
   <div class="reminders-header">
@@ -303,13 +291,6 @@ function fbSetReminders(arr) {
 function fbSetMeditation(med) {
   showSync('syncing', 'Syncing…');
   set(ref(db, 'meditation'), med)
-    .then(() => showSync('synced', 'Synced'))
-    .catch(() => showSync('error', 'Sync failed'));
-}
-
-function fbSetParked(v) {
-  showSync('syncing', 'Syncing…');
-  set(ref(db, 'parked'), v)
     .then(() => showSync('synced', 'Synced'))
     .catch(() => showSync('error', 'Sync failed'));
 }
@@ -479,8 +460,7 @@ const fbCache = {
   reminders: null,
   shifts: {},  // { [dayKey]: hours }
   meditation: null,  // { minutes, lastEval:'YYYY-MM-DD', done:{ 'YYYY-MM-DD':true } }
-  impulses: null,    // [{ id, text, ts, block, dayKey }]
-  parked: null       // { text, ts } — where you left off, so you can stop holding it
+  impulses: null     // [{ id, text, ts, block, dayKey }]
 };
 let currentBlockLabel = ''; // set by render(); declared here so render can't hit a TDZ
 
@@ -528,12 +508,6 @@ onValue(ref(db, 'meditation'), snap => {
   if (v) fbCache.meditation = v; // don't clobber a locally-seeded value with an empty snapshot
   medLoaded = true; // Firebase has reported in — safe to seed / roll over now
   render();
-});
-
-// Parked note — synced across devices
-onValue(ref(db, 'parked'), snap => {
-  fbCache.parked = snap.val() || null;
-  renderParked();
 });
 
 // Impulse log — synced across devices
@@ -986,7 +960,6 @@ const remindersBtn = document.getElementById('reminders-btn');
 const remindersOverlay = document.getElementById('reminders-overlay');
 remindersBtn.onclick = (e) => {
   e.stopPropagation();
-  { const pk = document.getElementById('parked-overlay'); if (pk) pk.classList.remove('show'); }
   shiftOverlay.classList.remove('show');
   const imp = document.getElementById('impulse-overlay');
   if (imp) imp.classList.remove('show');
@@ -1088,62 +1061,10 @@ function renderImpulses() {
     btn.onclick = (e) => { e.stopPropagation(); saveImpulses(loadImpulses().filter(x => x.id !== btn.dataset.imp)); };
   });
 }
-// ── Parked note ───────────────────────────────────────────────────────────────
-// One note: exactly where you left off. Writing it down is what lets you stop
-// holding the thread through the break.
-let _parkedTimer = null;
-function renderParked() {
-  const ta = document.getElementById('parked-text');
-  if (!ta) return;
-  const p = fbCache.parked;
-  if (document.activeElement !== ta) ta.value = (p && p.text) || '';
-  const when = document.getElementById('parked-when');
-  if (when) {
-    if (p && p.ts && p.text) {
-      const t = new Date(p.ts);
-      when.textContent = 'parked ' + String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0');
-    } else when.textContent = '';
-  }
-}
-function saveParked(text) {
-  const v = text.trim() ? { text, ts: Date.now() } : null;
-  fbCache.parked = v;
-  fbSetParked(v);
-  renderParked();
-}
-const parkedBtn = document.getElementById('parked-btn');
-const parkedOverlay = document.getElementById('parked-overlay');
-parkedBtn.onclick = (e) => {
-  e.stopPropagation();
-  shiftOverlay.classList.remove('show');
-  remindersOverlay.classList.remove('show');
-  document.getElementById('impulse-overlay').classList.remove('show');
-  parkedOverlay.classList.toggle('show');
-  if (parkedOverlay.classList.contains('show')) {
-    renderParked();
-    setTimeout(() => document.getElementById('parked-text').focus(), 0);
-  }
-};
-document.addEventListener('click', e => {
-  if (!parkedOverlay.contains(e.target) && !parkedBtn.contains(e.target)) parkedOverlay.classList.remove('show');
-});
-document.getElementById('parked-text').addEventListener('input', (e) => {
-  clearTimeout(_parkedTimer);
-  const val = e.target.value;
-  _parkedTimer = setTimeout(() => saveParked(val), 600);
-});
-document.getElementById('parked-clear').onclick = (e) => {
-  e.stopPropagation();
-  document.getElementById('parked-text').value = '';
-  saveParked('');
-};
-renderParked();
-
 const impulseBtn = document.getElementById('impulse-btn');
 const impulseOverlay = document.getElementById('impulse-overlay');
 impulseBtn.onclick = (e) => {
   e.stopPropagation();
-  { const pk = document.getElementById('parked-overlay'); if (pk) pk.classList.remove('show'); }
   shiftOverlay.classList.remove('show');
   remindersOverlay.classList.remove('show');
   impulseOverlay.classList.toggle('show');
