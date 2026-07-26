@@ -670,6 +670,10 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
       if (t.indexOf('Meditate') === 0 && _isToday) {
         return `<span class="tag tag-med${_medDone ? ' med-done' : ''}" data-med="1">${t}${_medDone ? ' ✓' : ''}</span>`;
       }
+      if (t.indexOf('Gratitude') === 0 && _isToday) {
+        const _gd = isExDone(currentDayKey, 'gratitude');
+        return `<span class="tag tag-med${_gd ? ' med-done' : ''}" data-exdone="gratitude">${t}${_gd ? ' ✓' : ''}</span>`;
+      }
       if (_isExercise && _isToday) {
         return `<span class="tag tag-med${_exDone ? ' med-done' : ''}" data-exdone="${b.start}">${t}${_exDone ? ' ✓' : ''}</span>`;
       }
@@ -688,10 +692,9 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
     `;
     tl.appendChild(block);
 
-    const _exEl = block.querySelector('[data-exdone]');
-    if (_exEl) {
+    block.querySelectorAll('[data-exdone]').forEach(_exEl => {
       _exEl.addEventListener('click', (e) => { e.stopPropagation(); toggleExDone(currentDayKey, _exEl.dataset.exdone); });
-    }
+    });
 
     // Meditation pill: tap to mark today done (adaptive minutes)
     const _medEl = block.querySelector('[data-med]');
