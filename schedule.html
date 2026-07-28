@@ -77,7 +77,24 @@ body { padding: 12px; padding-bottom: 40px; }
 .date-nav button:active { background: rgba(0,0,0,0.04); }
 .date-label { font-size: 15px; font-weight: 500; color: var(--text-primary); min-width: 220px; text-align: center; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border-strong); }
 .reminder-pill { display: inline-block; background: #556274; color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
-    .reminder-pill-groom { background: #C0392B; }
+    .reminder-pill-groom { background: #C0392B; cursor: pointer; }
+    .tag-clickable { cursor: pointer; }
+    .routine-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 100; }
+    .routine-backdrop.show { display: block; }
+    .routine-popup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--surface); border-radius: 14px; padding: 22px 26px; z-index: 101; min-width: 240px; max-width: 88vw; box-shadow: 0 12px 44px rgba(0,0,0,0.18); }
+    .routine-popup.show { display: block; }
+    .routine-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-primary); margin-bottom: 14px; }
+    .routine-list { list-style: none; display: flex; flex-direction: column; gap: 11px; }
+    .routine-list li { display: flex; align-items: center; gap: 12px; cursor: pointer; font-size: 14px; color: var(--text-secondary); }
+    .routine-check { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid rgba(110,109,103,0.35); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: background 0.15s, border-color 0.15s; }
+    .routine-list li.done .routine-check { background: #1E293B; border-color: #1E293B; }
+    .routine-list li.done .routine-check::after { content: ""; width: 5px; height: 9px; border-right: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(45deg) translateY(-1px); }
+    .routine-list li.done .routine-text { color: var(--text-tertiary); text-decoration: line-through; text-decoration-color: rgba(110,109,103,0.4); }
+    .tag-skincare { cursor: pointer; }
+    .skincare-overlay { top: 50%; left: 50%; right: auto; transform: translate(-50%, -50%); width: 300px; }
+    .skincare-step { display: flex; align-items: center; gap: 12px; padding: 11px 0; font-size: 14px; color: var(--text-primary); border-bottom: 0.5px solid var(--border); }
+    .skincare-step:last-child { border-bottom: 0; }
+    .skincare-num { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: #E8ECF1; color: #556274; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
 .reminder-wrap { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .reminder-wrap:not(:empty) { margin-top: 6px; }
 .now-banner-wrap { text-align: center; display: flex; align-items: center; justify-content: center; gap: 0; }
@@ -227,6 +244,15 @@ body { padding: 12px; padding-bottom: 40px; }
   </div>
   <div class="reminders-list" id="impulse-list"></div>
 </div>
+<div class="reminders-overlay skincare-overlay" id="skincare-overlay">
+  <div class="reminders-header"><span class="reminders-title" id="skincare-title"></span></div>
+  <div id="skincare-steps"></div>
+</div>
+<div class="routine-backdrop" id="routine-backdrop"></div>
+<div class="routine-popup" id="routine-popup">
+  <div class="routine-title" id="routine-title"></div>
+  <ul class="routine-list" id="routine-list"></ul>
+</div>
 <div class="sync-indicator" id="sync-indicator"></div>
 
 <script type="module">
@@ -293,6 +319,13 @@ function fbSetReminders(arr) {
 function fbSetMeditation(med) {
   showSync('syncing', 'Syncing…');
   set(ref(db, 'meditation'), med)
+    .then(() => showSync('synced', 'Synced'))
+    .catch(() => showSync('error', 'Sync failed'));
+}
+
+function fbSetRoutines(map) {
+  showSync('syncing', 'Syncing…');
+  set(ref(db, 'routines'), map)
     .then(() => showSync('synced', 'Synced'))
     .catch(() => showSync('error', 'Sync failed'));
 }
@@ -480,7 +513,8 @@ const fbCache = {
   shifts: {},  // { [dayKey]: hours }
   meditation: null,  // { minutes, lastEval:'YYYY-MM-DD', done:{ 'YYYY-MM-DD':true } }
   impulses: null,    // [{ id, text, ts, block, dayKey }]
-  exdone: null       // { 'YYYY-MM-DD_H:MM': true } — exercise blocks ticked done
+  exdone: null,      // { 'YYYY-MM-DD_H:MM': true } — exercise blocks ticked done
+  routines: null     // { 'YYYY-MM-DD': { popupKey: { i0:true, ... } } } — skincare/grooming checklists
 };
 let currentBlockLabel = ''; // set by render(); declared here so render can't hit a TDZ
 
@@ -528,6 +562,12 @@ onValue(ref(db, 'meditation'), snap => {
   if (v) fbCache.meditation = v; // don't clobber a locally-seeded value with an empty snapshot
   medLoaded = true; // Firebase has reported in — safe to seed / roll over now
   render();
+});
+
+// Routine checklists (skincare/grooming) — synced across devices
+onValue(ref(db, 'routines'), snap => {
+  fbCache.routines = snap.val() || {};
+  renderRoutinePopup();
 });
 
 // Exercise completions — synced across devices
@@ -679,6 +719,16 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
       if (_isExercise && _isToday && !REST_OPTIONS.includes(t)) {
         return `<span class="tag tag-med${_exDone ? ' med-done' : ''}" data-exdone="${b.start}">${t}${_exDone ? ' ✓' : ''}</span>`;
       }
+      if (t === 'Skincare') {
+        const _when = b.label === 'MR' ? 'morning' : 'evening';
+        return `<span class="tag tag-skincare" data-skincare="${_when}">${t}</span>`;
+      }
+      if (t === 'Skincare') {
+        return `<span class="tag tag-clickable" data-popup="skincare-${b.label === 'MR' ? 'morning' : 'evening'}">${t}</span>`;
+      }
+      if (t === 'Personal Grooming') {
+        return `<span class="tag tag-clickable" data-popup="grooming">${t}</span>`;
+      }
       return `<span class="tag">${t}</span>`;
     }).join('')}</div>` : '';
     const displayStart = b.displayStart || formatTime(b.dispStartT);
@@ -696,6 +746,10 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
 
     block.querySelectorAll('[data-exdone]').forEach(_exEl => {
       _exEl.addEventListener('click', (e) => { e.stopPropagation(); toggleExDone(currentDayKey, _exEl.dataset.exdone); });
+    });
+
+    block.querySelectorAll('[data-skincare]').forEach(_skEl => {
+      _skEl.addEventListener('click', (e) => { e.stopPropagation(); openSkincare(_skEl.dataset.skincare); });
     });
 
     // Meditation pill: tap to mark today done (adaptive minutes)
@@ -778,7 +832,7 @@ function render() {
   const dow = d.getDay();
   const reminderWrap = document.getElementById('reminder-wrap');
   let pillsHtml = '';
-  if (dow === 2 || dow === 5) { pillsHtml += `<div class="reminder-pill reminder-pill-groom">Personal Grooming</div>`; }
+  if (dow === 2 || dow === 5) { pillsHtml += `<div class="reminder-pill reminder-pill-groom" data-popup="grooming">Personal Grooming</div>`; }
 
   const viewDate = new Date(cur * 86400000 + new Date(2026,0,1).getTime());
   viewDate.setHours(0,0,0,0);
@@ -1100,6 +1154,27 @@ function renderImpulses() {
     btn.onclick = (e) => { e.stopPropagation(); saveImpulses(loadImpulses().filter(x => x.id !== btn.dataset.imp)); };
   });
 }
+// ── Skincare popup ──────────────────────────────────────────────────────────────
+const SKINCARE = {
+  morning: ['Scrub With Toothbrush', 'Moisturizer', 'Sunscreen'],
+  evening: ['Scrub With Toothbrush', 'Cleanser', 'Retin-A', 'Moisturizer']
+};
+function openSkincare(when) {
+  const overlay = document.getElementById('skincare-overlay');
+  if (!overlay) return;
+  document.getElementById('skincare-title').textContent = (when === 'morning' ? 'Morning' : 'Evening') + ' Skincare';
+  document.getElementById('skincare-steps').innerHTML = (SKINCARE[when] || []).map((s, i) =>
+    `<div class="skincare-step"><span class="skincare-num">${i + 1}</span>${s}</div>`).join('');
+  remindersOverlay.classList.remove('show');
+  shiftOverlay.classList.remove('show');
+  const io = document.getElementById('impulse-overlay'); if (io) io.classList.remove('show');
+  overlay.classList.add('show');
+}
+document.addEventListener('click', (e) => {
+  const o = document.getElementById('skincare-overlay');
+  if (o && o.classList.contains('show') && !o.contains(e.target) && !e.target.closest('[data-skincare]')) o.classList.remove('show');
+});
+
 const impulseBtn = document.getElementById('impulse-btn');
 const impulseOverlay = document.getElementById('impulse-overlay');
 impulseBtn.onclick = (e) => {
@@ -1198,6 +1273,60 @@ function renderCal() {
 })();
 
 render();
+// Routine popups (Skincare morning/evening, Personal Grooming)
+const POPUPS = {
+  'skincare-morning': { title: 'Morning Skincare', items: ['Scrub with toothbrush', 'Moisturizer', 'Sunscreen'] },
+  'skincare-evening': { title: 'Evening Skincare', items: ['Scrub with toothbrush', 'Cleanser', 'Retin-A', 'Moisturizer'] },
+  'grooming': { title: 'Personal Grooming', items: ['Unibrow', 'Beard', 'Earlobe Hair', 'Nose Hair', 'Finger & Toe Nails', 'Body Hair', 'Groin Hair', 'Leg Hair'] }
+};
+let openPopupKey = null;
+function isRoutineDone(dk, key, i) {
+  return !!(fbCache.routines && fbCache.routines[dk] && fbCache.routines[dk][key] && fbCache.routines[dk][key]['i' + i]);
+}
+function toggleRoutine(dk, key, i) {
+  const map = JSON.parse(JSON.stringify(fbCache.routines || {}));
+  if (!map[dk]) map[dk] = {};
+  if (!map[dk][key]) map[dk][key] = {};
+  const ik = 'i' + i;
+  if (map[dk][key][ik]) delete map[dk][key][ik]; else map[dk][key][ik] = true;
+  if (Object.keys(map[dk][key]).length === 0) delete map[dk][key];
+  if (Object.keys(map[dk]).length === 0) delete map[dk];
+  fbCache.routines = map;
+  fbSetRoutines(map);
+  renderRoutinePopup();
+}
+function renderRoutinePopup() {
+  if (!openPopupKey) return;
+  const data = POPUPS[openPopupKey];
+  if (!data) return;
+  const dk = dayKey(dateFromNum(cur));
+  document.getElementById('routine-title').textContent = data.title;
+  const list = document.getElementById('routine-list');
+  list.innerHTML = data.items.map((item, i) => {
+    const done = isRoutineDone(dk, openPopupKey, i);
+    return `<li class="${done ? 'done' : ''}" data-idx="${i}"><span class="routine-check"></span><span class="routine-text">${item}</span></li>`;
+  }).join('');
+  list.querySelectorAll('[data-idx]').forEach(li => {
+    li.onclick = (e) => { e.stopPropagation(); toggleRoutine(dk, openPopupKey, parseInt(li.dataset.idx, 10)); };
+  });
+}
+function openRoutinePopup(key) {
+  if (!POPUPS[key]) return;
+  openPopupKey = key;
+  renderRoutinePopup();
+  document.getElementById('routine-popup').classList.add('show');
+  document.getElementById('routine-backdrop').classList.add('show');
+}
+function closeRoutinePopup() {
+  openPopupKey = null;
+  document.getElementById('routine-popup').classList.remove('show');
+  document.getElementById('routine-backdrop').classList.remove('show');
+}
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-popup]');
+  if (el) { e.stopPropagation(); openRoutinePopup(el.dataset.popup); }
+});
+document.getElementById('routine-backdrop').onclick = closeRoutinePopup;
 </script>
 </body>
 </html>
