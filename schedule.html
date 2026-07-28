@@ -78,6 +78,8 @@ body { padding: 12px; padding-bottom: 40px; }
 .date-label { font-size: 15px; font-weight: 500; color: var(--text-primary); min-width: 220px; text-align: center; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border-strong); }
 .reminder-pill { display: inline-block; background: #556274; color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
     .reminder-pill-groom { background: #C0392B; cursor: pointer; }
+    .reminder-pill-blue { background: #3B6FC0; }
+    .reminder-pill-black { background: #1A1A1A; }
     .tag-clickable { cursor: pointer; }
     .routine-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 100; }
     .routine-backdrop.show { display: block; }
@@ -833,6 +835,8 @@ function render() {
   const reminderWrap = document.getElementById('reminder-wrap');
   let pillsHtml = '';
   if (dow === 2 || dow === 5) { pillsHtml += `<div class="reminder-pill reminder-pill-groom" data-popup="grooming">Personal Grooming</div>`; }
+  const shampooTag = getShowerTag(d);
+  if (shampooTag) { pillsHtml += `<div class="reminder-pill reminder-pill-${shampooTag.toLowerCase()}">${shampooTag} Shampoo</div>`; }
 
   const viewDate = new Date(cur * 86400000 + new Date(2026,0,1).getTime());
   viewDate.setHours(0,0,0,0);
