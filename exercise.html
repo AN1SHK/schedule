@@ -29,34 +29,27 @@
   .wrap { max-width: 620px; margin: 0 auto; }
   .nav { display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 28px; }
   .arrow {
-    background: var(--surface); border: 0.5px solid var(--border-strong); border-radius: 10px;
-    padding: 8px 16px; cursor: pointer; font-size: 18px; line-height: 1; color: var(--text-primary);
+    background: none; border: 0.5px solid var(--border-strong); border-radius: 8px;
+    padding: 6px 12px; cursor: pointer; font-size: 15px; line-height: 1; color: var(--text-primary);
     font-family: inherit;
   }
   .arrow:active { background: rgba(0,0,0,0.04); }
   .date {
     background: none; border: 0; cursor: pointer; font-family: inherit;
-    font-size: 22px; font-weight: 600; color: var(--text-primary);
+    font-size: 20px; font-weight: 600; color: var(--text-primary);
     text-decoration: underline; text-underline-offset: 4px; text-decoration-color: var(--border-strong);
   }
-  .list { display: flex; flex-direction: column; gap: 16px; }
+  .list { display: flex; flex-direction: column; gap: 3px; }
   .row {
-    display: flex; align-items: center; justify-content: space-between;
-    background: var(--surface); border: 0.5px solid var(--border-strong); border-radius: 16px;
-    padding: 22px 26px; cursor: pointer; transition: background 0.15s;
+    background: var(--surface); border-radius: 0; padding: 14px 14px;
+    display: flex; flex-direction: column; align-items: flex-start; cursor: pointer;
   }
   .row.rest { cursor: default; }
-  .row-value { font-size: 20px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary); }
-  .row.done .row-value { color: var(--text-tertiary); }
-  .check {
-    width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid rgba(110,109,103,0.35);
-    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-    transition: background 0.15s, border-color 0.15s;
-  }
-  .row.done .check { background: var(--done); border-color: var(--done); }
-  .row.done .check::after { content: ""; width: 7px; height: 13px; border-right: 2.5px solid #fff; border-bottom: 2.5px solid #fff; transform: rotate(45deg) translateY(-1px); }
-  .rest-opts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
-  .rest-opt { font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-secondary); background: #EEF1F5; border-radius: 999px; padding: 4px 12px; }
+  .b-label { font-size: 11px; color: var(--text-secondary); line-height: 1.2; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+  .b-time { font-size: 10px; color: var(--text-secondary); margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .tag { display: inline-block; background: #E8ECF1; color: #556274; font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.02em; text-transform: uppercase; }
+  .tag.pill-done { background: #1E293B; color: #fff; }
   .back {
     display: inline-flex; align-items: center; gap: 6px; margin-top: 30px;
     font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
@@ -107,9 +100,9 @@ const pick = (arr, d) => arr[(((dayNum(d) - EX_START) % arr.length) + arr.length
 
 // The rows: each maps to the same exdone key the schedule uses (dayKey_blockStart).
 const ROWS = [
-  { label: 'Lift',    start: '11:30', cycle: LIFT_CYCLE },
-  { label: 'Cardio',  start: '16:30', cycle: CARDIO_CYCLE },
-  { label: 'Stretch', start: '20:30', fixed: 'Stretch' }
+  { label: 'Lift',    start: '11:30', time: '11:30 – 12:30', cycle: LIFT_CYCLE },
+  { label: 'Cardio',  start: '16:30', time: '16:30 – 17:00', cycle: CARDIO_CYCLE },
+  { label: 'Stretch', start: '20:30', time: '20:30 – 21:00', fixed: 'Stretch' }
 ];
 
 let exdone = {};
@@ -143,16 +136,23 @@ function render() {
   const today = dayKey(new Date());
 
   const dl = document.getElementById('date');
-  const wk = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()];
-  const mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
-  dl.textContent = (dk === today) ? 'Today' : wk + ', ' + mo + ' ' + d.getDate();
+  dl.textContent = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
   const list = document.getElementById('list');
   list.innerHTML = ROWS.map(r => {
+    const variant = r.fixed || pick(r.cycle, d);
+    if (variant === 'Rest') {
+      return `<div class="row rest">
+        <div class="b-label">${r.label}</div>
+        <div class="b-time">${r.time}</div>
+        <div class="tag-row">${REST_OPTIONS.map(o => `<span class="tag">${o}</span>`).join('')}</div>
+      </div>`;
+    }
     const done = isDone(dk, r.start);
-    return `<div class="row${done ? ' done' : ''}" data-start="${r.start}">
-      <div class="row-value">${r.label}</div>
-      <div class="check"></div>
+    return `<div class="row" data-start="${r.start}">
+      <div class="b-label">${r.label}</div>
+      <div class="b-time">${r.time}</div>
+      <div class="tag-row"><span class="tag${done ? ' pill-done' : ''}">${variant}${done ? ' ✓' : ''}</span></div>
     </div>`;
   }).join('');
 
