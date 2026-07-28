@@ -320,15 +320,14 @@ const MIN_BLOCK_HEIGHT = 36;
 
 const FIXED_BLOCKS = [
   { start: '7:00', end: '7:30', label: 'MR', tags: ['MEDITATE_TAG', 'Gratitude - 3 Pts'] },
-  { start: '7:30', end: '11:30', label: 'Work', tags: [] },
-  { start: '11:30', end: '12:00', label: 'Exercise', tags: ['EX_EARLY_TAG'] },
-  { start: '12:00', end: '12:30', label: 'Cold Shower' },
-  { start: '12:30', end: '14:30', label: 'Work', tags: [] },
-  { start: '14:30', end: '15:00', label: 'Exercise', tags: ['EX_AM_TAG'] },
-  { start: '15:00', end: '17:00', label: 'Work', tags: ['Plan Tomorrow'] },
-  { start: '17:00', end: '18:00', label: 'Exercise', tags: ['EX_TAG'] },
-  { start: '18:00', end: '18:30', label: 'Shower', tags: ['SHOWER_TAG'], grooming: true },
-  { start: '18:30', end: '22:00', label: 'Open', tags: ['Read', 'Journal', 'Socialize'], buffer: true, bufferPriority: 1 },
+  { start: '7:30', end: '11:30', label: 'Build', tags: [] },
+  { start: '11:30', end: '12:30', label: 'Lift', tags: ['EX_EARLY_TAG'] },
+  { start: '12:30', end: '16:30', label: 'Build', tags: [], buffer: true, bufferPriority: 1 },
+  { start: '16:30', end: '17:00', label: 'Cardio', tags: ['EX_AM_TAG'] },
+  { start: '17:00', end: '17:30', label: 'Shower', tags: ['SHOWER_TAG'], grooming: true },
+  { start: '17:30', end: '20:30', label: 'Build', tags: [] },
+  { start: '20:30', end: '21:00', label: 'Stretch', tags: [] },
+  { start: '21:00', end: '22:00', label: 'Read', tags: [] },
   { start: '22:00', end: '23:00', label: 'NR', tags: [] },
   { start: '23:00', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
 ];
@@ -348,17 +347,18 @@ function formatTime(t) {
 }
 
 // Main exercise rotates on a 12-day cycle, starting July 15 2026
-const EX_START = dayNum(new Date(2026, 6, 15));
+const EX_START = dayNum(new Date(2026, 6, 24));  // shared anchor so lift+cardio rest align
 const EX_CYCLE = ['Push', 'Mobility', 'Pull', 'Basketball', 'Legs', 'Mobility', 'Push', 'Basketball', 'Pull', 'Mobility', 'Legs', 'Basketball'];
 // Early exercise (right after MR) rotates on a 3-day cycle from Fri July 17 2026
-const EX_EARLY_START = dayNum(new Date(2026, 6, 17));
-const EX_EARLY_CYCLE = ['Sprint', 'Skip', 'Run'];
+const EX_EARLY_START = EX_START;
+const EX_EARLY_CYCLE = ['Push', 'Pull', 'Legs', 'Rest'];
 function getEarlyExerciseTag(d) {
   const n = EX_EARLY_CYCLE.length;
   return EX_EARLY_CYCLE[(((dayNum(d) - EX_EARLY_START) % n) + n) % n];
 }
 // Late-morning exercise rotates on its own 2-day cycle, same start date
-const EX_AM_CYCLE = ['Basketball', 'Walk'];
+const EX_AM_CYCLE = ['Sprint', 'Run', 'Skip', 'Rest'];
+const REST_OPTIONS = ['Walk', 'Bike', 'Swim', 'Sport']; // shown on Rest days
 function getAmExerciseTag(d) {
   const n = EX_AM_CYCLE.length;
   return EX_AM_CYCLE[(((dayNum(d) - EX_START) % n) + n) % n];
@@ -665,7 +665,7 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
     const _isToday = currentDayKey === dayKey(new Date());
     const _medDone = _isToday && fbCache.meditation && fbCache.meditation.done && fbCache.meditation.done[currentDayKey];
     const _exDone = _isToday && isExDone(currentDayKey, b.start);
-    const _isExercise = b.label === 'Exercise';
+    const _isExercise = b.label === 'Lift' || b.label === 'Cardio';
     const tagsHtml = b.tags ? `<div class="tag-row">${b.tags.map(t => {
       if (t.indexOf('Meditate') === 0 && _isToday) {
         return `<span class="tag tag-med${_medDone ? ' med-done' : ''}" data-med="1">${t}${_medDone ? ' ✓' : ''}</span>`;
@@ -674,7 +674,7 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
         const _gd = isExDone(currentDayKey, 'gratitude');
         return `<span class="tag tag-med${_gd ? ' med-done' : ''}" data-exdone="gratitude">${t}${_gd ? ' ✓' : ''}</span>`;
       }
-      if (_isExercise && _isToday) {
+      if (_isExercise && _isToday && !REST_OPTIONS.includes(t)) {
         return `<span class="tag tag-med${_exDone ? ' med-done' : ''}" data-exdone="${b.start}">${t}${_exDone ? ' ✓' : ''}</span>`;
       }
       return `<span class="tag">${t}</span>`;
@@ -807,8 +807,8 @@ function render() {
     if (b.grooming && (dow === 2 || dow === 5)) extraTags = ['Personal Grooming'];
     const tags = b.tags ? [...b.tags.flatMap(t => {
       if (t === 'EX_TAG') return [getExerciseTag(d)];
-      if (t === 'EX_EARLY_TAG') return [getEarlyExerciseTag(d)];
-      if (t === 'EX_AM_TAG') return [getAmExerciseTag(d)];
+      if (t === 'EX_EARLY_TAG') { const v = getEarlyExerciseTag(d); return v === 'Rest' ? REST_OPTIONS.slice() : [v]; }
+      if (t === 'EX_AM_TAG') { const v = getAmExerciseTag(d); return v === 'Rest' ? REST_OPTIONS.slice() : [v]; }
       if (t === 'SHOWER_TAG') { const s = getShowerTag(d); return s ? [s] : []; }
       if (t === 'MEDITATE_TAG') return [getMeditationTag(d)];
       return [t];
@@ -821,7 +821,7 @@ function render() {
   }).sort((a, b) => a.startT - b.startT);
 
   const SPLIT_1 = 12.5;
-  const SPLIT_2 = 18;
+  const SPLIT_2 = 20.5;
   const morning = enriched.filter(b => b.endT <= SPLIT_1);
   const afternoon = enriched.filter(b => b.endT > SPLIT_1 && b.endT <= SPLIT_2);
   const evening = enriched.filter(b => b.endT > SPLIT_2);
