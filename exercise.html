@@ -20,7 +20,7 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { background: var(--bg); }
   body {
-    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
     color: var(--text-primary);
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
@@ -36,18 +36,19 @@
   .arrow:active { background: rgba(0,0,0,0.04); }
   .date {
     background: none; border: 0; cursor: pointer; font-family: inherit;
-    font-size: 20px; font-weight: 600; color: var(--text-primary);
-    text-decoration: underline; text-underline-offset: 4px; text-decoration-color: var(--border-strong);
+    font-size: 15px; font-weight: 500; color: var(--text-primary);
+    text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border-strong);
   }
   .list { display: flex; flex-direction: column; gap: 3px; }
   .row {
-    background: var(--surface); border-radius: 0; padding: 14px 14px;
-    display: flex; flex-direction: column; align-items: flex-start; cursor: pointer;
+    background: var(--surface); border-radius: 0; padding: 16px 18px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer;
   }
   .row.rest { cursor: default; }
+  .row-left { display: flex; flex-direction: column; gap: 2px; }
   .b-label { font-size: 11px; color: var(--text-secondary); line-height: 1.2; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
-  .b-time { font-size: 10px; color: var(--text-secondary); margin-top: 2px; font-variant-numeric: tabular-nums; }
-  .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .b-time { font-size: 10px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+  .tag-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
   .tag { display: inline-block; background: #E8ECF1; color: #556274; font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.02em; text-transform: uppercase; }
   .tag.pill-done { background: #1E293B; color: #fff; }
   .back {
@@ -143,16 +144,20 @@ function render() {
     const variant = r.fixed || pick(r.cycle, d);
     if (variant === 'Rest') {
       return `<div class="row rest">
-        <div class="b-label">${r.label}</div>
-        <div class="b-time">${r.time}</div>
+        <div class="row-left">
+          <div class="b-label">${r.label}</div>
+          <div class="b-time">${r.time}</div>
+        </div>
         <div class="tag-row">${REST_OPTIONS.map(o => `<span class="tag">${o}</span>`).join('')}</div>
       </div>`;
     }
     const done = isDone(dk, r.start);
     return `<div class="row" data-start="${r.start}">
-      <div class="b-label">${r.label}</div>
-      <div class="b-time">${r.time}</div>
-      <div class="tag-row"><span class="tag${done ? ' pill-done' : ''}">${variant}${done ? ' ✓' : ''}</span></div>
+      <div class="row-left">
+        <div class="b-label">${r.label}</div>
+        <div class="b-time">${r.time}</div>
+      </div>
+      <span class="tag${done ? ' pill-done' : ''}">${variant}${done ? ' ✓' : ''}</span>
     </div>`;
   }).join('');
 
