@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Exercise</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='none' stroke='%231a1a1a' stroke-width='2'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #F5F4EF;
+    --surface: #FFFFFF;
+    --border-strong: rgba(110,109,103,0.18);
+    --text-primary: #2A2A28;
+    --text-secondary: #6E6D67;
+    --text-tertiary: #A8A7A1;
+    --done: #1E293B;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: var(--bg); }
+  body {
+    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--text-primary);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    padding: 28px 20px 60px;
+  }
+  .wrap { max-width: 620px; margin: 0 auto; }
+  .nav { display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 28px; }
+  .arrow {
+    background: var(--surface); border: 0.5px solid var(--border-strong); border-radius: 10px;
+    padding: 8px 16px; cursor: pointer; font-size: 18px; line-height: 1; color: var(--text-primary);
+    font-family: inherit;
+  }
+  .arrow:active { background: rgba(0,0,0,0.04); }
+  .date {
+    background: none; border: 0; cursor: pointer; font-family: inherit;
+    font-size: 22px; font-weight: 600; color: var(--text-primary);
+    text-decoration: underline; text-underline-offset: 4px; text-decoration-color: var(--border-strong);
+  }
+  .list { display: flex; flex-direction: column; gap: 16px; }
+  .row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--surface); border: 0.5px solid var(--border-strong); border-radius: 16px;
+    padding: 22px 26px; cursor: pointer; transition: background 0.15s;
+  }
+  .row.rest { cursor: default; }
+  .row-value { font-size: 20px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary); }
+  .row.done .row-value { color: var(--text-tertiary); }
+  .check {
+    width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid rgba(110,109,103,0.35);
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .row.done .check { background: var(--done); border-color: var(--done); }
+  .row.done .check::after { content: ""; width: 7px; height: 13px; border-right: 2.5px solid #fff; border-bottom: 2.5px solid #fff; transform: rotate(45deg) translateY(-1px); }
+  .rest-opts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .rest-opt { font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-secondary); background: #EEF1F5; border-radius: 999px; padding: 4px 12px; }
+  .back {
+    display: inline-flex; align-items: center; gap: 6px; margin-top: 30px;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--text-tertiary); text-decoration: none;
+  }
+  .sync { position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--text-tertiary); opacity: 0; transition: opacity 0.2s; }
+  .sync.show { opacity: 1; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="nav">
+      <button class="arrow" id="prev">&larr;</button>
+      <button class="date" id="date"></button>
+      <button class="arrow" id="next">&rarr;</button>
+    </div>
+    <div class="list" id="list"></div>
+    <a class="back" href="schedule.html">&larr; Schedule</a>
+  </div>
+  <div class="sync" id="sync"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAIlMRgVKpN_xe48WKJihiQ1ZgiVLRouMs",
+  authDomain: "my-schedule-a0ded.firebaseapp.com",
+  databaseURL: "https://my-schedule-a0ded-default-rtdb.firebaseio.com",
+  projectId: "my-schedule-a0ded",
+  storageBucket: "my-schedule-a0ded.firebasestorage.app",
+  messagingSenderId: "941701290759",
+  appId: "1:941701290759:web:86d0c144ee0425fad983a2"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// ── Same date + cycle logic as the schedule, so values and ticks match ──────────
+function dayNum(d) { const refD = new Date(2026, 0, 1); return Math.floor((d - refD) / 86400000); }
+function dateFromNum(n) { return new Date(2026, 0, 1 + n); }
+function dayKey(d) { return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+
+const EX_START = dayNum(new Date(2026, 6, 24));
+const LIFT_CYCLE = ['Push', 'Pull', 'Legs', 'Rest'];
+const CARDIO_CYCLE = ['Sprint', 'Run', 'Skip', 'Rest'];
+const REST_OPTIONS = ['Walk', 'Bike', 'Swim', 'Sport'];
+const pick = (arr, d) => arr[(((dayNum(d) - EX_START) % arr.length) + arr.length) % arr.length];
+
+// The rows: each maps to the same exdone key the schedule uses (dayKey_blockStart).
+const ROWS = [
+  { label: 'Lift',    start: '11:30', cycle: LIFT_CYCLE },
+  { label: 'Cardio',  start: '16:30', cycle: CARDIO_CYCLE },
+  { label: 'Stretch', start: '20:30', fixed: 'Stretch' }
+];
+
+let exdone = {};
+let viewDay = dayNum(new Date());
+let syncTimer = null;
+
+function showSync(msg) {
+  const s = document.getElementById('sync');
+  s.textContent = msg; s.classList.add('show');
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => s.classList.remove('show'), 1200);
+}
+
+onValue(ref(db, 'exdone'), snap => { exdone = snap.val() || {}; render(); });
+
+function exKey(dk, start) { return dk + '_' + start; }
+function isDone(dk, start) { return !!exdone[exKey(dk, start)]; }
+function toggle(dk, start) {
+  const map = Object.assign({}, exdone);
+  const k = exKey(dk, start);
+  if (map[k]) delete map[k]; else map[k] = true;
+  exdone = map;
+  showSync('Saving…');
+  set(ref(db, 'exdone'), map).then(() => showSync('Saved')).catch(() => showSync('Save failed'));
+  render();
+}
+
+function render() {
+  const d = dateFromNum(viewDay);
+  const dk = dayKey(d);
+  const today = dayKey(new Date());
+
+  const dl = document.getElementById('date');
+  const wk = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()];
+  const mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+  dl.textContent = (dk === today) ? 'Today' : wk + ', ' + mo + ' ' + d.getDate();
+
+  const list = document.getElementById('list');
+  list.innerHTML = ROWS.map(r => {
+    const done = isDone(dk, r.start);
+    return `<div class="row${done ? ' done' : ''}" data-start="${r.start}">
+      <div class="row-value">${r.label}</div>
+      <div class="check"></div>
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('[data-start]').forEach(row => {
+    row.onclick = () => toggle(dk, row.dataset.start);
+  });
+}
+
+document.getElementById('prev').onclick = () => { viewDay -= 1; render(); };
+document.getElementById('next').onclick = () => { viewDay += 1; render(); };
+document.getElementById('date').onclick = () => { viewDay = dayNum(new Date()); render(); };
+render();
+</script>
+</body>
+</html>
