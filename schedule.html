@@ -72,7 +72,7 @@ body { padding: 12px; padding-bottom: 40px; }
 .reminder-input { font-size: 12px; padding: 5px 10px; border: 0.5px solid var(--border-strong); border-radius: 6px; font-family: inherit; color: var(--text-primary); background: transparent; }
 #reminder-name { flex: 1; min-width: 140px; }
 .reminder-save-btn { background: var(--text-primary); color: var(--surface); border: 0; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
-.date-nav { display: flex; align-items: center; gap: 8px; position: relative; padding-right: 164px; padding-left: 164px; overflow: visible; }
+.date-nav { display: flex; align-items: center; gap: 8px; position: relative; padding-right: 126px; padding-left: 126px; overflow: visible; }
 .date-nav button { background: none; border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 4px 10px; cursor: pointer; font-size: 14px; color: var(--text-primary); font-family: inherit; }
 .date-nav button:active { background: rgba(0,0,0,0.04); }
 .date-label { font-size: 15px; font-weight: 500; color: var(--text-primary); min-width: 220px; text-align: center; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border-strong); }
@@ -126,6 +126,11 @@ body { padding: 12px; padding-bottom: 40px; }
 .timeline-wrap { padding-top: 24px; padding-bottom: 12px; }
 .timeline { position: relative; }
 
+.ex-check-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.25s; pointer-events: none; z-index: 2; }
+.ex-check-overlay svg { width: 46px; height: 46px; }
+.block.block-done .ex-check-overlay { opacity: 1; }
+.block.block-done { background: #EEF2F6; }
+.block.block-done .block-content { opacity: 0.38; transition: opacity 0.25s; }
 .block { position: absolute; left: 0; right: 0; background: var(--surface); border-radius: 0; overflow: hidden; user-select: none; -webkit-user-select: none; padding: 14px 14px; display: flex; align-items: flex-start; gap: 10px; transition: opacity 0.3s; }
 .block.past { opacity: 0.35; }
 .block-content { flex: 1; min-width: 0; }
@@ -190,7 +195,6 @@ body { padding: 12px; padding-bottom: 40px; }
         <button id="shift-btn" class="shift-btn" title="Shift schedule">⟲</button>
         <button id="reminders-btn" class="shift-btn" title="Reminders"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
         <button id="impulse-btn" class="shift-btn" title="Impulses"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button>
-        <a id="exercise-btn" class="shift-btn" href="exercise.html" title="Exercise tracker"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;"><path d="M6.5 6.5l11 11"/><path d="M21 21l-1-1"/><path d="M3 3l1 1"/><path d="M18 22l4-4"/><path d="M2 6l4-4"/><path d="M3 10l7-7"/><path d="M14 21l7-7"/></svg></a>
         <div class="shift-overlay" id="shift-overlay">
           <span class="shift-title">Woke up at</span>
           <input type="time" id="shift-input" value="07:00" class="shift-input">
@@ -719,7 +723,7 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
         return `<span class="tag tag-med${_gd ? ' med-done' : ''}" data-exdone="gratitude">${t}${_gd ? ' ✓' : ''}</span>`;
       }
       if (_isExercise && _isToday && !REST_OPTIONS.includes(t)) {
-        return `<span class="tag tag-med${_exDone ? ' med-done' : ''}" data-exdone="${b.start}">${t}${_exDone ? ' ✓' : ''}</span>`;
+        return `<span class="tag">${t}</span>`;
       }
       if (t === 'Skincare') {
         const _when = b.label === 'MR' ? 'morning' : 'evening';
@@ -736,7 +740,15 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
     const displayStart = b.displayStart || formatTime(b.dispStartT);
     const displayEnd = b.displayEnd || formatTime(b.dispEndT);
     const noteHtml = b.note ? `<div class="b-note">${b.note}</div>` : '';
+    const _exClickable = (b.label === 'Lift' || b.label === 'Cardio' || b.label === 'Stretch');
+    const _exBlockDone = _exClickable && isExDone(currentDayKey, b.start);
+    if (_exBlockDone) block.classList.add('block-done');
+    if (_exClickable) block.dataset.exblock = b.start;
+    const checkOverlay = _exClickable
+      ? `<div class="ex-check-overlay"><svg viewBox="0 0 48 48" fill="none" stroke="#1E293B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 25 l9 9 l17 -19"/></svg></div>`
+      : '';
     block.innerHTML = `
+      ${checkOverlay}
       <div class="block-content">
         <div class="b-label">${b.label}</div>
         <div class="b-time">${displayStart} – ${displayEnd}</div>
@@ -745,6 +757,8 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
       </div>
     `;
     tl.appendChild(block);
+
+    if (_exClickable) block.style.cursor = 'pointer';
 
     block.querySelectorAll('[data-exdone]').forEach(_exEl => {
       _exEl.addEventListener('click', (e) => { e.stopPropagation(); toggleExDone(currentDayKey, _exEl.dataset.exdone); });
@@ -974,6 +988,11 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) { re
 window.addEventListener('focus', render);
 window.addEventListener('pageshow', render);
 
+// Tap an exercise block (Lift/Cardio/Stretch) to toggle its done checkmark for the viewed day
+document.addEventListener('click', (e) => {
+  const eb = e.target.closest('[data-exblock]');
+  if (eb) { e.stopPropagation(); toggleExDone(dayKey(dateFromNum(cur)), eb.dataset.exblock); }
+});
 document.getElementById('prev-btn').onclick = () => { cur--; render(); };
 document.getElementById('next-btn').onclick = () => { cur++; render(); };
 
