@@ -447,7 +447,7 @@ function ensureMeditation() {
   if (med.lastEval && med.lastEval < today) {
     let cur = med.lastEval, changed = false, guard = 0;
     while (cur < today && guard < 500) {
-      med.minutes += (med.done && med.done[cur]) ? 2 : -1;
+      if (!(med.done && med.done[cur])) med.minutes -= 1; // done days already credited immediately
       if (med.minutes > 25) med.minutes = 25;
       if (med.minutes < 1) med.minutes = 1;
       cur = nextDayKey(cur);
@@ -473,19 +473,19 @@ function toggleMedDone() {
   const med = ensureMeditation();
   const tk = dayKey(new Date());
   med.done = med.done || {};
-  med.done[tk] = !med.done[tk];
+  if (med.done[tk]) {
+    delete med.done[tk];
+    med.minutes = Math.max(1, med.minutes - 2); // undo today's credit
+  } else {
+    med.done[tk] = true;
+    med.minutes = Math.min(25, med.minutes + 2); // credit immediately, not next day
+  }
   fbCache.meditation = med;
   fbSetMeditation(med);
   render();
 }
 function projectedMedMinutes(viewedDate) {
-  const med = ensureMeditation();          // current value, rolled over to the real today
-  const today = dayKey(new Date());
-  const viewed = dayKey(viewedDate);
-  if (viewed <= today) return med.minutes; // today or past: the real current value
-  // Future days preview the effect of today's choice: done -> +2, otherwise the -1 miss.
-  const delta = (med.done && med.done[today]) ? 2 : -1;
-  return Math.max(1, Math.min(25, med.minutes + delta));
+  return ensureMeditation().minutes; // credited immediately on tap, so this is the live value
 }
 function getMeditationTag(d) {
   const mins = projectedMedMinutes(d);
@@ -715,8 +715,8 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
     const _exDone = _isToday && isExDone(currentDayKey, b.start);
     const _isExercise = b.label === 'Lift' || b.label === 'Cardio';
     const tagsHtml = b.tags ? `<div class="tag-row">${b.tags.map(t => {
-      if (t.indexOf('Meditate') === 0 && _isToday) {
-        return `<span class="tag tag-med${_medDone ? ' med-done' : ''}" data-med="1">${t}${_medDone ? ' ✓' : ''}</span>`;
+      if (t.indexOf('Meditate') === 0) {
+        return `<span class="tag">${t}</span>`;
       }
       if (t.indexOf('Gratitude') === 0 && _isToday) {
         const _gd = isExDone(currentDayKey, 'gratitude');
@@ -741,10 +741,13 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
     const displayEnd = b.displayEnd || formatTime(b.dispEndT);
     const noteHtml = b.note ? `<div class="b-note">${b.note}</div>` : '';
     const _exClickable = (b.label === 'Lift' || b.label === 'Cardio' || b.label === 'Stretch');
-    const _exBlockDone = _exClickable && isExDone(currentDayKey, b.start);
-    if (_exBlockDone) block.classList.add('block-done');
+    const _mrClickable = (b.label === 'MR') && _isToday;
+    const _blockClickable = _exClickable || _mrClickable;
+    const _blockDone = _exClickable ? isExDone(currentDayKey, b.start) : (_mrClickable && _medDone);
+    if (_blockDone) block.classList.add('block-done');
     if (_exClickable) block.dataset.exblock = b.start;
-    const checkOverlay = _exClickable
+    if (_mrClickable) block.dataset.medblock = '1';
+    const checkOverlay = _blockClickable
       ? `<div class="ex-check-overlay"><svg viewBox="0 0 48 48" fill="none" stroke="#1E293B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 25 l9 9 l17 -19"/></svg></div>`
       : '';
     block.innerHTML = `
@@ -758,7 +761,7 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
     `;
     tl.appendChild(block);
 
-    if (_exClickable) block.style.cursor = 'pointer';
+    if (_blockClickable) block.style.cursor = 'pointer';
 
     block.querySelectorAll('[data-exdone]').forEach(_exEl => {
       _exEl.addEventListener('click', (e) => { e.stopPropagation(); toggleExDone(currentDayKey, _exEl.dataset.exdone); });
@@ -991,7 +994,9 @@ window.addEventListener('pageshow', render);
 // Tap an exercise block (Lift/Cardio/Stretch) to toggle its done checkmark for the viewed day
 document.addEventListener('click', (e) => {
   const eb = e.target.closest('[data-exblock]');
-  if (eb) { e.stopPropagation(); toggleExDone(dayKey(dateFromNum(cur)), eb.dataset.exblock); }
+  if (eb) { e.stopPropagation(); toggleExDone(dayKey(dateFromNum(cur)), eb.dataset.exblock); return; }
+  const mb = e.target.closest('[data-medblock]');
+  if (mb) { e.stopPropagation(); toggleMedDone(); }
 });
 document.getElementById('prev-btn').onclick = () => { cur--; render(); };
 document.getElementById('next-btn').onclick = () => { cur++; render(); };
