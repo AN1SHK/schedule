@@ -419,6 +419,7 @@ function getExerciseTag(d) {
 // Meditation is adaptive: mark a day done -> +2 next day; any untapped day -> -1.
 // Range clamped to 1..25. MEDITATE_START only seeds the very first value for continuity.
 const MEDITATE_START = dayNum(new Date(2026, 6, 13));
+const MED_EPOCH = 'restart-1min'; // bump to force a one-time meditation reset
 let medLoaded = false; // flips true after the first Firebase meditation snapshot
 function legacyMedMinutes(d) {
   const offset = Math.max(0, dayNum(d) - MEDITATE_START);
@@ -475,10 +476,10 @@ function toggleMedDone() {
   med.done = med.done || {};
   if (med.done[tk]) {
     delete med.done[tk];
-    med.minutes = Math.max(1, med.minutes - 2); // undo today's credit
+    med.minutes = Math.max(1, med.minutes - 1); // undo today's credit
   } else {
     med.done[tk] = true;
-    med.minutes = Math.min(25, med.minutes + 2); // credit immediately, not next day
+    med.minutes = Math.min(25, med.minutes + 1); // credit immediately, not next day
   }
   fbCache.meditation = med;
   fbSetMeditation(med);
@@ -567,6 +568,11 @@ onValue(ref(db, 'meditation'), snap => {
   const v = snap.val();
   if (v) fbCache.meditation = v; // don't clobber a locally-seeded value with an empty snapshot
   medLoaded = true; // Firebase has reported in — safe to seed / roll over now
+  if (!fbCache.meditation || fbCache.meditation.epoch !== MED_EPOCH) {
+    const tomorrow = dayKey(dateFromNum(dayNum(new Date()) + 1));
+    fbCache.meditation = { minutes: 1, lastEval: tomorrow, done: {}, epoch: MED_EPOCH };
+    fbSetMeditation(fbCache.meditation);
+  }
   render();
 });
 
