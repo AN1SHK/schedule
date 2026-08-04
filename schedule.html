@@ -363,11 +363,13 @@ const MIN_BLOCK_HEIGHT = 36;
 
 const FIXED_BLOCKS = [
   { start: '7:00', end: '7:30', label: 'MR', tags: ['MEDITATE_TAG', 'Gratitude - 3 Pts', 'Face Grooming', 'Skincare'] },
-  { start: '7:30', end: '10:30', label: 'Deep Work', tags: [] },
-  { start: '10:30', end: '11:30', label: 'Shallow Work', tags: [] },
-  { start: '11:30', end: '12:30', label: 'Train', tags: ['TRAIN_TAG'] },
-  { start: '12:30', end: '13:00', label: 'Shower', tags: ['SHOWER_TAG', 'Skincare'], grooming: true },
-  { start: '13:00', end: '20:30', label: 'Rest', tags: [], buffer: true, bufferPriority: 1 },
+  { start: '7:30', end: '9:00', label: 'Deep Work', tags: [] },
+  { start: '9:00', end: '9:30', label: 'Rest', tags: [] },
+  { start: '9:30', end: '11:00', label: 'Deep Work', tags: [] },
+  { start: '11:00', end: '12:00', label: 'Train', tags: ['TRAIN_TAG'] },
+  { start: '12:00', end: '13:00', label: 'Shallow Work', tags: [] },
+  { start: '13:00', end: '13:30', label: 'Shower', tags: ['SHOWER_TAG', 'Skincare'], grooming: true },
+  { start: '13:30', end: '20:30', label: 'Rest', tags: [], buffer: true, bufferPriority: 1 },
   { start: '20:30', end: '21:00', label: 'Stretch', tags: [] },
   { start: '21:00', end: '21:30', label: 'NR', tags: [] },
   { start: '21:30', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
@@ -410,9 +412,10 @@ function dayBlocks(d) {
   const isCardio = ['Sprint', 'Run', 'Skip'].includes(getTrainTag(d));
   if (!isCardio) return FIXED_BLOCKS;
   return FIXED_BLOCKS.map(b => {
-    if (b.label === 'Train') return { ...b, end: '12:00' };
-    if (b.label === 'Shower') return { ...b, start: '12:00', end: '12:30' };
-    if (b.buffer && b.label === 'Rest') return { ...b, start: '12:30' };
+    if (b.label === 'Train') return { ...b, end: '11:30' };
+    if (b.label === 'Shallow Work') return { ...b, start: '11:30', end: '12:30' };
+    if (b.label === 'Shower') return { ...b, start: '12:30', end: '13:00' };
+    if (b.buffer && b.label === 'Rest') return { ...b, start: '13:00' };
     return b;
   });
 }
@@ -927,7 +930,7 @@ function render() {
     return { ...b, tags, displayLabel, i, startT, endT, dispStartT, dispEndT, done: !!(doneState && doneState[i]) };
   }).sort((a, b) => a.startT - b.startT);
 
-  const SPLIT_1 = 11.5;
+  const SPLIT_1 = 11;
   const SPLIT_2 = 20.5;
   const morning = enriched.filter(b => b.endT <= SPLIT_1);
   const afternoon = enriched.filter(b => b.endT > SPLIT_1 && b.endT <= SPLIT_2);
