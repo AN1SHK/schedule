@@ -971,10 +971,14 @@ function render() {
   const eveningMarkers = [];
 
   const timelineMarkers = [
-    { time: 15, cls: 'marker', labelCls: 'marker-label', label: 'Last Nap · 15:00' },
-    { time: 20, cls: 'marker', labelCls: 'marker-label', label: 'Last Meal · 20:00' },
-    { time: 22, cls: 'marker', labelCls: 'marker-label', label: 'All Devices Off · 22:00' }
+    { time: 14.5, cls: 'marker', labelCls: 'marker-label', label: 'Last Nap · 14:30' },
+    { time: 19.5, cls: 'marker', labelCls: 'marker-label', label: 'Last Meal · 19:30' }
   ];
+  // First Meal pinned to the end of Shower; All Devices Off pinned to the start of NR
+  const _showerB = enriched.find(b => b.label === 'Shower');
+  if (_showerB) timelineMarkers.push({ time: _showerB.dispEndT, cls: 'marker', labelCls: 'marker-label', label: `First Meal · ${formatTime(_showerB.dispEndT)}` });
+  const _nrB = enriched.find(b => b.label === 'NR');
+  if (_nrB) timelineMarkers.push({ time: _nrB.dispStartT, cls: 'marker', labelCls: 'marker-label', label: `All Devices Off · ${formatTime(_nrB.dispStartT)}` });
 
   // Timed reminders due on the viewed day
   const viewedDayReminders = loadReminders().filter(r => r.date === key && r.time);
