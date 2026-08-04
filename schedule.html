@@ -80,7 +80,9 @@ body { padding: 12px; padding-bottom: 40px; }
     .reminder-pill-groom { background: #C0392B; cursor: pointer; }
     .reminder-pill-blue { background: #3B6FC0; }
     .reminder-pill-black { background: #1A1A1A; }
-    .tag-clickable { cursor: pointer; }
+    .tag-clickable { cursor: pointer; position: relative; padding-right: 19px; background: #E3E9F1; transition: background 0.15s; }
+    .tag-clickable::after { content: ""; position: absolute; right: 8px; top: 50%; width: 5px; height: 5px; border-right: 1.5px solid rgba(85,98,116,0.55); border-top: 1.5px solid rgba(85,98,116,0.55); transform: translateY(-50%) rotate(45deg); }
+    .tag-clickable:active { background: #D5DEE9; }
     .routine-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 100; }
     .routine-backdrop.show { display: block; }
     .routine-popup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--surface); border-radius: 14px; padding: 22px 26px; z-index: 101; min-width: 240px; max-width: 88vw; box-shadow: 0 12px 44px rgba(0,0,0,0.18); }
@@ -144,8 +146,8 @@ body { padding: 12px; padding-bottom: 40px; }
 .subitem.done { color: rgba(110, 109, 103, 0.5); text-decoration: line-through; }
 .subitem.done::before { background: #1D9E75; border-color: #1D9E75; }
 .subitem.done::after { content: ''; position: absolute; left: 5.5px; top: 8.5px; width: 4px; height: 2px; border-left: 1.5px solid white; border-bottom: 1.5px solid white; transform: rotate(-45deg); }
-.tag-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
-.tag { display: inline-block; background: #E8ECF1; color: #556274; font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.02em; text-transform: uppercase; }
+.tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.tag { display: inline-block; background: #EEF1F6; color: #556274; font-size: 10px; font-weight: 600; padding: 4px 9px; border-radius: 6px; letter-spacing: 0.03em; text-transform: uppercase; }
 .tag-med { cursor: pointer; user-select: none; -webkit-user-select: none; }
 .tag-med.med-done { background: #1E293B; color: #FFFFFF; }
 .marker { position: absolute; left: 0; right: 0; height: 1px; background: #556274; z-index: 5; pointer-events: none; }
@@ -360,17 +362,15 @@ const MIN_BLOCK_HEIGHT = 36;
 // Pomodoro: 25min work / 5min break, repeating
 
 const FIXED_BLOCKS = [
-  { start: '7:00', end: '7:30', label: 'MR', tags: ['MEDITATE_TAG', 'Gratitude - 3 Pts', 'Skincare'] },
-  { start: '7:30', end: '11:30', label: 'Work', tags: [] },
-  { start: '11:30', end: '12:30', label: 'Lift', tags: ['EX_EARLY_TAG'] },
-  { start: '12:30', end: '16:30', label: 'Open', tags: [], buffer: true, bufferPriority: 1 },
-  { start: '16:30', end: '17:00', label: 'Cardio', tags: ['EX_AM_TAG'] },
-  { start: '17:00', end: '17:30', label: 'Shower', tags: ['SHOWER_TAG', 'Skincare'], grooming: true },
-  { start: '17:30', end: '20:30', label: 'Open', tags: [] },
+  { start: '7:00', end: '7:30', label: 'MR', tags: ['MEDITATE_TAG', 'Gratitude - 3 Pts', 'Face Grooming', 'Skincare'] },
+  { start: '7:30', end: '10:30', label: 'Deep Work', tags: [] },
+  { start: '10:30', end: '11:30', label: 'Shallow Work', tags: [] },
+  { start: '11:30', end: '12:30', label: 'Train', tags: ['TRAIN_TAG'] },
+  { start: '12:30', end: '13:00', label: 'Shower', tags: ['SHOWER_TAG', 'Skincare'], grooming: true },
+  { start: '13:00', end: '20:30', label: 'Rest', tags: [], buffer: true, bufferPriority: 1 },
   { start: '20:30', end: '21:00', label: 'Stretch', tags: [] },
-  { start: '21:00', end: '22:00', label: 'Open', tags: [] },
-  { start: '22:00', end: '23:00', label: 'NR', tags: [] },
-  { start: '23:00', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
+  { start: '21:00', end: '21:30', label: 'NR', tags: [] },
+  { start: '21:30', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
 ];
 
 function dayKey(d) { return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
@@ -400,6 +400,22 @@ function getEarlyExerciseTag(d) {
 // Late-morning exercise rotates on its own 2-day cycle, same start date
 const EX_AM_CYCLE = ['Sprint', 'Run', 'Skip', 'Rest'];
 const REST_OPTIONS = ['Walk', 'Bike', 'Swim', 'Sport']; // shown on Rest days
+const TRAIN_CYCLE = ['Push', 'Sprint', 'Pull', 'Run', 'Legs', 'Skip', 'Rest']; // one block, alternates lift/cardio
+function getTrainTag(d) {
+  const n = TRAIN_CYCLE.length;
+  return TRAIN_CYCLE[(((dayNum(d) - EX_START) % n) + n) % n];
+}
+function dayBlocks(d) {
+  // On cardio days the Train block is 30 min; the freed 30 min extends the Rest block.
+  const isCardio = ['Sprint', 'Run', 'Skip'].includes(getTrainTag(d));
+  if (!isCardio) return FIXED_BLOCKS;
+  return FIXED_BLOCKS.map(b => {
+    if (b.label === 'Train') return { ...b, end: '12:00' };
+    if (b.label === 'Shower') return { ...b, start: '12:00', end: '12:30' };
+    if (b.buffer && b.label === 'Rest') return { ...b, start: '12:30' };
+    return b;
+  });
+}
 function getAmExerciseTag(d) {
   const n = EX_AM_CYCLE.length;
   return EX_AM_CYCLE[(((dayNum(d) - EX_START) % n) + n) % n];
@@ -628,12 +644,12 @@ function saveReminders(arr) {
 // Buffers (evening Open first, then afternoon Open) shrink in priority order to absorb
 // the delay, so the fixed evening anchors (NR/Sleep) stay put.
 // Returns { startT, endT, dispStartT, dispEndT } per FIXED_BLOCKS index.
-function computeShiftedTimes(shiftHours) {
+function computeShiftedTimes(shiftHours, blocks) {
   const shift = shiftHours > 0 ? shiftHours : 0;
   // Allocate how much each buffer shrinks, consuming buffers by priority.
   const bufferShrink = {};
   let toRemove = shift;
-  FIXED_BLOCKS.filter(b => b.buffer)
+  blocks.filter(b => b.buffer)
     .sort((a, b) => (a.bufferPriority || 99) - (b.bufferPriority || 99))
     .forEach(bb => {
       const cap = parseTime(bb.end) - parseTime(bb.start);
@@ -643,7 +659,7 @@ function computeShiftedTimes(shiftHours) {
     });
   // Pack blocks end-to-end from the wake time; anchors keep their original times.
   let cursor = START_HOUR + shift;
-  return FIXED_BLOCKS.map(b => {
+  return blocks.map(b => {
     const startT = parseTime(b.start);
     const endT = parseTime(b.end);
     let dispStartT = startT;
@@ -719,7 +735,7 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
     const _isToday = currentDayKey === dayKey(new Date());
     const _medDone = _isToday && fbCache.meditation && fbCache.meditation.done && fbCache.meditation.done[currentDayKey];
     const _exDone = _isToday && isExDone(currentDayKey, b.start);
-    const _isExercise = b.label === 'Lift' || b.label === 'Cardio';
+    const _isExercise = b.label === 'Train';
     const tagsHtml = b.tags ? `<div class="tag-row">${b.tags.map(t => {
       if (t.indexOf('Meditate') === 0) {
         return `<span class="tag">${t}</span>`;
@@ -741,12 +757,15 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
       if (t === 'Personal Grooming') {
         return `<span class="tag tag-clickable" data-popup="grooming">${t}</span>`;
       }
+      if (t === 'Face Grooming') {
+        return `<span class="tag tag-clickable" data-popup="face-grooming">${t}</span>`;
+      }
       return `<span class="tag">${t}</span>`;
     }).join('')}</div>` : '';
     const displayStart = b.displayStart || formatTime(b.dispStartT);
     const displayEnd = b.displayEnd || formatTime(b.dispEndT);
     const noteHtml = b.note ? `<div class="b-note">${b.note}</div>` : '';
-    const _exClickable = (b.label === 'Lift' || b.label === 'Cardio' || b.label === 'Stretch');
+    const _exClickable = (b.label === 'Train' || b.label === 'Stretch');
     const _mrClickable = (b.label === 'MR') && _isToday;
     const _blockClickable = _exClickable || _mrClickable;
     const _blockDone = _exClickable ? isExDone(currentDayKey, b.start) : (_mrClickable && _medDone);
@@ -759,7 +778,7 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
     block.innerHTML = `
       ${checkOverlay}
       <div class="block-content">
-        <div class="b-label">${b.label}</div>
+        <div class="b-label">${b.displayLabel || b.label}</div>
         <div class="b-time">${displayStart} – ${displayEnd}</div>
         ${noteHtml}
         ${tagsHtml}
@@ -882,28 +901,33 @@ function render() {
     else shiftBtnEl.classList.remove('active');
   }
 
-  const packed = computeShiftedTimes(shiftHours);
+  const BLOCKS = dayBlocks(d);
+  const packed = computeShiftedTimes(shiftHours, BLOCKS);
 
-  const enriched = FIXED_BLOCKS.map((b, i) => {
+  const enriched = BLOCKS.map((b, i) => {
     // Inject Personal Grooming tag into Shower on Tue/Fri
     let extraTags = [];
     if (b.grooming && (dow === 2 || dow === 5)) extraTags = ['Personal Grooming'];
     const tags = b.tags ? [...b.tags.flatMap(t => {
       if (t === 'EX_TAG') return [getExerciseTag(d)];
-      if (t === 'EX_EARLY_TAG') { const v = getEarlyExerciseTag(d); return v === 'Rest' ? REST_OPTIONS.slice() : [v]; }
-      if (t === 'EX_AM_TAG') { const v = getAmExerciseTag(d); return v === 'Rest' ? REST_OPTIONS.slice() : [v]; }
+      if (t === 'TRAIN_TAG') { const v = getTrainTag(d); return v === 'Rest' ? REST_OPTIONS.slice() : [v]; }
       if (t === 'SHOWER_TAG') { const s = getShowerTag(d); return s ? [s] : []; }
       if (t === 'MEDITATE_TAG') return [getMeditationTag(d)];
       return [t];
     }), ...extraTags] : (extraTags.length ? extraTags : b.tags);
+    let displayLabel = b.label;
+    if (b.label === 'Train') {
+      const _tv = getTrainTag(d);
+      displayLabel = ['Push', 'Pull', 'Legs'].includes(_tv) ? 'Lift' : ['Sprint', 'Run', 'Skip'].includes(_tv) ? 'Cardio' : 'Recover';
+    }
     const startT = parseTime(b.start);
     const endT = parseTime(b.end);
     const dispStartT = packed[i].dispStartT;
     const dispEndT = packed[i].dispEndT;
-    return { ...b, tags, i, startT, endT, dispStartT, dispEndT, done: !!(doneState && doneState[i]) };
+    return { ...b, tags, displayLabel, i, startT, endT, dispStartT, dispEndT, done: !!(doneState && doneState[i]) };
   }).sort((a, b) => a.startT - b.startT);
 
-  const SPLIT_1 = 12.5;
+  const SPLIT_1 = 11.5;
   const SPLIT_2 = 20.5;
   const morning = enriched.filter(b => b.endT <= SPLIT_1);
   const afternoon = enriched.filter(b => b.endT > SPLIT_1 && b.endT <= SPLIT_2);
@@ -1311,7 +1335,8 @@ render();
 const POPUPS = {
   'skincare-morning': { title: 'Morning Skincare', items: ['Scrub with toothbrush', 'Moisturizer', 'Sunscreen'] },
   'skincare-evening': { title: 'Evening Skincare', items: ['Scrub with toothbrush', 'Cleanser', 'Retin-A', 'Moisturizer'] },
-  'grooming': { title: 'Personal Grooming', items: ['Unibrow', 'Beard', 'Earlobe Hair', 'Nose Hair', 'Finger & Toe Nails', 'Body Hair', 'Groin Hair', 'Leg Hair'] }
+  'grooming': { title: 'Personal Grooming', items: ['Nose Hair', 'Finger & Toe Nails', 'Body Hair', 'Groin Hair', 'Leg Hair'] },
+  'face-grooming': { title: 'Face Grooming', items: ['Unibrow', 'Beard', 'Earlobe Hair'] }
 };
 let openPopupKey = null;
 function isRoutineDone(dk, key, i) {
