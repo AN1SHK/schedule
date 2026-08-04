@@ -80,9 +80,13 @@ body { padding: 12px; padding-bottom: 40px; }
     .reminder-pill-groom { background: #C0392B; cursor: pointer; }
     .reminder-pill-blue { background: #3B6FC0; }
     .reminder-pill-black { background: #1A1A1A; }
-    .tag-clickable { cursor: pointer; position: relative; padding-right: 19px; background: #E3E9F1; transition: background 0.15s; }
-    .tag-clickable::after { content: ""; position: absolute; right: 8px; top: 50%; width: 5px; height: 5px; border-right: 1.5px solid rgba(85,98,116,0.55); border-top: 1.5px solid rgba(85,98,116,0.55); transform: translateY(-50%) rotate(45deg); }
+    .tag-clickable { cursor: pointer; background: #E3E9F1; transition: background 0.15s; }
     .tag-clickable:active { background: #D5DEE9; }
+    .tag-act { cursor: pointer; background: #E3E9F1; transition: background 0.15s; }
+    .tag-act:active { background: #D5DEE9; }
+    .routine-list li.routine-select { cursor: pointer; padding: 3px 0; }
+    .routine-list li.routine-select .routine-text { font-size: 15px; }
+    .routine-list li.routine-select:active .routine-text { opacity: 0.55; }
     .routine-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 100; }
     .routine-backdrop.show { display: block; }
     .routine-popup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--surface); border-radius: 14px; padding: 22px 26px; z-index: 101; min-width: 240px; max-width: 88vw; box-shadow: 0 12px 44px rgba(0,0,0,0.18); }
@@ -368,12 +372,11 @@ const FIXED_BLOCKS = [
   { start: '9:30', end: '11:00', label: 'Deep Work', tags: [] },
   { start: '11:00', end: '11:30', label: 'Rest', tags: [] },
   { start: '11:30', end: '12:30', label: 'Shallow Work', tags: [] },
-  { start: '12:30', end: '13:30', label: 'Train', tags: ['TRAIN_TAG'] },
+  { start: '12:30', end: '13:30', label: 'Exercise', tags: ['Lift', 'Cardio', 'Stretch'] },
   { start: '13:30', end: '14:00', label: 'Shower', tags: ['SHOWER_TAG', 'Skincare'], grooming: true },
-  { start: '14:00', end: '20:30', label: 'Rest', tags: [], buffer: true, bufferPriority: 1 },
-  { start: '20:30', end: '21:00', label: 'Stretch', tags: [] },
-  { start: '21:00', end: '21:30', label: 'NR', tags: [] },
-  { start: '21:30', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
+  { start: '14:00', end: '21:00', label: 'Rest', tags: [], buffer: true, bufferPriority: 1 },
+  { start: '21:00', end: '22:00', label: 'NR', tags: [] },
+  { start: '22:00', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
 ];
 
 function dayKey(d) { return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
@@ -402,22 +405,14 @@ function getEarlyExerciseTag(d) {
 }
 // Late-morning exercise rotates on its own 2-day cycle, same start date
 const EX_AM_CYCLE = ['Sprint', 'Run', 'Skip', 'Rest'];
-const REST_OPTIONS = ['Walk', 'Bike', 'Swim', 'Sport']; // shown on Rest days
+const REST_OPTIONS = ['Stretch', 'Walk', 'Bike', 'Swim', 'Sport']; // shown on Recover days
 const TRAIN_CYCLE = ['Push', 'Sprint', 'Pull', 'Run', 'Legs', 'Skip', 'Rest']; // one block, alternates lift/cardio
 function getTrainTag(d) {
   const n = TRAIN_CYCLE.length;
   return TRAIN_CYCLE[(((dayNum(d) - EX_START) % n) + n) % n];
 }
 function dayBlocks(d) {
-  // On cardio days the Train block is 30 min; the freed 30 min extends the Rest block.
-  const isCardio = ['Sprint', 'Run', 'Skip'].includes(getTrainTag(d));
-  if (!isCardio) return FIXED_BLOCKS;
-  return FIXED_BLOCKS.map(b => {
-    if (b.label === 'Train') return { ...b, end: '13:00' };
-    if (b.label === 'Shower') return { ...b, start: '13:00', end: '13:30' };
-    if (b.buffer && b.label === 'Rest') return { ...b, start: '13:30' };
-    return b;
-  });
+  return FIXED_BLOCKS; // exercise is an open block now — no per-day duration changes
 }
 function getAmExerciseTag(d) {
   const n = EX_AM_CYCLE.length;
@@ -488,6 +483,14 @@ function toggleExDone(dk, start) {
   fbSetExDone(map);
   render();
 }
+function setExDone(dk, start) {
+  const map = Object.assign({}, fbCache.exdone || {});
+  map[exKey(dk, start)] = true;
+  fbCache.exdone = map;
+  fbSetExDone(map);
+  render();
+}
+function exerciseStart() { const b = FIXED_BLOCKS.find(x => x.label === 'Exercise'); return b ? b.start : null; }
 function toggleMedDone() {
   if (!medLoaded) return; // wait until the stored state is known
   const med = ensureMeditation();
@@ -763,12 +766,15 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
       if (t === 'Face Grooming') {
         return `<span class="tag tag-clickable" data-popup="face-grooming">${t}</span>`;
       }
+      if (t === 'Lift') return `<span class="tag tag-clickable" data-popup="lift">${t}</span>`;
+      if (t === 'Cardio') return `<span class="tag tag-clickable" data-popup="cardio">${t}</span>`;
+      if (t === 'Stretch') return `<span class="tag tag-act" data-exset="1">${t}</span>`;
       return `<span class="tag">${t}</span>`;
     }).join('')}</div>` : '';
     const displayStart = b.displayStart || formatTime(b.dispStartT);
     const displayEnd = b.displayEnd || formatTime(b.dispEndT);
     const noteHtml = b.note ? `<div class="b-note">${b.note}</div>` : '';
-    const _exClickable = (b.label === 'Train' || b.label === 'Stretch');
+    const _exClickable = (b.label === 'Exercise');
     const _mrClickable = (b.label === 'MR') && _isToday;
     const _blockClickable = _exClickable || _mrClickable;
     const _blockDone = _exClickable ? isExDone(currentDayKey, b.start) : (_mrClickable && _medDone);
@@ -919,10 +925,6 @@ function render() {
       return [t];
     }), ...extraTags] : (extraTags.length ? extraTags : b.tags);
     let displayLabel = b.label;
-    if (b.label === 'Train') {
-      const _tv = getTrainTag(d);
-      displayLabel = ['Push', 'Pull', 'Legs'].includes(_tv) ? 'Lift' : ['Sprint', 'Run', 'Skip'].includes(_tv) ? 'Cardio' : 'Recover';
-    }
     const startT = parseTime(b.start);
     const endT = parseTime(b.end);
     const dispStartT = packed[i].dispStartT;
@@ -1032,6 +1034,7 @@ window.addEventListener('pageshow', render);
 
 // Tap an exercise block (Lift/Cardio/Stretch) to toggle its done checkmark for the viewed day
 document.addEventListener('click', (e) => {
+  if (e.target.closest('[data-popup], [data-exset]')) return; // pill menus/actions handle their own clicks
   const eb = e.target.closest('[data-exblock]');
   if (eb) { e.stopPropagation(); toggleExDone(dayKey(dateFromNum(cur)), eb.dataset.exblock); return; }
   const mb = e.target.closest('[data-medblock]');
@@ -1345,7 +1348,9 @@ const POPUPS = {
   'skincare-morning': { title: 'Morning Skincare', items: ['Scrub with toothbrush', 'Moisturizer', 'Sunscreen'] },
   'skincare-evening': { title: 'Evening Skincare', items: ['Scrub with toothbrush', 'Cleanser', 'Retin-A', 'Moisturizer'] },
   'grooming': { title: 'Personal Grooming', items: ['Nose Hair', 'Finger & Toe Nails', 'Body Hair', 'Groin Hair', 'Leg Hair'] },
-  'face-grooming': { title: 'Face Grooming', items: ['Unibrow', 'Beard', 'Earlobe Hair'] }
+  'face-grooming': { title: 'Face Grooming', items: ['Unibrow', 'Beard', 'Earlobe Hair'] },
+  'lift': { title: 'Lift', items: ['Push', 'Pull', 'Legs'], select: true },
+  'cardio': { title: 'Cardio', items: ['Walk', 'Run', 'Sprint', 'Sport', 'Swim'], select: true }
 };
 let openPopupKey = null;
 function isRoutineDone(dk, key, i) {
@@ -1370,6 +1375,14 @@ function renderRoutinePopup() {
   const dk = dayKey(dateFromNum(cur));
   document.getElementById('routine-title').textContent = data.title;
   const list = document.getElementById('routine-list');
+  if (data.select) {
+    list.innerHTML = data.items.map((item, i) => `<li class="routine-select" data-idx="${i}"><span class="routine-text">${item}</span></li>`).join('');
+    const start = exerciseStart();
+    list.querySelectorAll('[data-idx]').forEach(li => {
+      li.onclick = (e) => { e.stopPropagation(); if (start) setExDone(dk, start); closeRoutinePopup(); };
+    });
+    return;
+  }
   list.innerHTML = data.items.map((item, i) => {
     const done = isRoutineDone(dk, openPopupKey, i);
     return `<li class="${done ? 'done' : ''}" data-idx="${i}"><span class="routine-check"></span><span class="routine-text">${item}</span></li>`;
@@ -1392,7 +1405,9 @@ function closeRoutinePopup() {
 }
 document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-popup]');
-  if (el) { e.stopPropagation(); openRoutinePopup(el.dataset.popup); }
+  if (el) { e.stopPropagation(); openRoutinePopup(el.dataset.popup); return; }
+  const ex = e.target.closest('[data-exset]');
+  if (ex) { e.stopPropagation(); const s = exerciseStart(); if (s) setExDone(dayKey(dateFromNum(cur)), s); }
 });
 document.getElementById('routine-backdrop').onclick = closeRoutinePopup;
 </script>
