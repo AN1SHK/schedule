@@ -366,10 +366,11 @@ const FIXED_BLOCKS = [
   { start: '7:30', end: '9:00', label: 'Deep Work', tags: [] },
   { start: '9:00', end: '9:30', label: 'Rest', tags: [] },
   { start: '9:30', end: '11:00', label: 'Deep Work', tags: [] },
-  { start: '11:00', end: '12:00', label: 'Train', tags: ['TRAIN_TAG'] },
-  { start: '12:00', end: '13:00', label: 'Shallow Work', tags: [] },
-  { start: '13:00', end: '13:30', label: 'Shower', tags: ['SHOWER_TAG', 'Skincare'], grooming: true },
-  { start: '13:30', end: '20:30', label: 'Rest', tags: [], buffer: true, bufferPriority: 1 },
+  { start: '11:00', end: '11:30', label: 'Rest', tags: [] },
+  { start: '11:30', end: '12:30', label: 'Shallow Work', tags: [] },
+  { start: '12:30', end: '13:30', label: 'Train', tags: ['TRAIN_TAG'] },
+  { start: '13:30', end: '14:00', label: 'Shower', tags: ['SHOWER_TAG', 'Skincare'], grooming: true },
+  { start: '14:00', end: '20:30', label: 'Rest', tags: [], buffer: true, bufferPriority: 1 },
   { start: '20:30', end: '21:00', label: 'Stretch', tags: [] },
   { start: '21:00', end: '21:30', label: 'NR', tags: [] },
   { start: '21:30', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
@@ -412,10 +413,9 @@ function dayBlocks(d) {
   const isCardio = ['Sprint', 'Run', 'Skip'].includes(getTrainTag(d));
   if (!isCardio) return FIXED_BLOCKS;
   return FIXED_BLOCKS.map(b => {
-    if (b.label === 'Train') return { ...b, end: '11:30' };
-    if (b.label === 'Shallow Work') return { ...b, start: '11:30', end: '12:30' };
-    if (b.label === 'Shower') return { ...b, start: '12:30', end: '13:00' };
-    if (b.buffer && b.label === 'Rest') return { ...b, start: '13:00' };
+    if (b.label === 'Train') return { ...b, end: '13:00' };
+    if (b.label === 'Shower') return { ...b, start: '13:00', end: '13:30' };
+    if (b.buffer && b.label === 'Rest') return { ...b, start: '13:30' };
     return b;
   });
 }
@@ -434,15 +434,15 @@ function getExerciseTag(d) {
   const n = EX_CYCLE.length;
   return EX_CYCLE[(((dayNum(d) - EX_START) % n) + n) % n];
 }
-// Meditation ramps +2 min/day from 1 min up to 25 min, starting July 13 2026
+// Meditation ramps +1 min/day from 1 min up to 15 min
 // Meditation is adaptive: mark a day done -> +2 next day; any untapped day -> -1.
-// Range clamped to 1..25. MEDITATE_START only seeds the very first value for continuity.
+// Range clamped to 1..15. MEDITATE_START only seeds the very first value for continuity.
 const MEDITATE_START = dayNum(new Date(2026, 6, 13));
 const MED_EPOCH = 'restart-1min'; // bump to force a one-time meditation reset
 let medLoaded = false; // flips true after the first Firebase meditation snapshot
 function legacyMedMinutes(d) {
   const offset = Math.max(0, dayNum(d) - MEDITATE_START);
-  return Math.min(25, 1 + offset * 2);
+  return Math.min(15, 1 + offset * 2);
 }
 function nextDayKey(k) {
   const [y, m, dd] = k.split('-').map(Number);
@@ -468,7 +468,7 @@ function ensureMeditation() {
     let cur = med.lastEval, changed = false, guard = 0;
     while (cur < today && guard < 500) {
       if (!(med.done && med.done[cur])) med.minutes -= 1; // done days already credited immediately
-      if (med.minutes > 25) med.minutes = 25;
+      if (med.minutes > 15) med.minutes = 15;
       if (med.minutes < 1) med.minutes = 1;
       cur = nextDayKey(cur);
       changed = true; guard++;
@@ -498,7 +498,7 @@ function toggleMedDone() {
     med.minutes = Math.max(1, med.minutes - 1); // undo today's credit
   } else {
     med.done[tk] = true;
-    med.minutes = Math.min(25, med.minutes + 1); // credit immediately, not next day
+    med.minutes = Math.min(15, med.minutes + 1); // credit immediately, not next day
   }
   fbCache.meditation = med;
   fbSetMeditation(med);
@@ -931,7 +931,7 @@ function render() {
   }).sort((a, b) => a.startT - b.startT);
 
   const SPLIT_1 = 11;
-  const SPLIT_2 = 20.5;
+  const SPLIT_2 = 14;
   const morning = enriched.filter(b => b.endT <= SPLIT_1);
   const afternoon = enriched.filter(b => b.endT > SPLIT_1 && b.endT <= SPLIT_2);
   const evening = enriched.filter(b => b.endT > SPLIT_2);
@@ -974,14 +974,16 @@ function render() {
   const eveningMarkers = [];
 
   const timelineMarkers = [
-    { time: 14.5, cls: 'marker', labelCls: 'marker-label', label: 'Last Nap · 14:30' },
-    { time: 19.5, cls: 'marker', labelCls: 'marker-label', label: 'Last Meal · 19:30' }
+    { time: 14.5, cls: 'marker', labelCls: 'marker-label', label: 'Last Nap · 14:30' }
   ];
-  // First Meal pinned to the end of Shower; All Devices Off pinned to the start of NR
+  // First Meal at end of Shower; Last Meal 3h before sleep; All Devices Off 1h before sleep
   const _showerB = enriched.find(b => b.label === 'Shower');
   if (_showerB) timelineMarkers.push({ time: _showerB.dispEndT, cls: 'marker', labelCls: 'marker-label', label: `First Meal · ${formatTime(_showerB.dispEndT)}` });
-  const _nrB = enriched.find(b => b.label === 'NR');
-  if (_nrB) timelineMarkers.push({ time: _nrB.dispStartT, cls: 'marker', labelCls: 'marker-label', label: `All Devices Off · ${formatTime(_nrB.dispStartT)}` });
+  const _sleepB = enriched.find(b => b.label === 'Sleep');
+  if (_sleepB) {
+    timelineMarkers.push({ time: _sleepB.dispStartT - 3, cls: 'marker', labelCls: 'marker-label', label: `Last Meal · ${formatTime(_sleepB.dispStartT - 3)}` });
+    timelineMarkers.push({ time: _sleepB.dispStartT - 1, cls: 'marker', labelCls: 'marker-label', label: `All Devices Off · ${formatTime(_sleepB.dispStartT - 1)}` });
+  }
 
   // Timed reminders due on the viewed day
   const viewedDayReminders = loadReminders().filter(r => r.date === key && r.time);
