@@ -981,9 +981,11 @@ function render() {
   const timelineMarkers = [
     { time: 14.5, cls: 'marker', labelCls: 'marker-label', label: 'Last Nap · 14:30' }
   ];
+  // First Meal at the end of the last (third) Deep Work block
+  const _dwB = enriched.filter(b => b.label === 'Deep Work');
+  const _dw3 = _dwB[_dwB.length - 1];
+  if (_dw3) timelineMarkers.push({ time: _dw3.dispEndT, cls: 'marker', labelCls: 'marker-label', label: `First Meal · ${formatTime(_dw3.dispEndT)}` });
   // First Meal at end of Shower; Last Meal 3h before sleep; All Devices Off 1h before sleep
-  const _showerB = enriched.find(b => b.label === 'Shower');
-  if (_showerB) timelineMarkers.push({ time: _showerB.dispEndT, cls: 'marker', labelCls: 'marker-label', label: `First Meal · ${formatTime(_showerB.dispEndT)}` });
   const _sleepB = enriched.find(b => b.label === 'Sleep');
   if (_sleepB) {
     timelineMarkers.push({ time: _sleepB.dispStartT - 3, cls: 'marker', labelCls: 'marker-label', label: `Last Meal · ${formatTime(_sleepB.dispStartT - 3)}` });
