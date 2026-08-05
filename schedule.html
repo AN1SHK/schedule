@@ -155,7 +155,11 @@ body { padding: 12px; padding-bottom: 40px; }
 .tag-med { cursor: pointer; user-select: none; -webkit-user-select: none; }
 .tag-med.med-done { background: #1E293B; color: #FFFFFF; }
 .marker { position: absolute; left: 0; right: 0; height: 1px; background: #556274; z-index: 5; pointer-events: none; }
-.marker-label { position: absolute; right: 8px; top: -8px; background: #556274; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
+.marker-label[data-popup] { cursor: pointer; pointer-events: all; }
+    .routine-list li.routine-note { cursor: default; align-items: flex-start; gap: 8px; }
+    .routine-list li.routine-note::before { content: "•"; color: var(--text-tertiary); line-height: 1.45; }
+    .routine-list li.routine-note .routine-text { font-size: 14px; line-height: 1.45; }
+    .marker-label { position: absolute; right: 8px; top: -8px; background: #556274; color: white; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
 .now-label { position: absolute; right: 8px; top: -8px; background: #1E293B; color: #FFFFFF; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: 0 0 0 3px var(--surface); z-index: 10; }
 .now-line { position: absolute; left: 0; right: 0; height: 1px; background: #1E293B; z-index: 6; pointer-events: none; }
 .chk { width: 20px; height: 20px; border-radius: 50%; border: 0.5px solid var(--border-strong); background: transparent; flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0; transition: background 0.15s, border-color 0.15s; pointer-events: none; margin-top: 1px; }
@@ -851,7 +855,7 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
     marker.className = m.cls;
     marker.style.top = `${markerTop}px`;
     if (nowTime !== null && m.cls !== 'now-line' && m.time < nowTime) marker.style.opacity = '0.3';
-    marker.innerHTML = `<div class="${m.labelCls}">${m.label}</div>`;
+    marker.innerHTML = `<div class="${m.labelCls}"${m.popup ? ` data-popup="${m.popup}"` : ''}>${m.label}</div>`;
     tl.appendChild(marker);
 
     if (m.cls === 'now-line') {
@@ -995,7 +999,7 @@ function render() {
     timelineMarkers.push({ time: _sleepB.dispStartT - 3, cls: 'marker', labelCls: 'marker-label', label: `Last Meal · ${formatTime(_sleepB.dispStartT - 3)}` });
   }
   const _restB = enriched.find(b => b.buffer);
-  if (_restB) timelineMarkers.push({ time: _restB.dispStartT, cls: 'marker', labelCls: 'marker-label', label: `All Devices Off · ${formatTime(_restB.dispStartT)}` });
+  if (_restB) timelineMarkers.push({ time: _restB.dispStartT, cls: 'marker', labelCls: 'marker-label', label: `All Devices Off · ${formatTime(_restB.dispStartT)}`, popup: 'devices-off' });
 
   // Timed reminders due on the viewed day
   const viewedDayReminders = loadReminders().filter(r => r.date === key && r.time);
@@ -1360,6 +1364,7 @@ const POPUPS = {
   'grooming': { title: 'Personal Grooming', items: ['Nose Hair', 'Finger & Toe Nails', 'Body Hair', 'Groin Hair', 'Leg Hair'] },
   'face-grooming': { title: 'Face Grooming', items: ['Unibrow', 'Beard', 'Earlobe Hair'] },
   'nr-routine': { title: 'Night Routine', items: ['Brush Teeth', 'Set Devices', 'Set Clothes & Water'] },
+  'devices-off': { title: 'All Devices Off', note: true, items: ['Laptop completely off.', 'Phone for messages only. Anything needed to be remembered or done can be put in Impulses.', 'Kindle for reading.'] },
   'lift': { title: 'Lift', items: ['Push', 'Pull', 'Legs'], select: true },
   'cardio': { title: 'Cardio', items: ['Walk', 'Run', 'Sprint', 'Sport', 'Swim'], select: true }
 };
@@ -1386,6 +1391,10 @@ function renderRoutinePopup() {
   const dk = dayKey(dateFromNum(cur));
   document.getElementById('routine-title').textContent = data.title;
   const list = document.getElementById('routine-list');
+  if (data.note) {
+    list.innerHTML = data.items.map(item => `<li class="routine-note"><span class="routine-text">${item}</span></li>`).join('');
+    return;
+  }
   if (data.select) {
     list.innerHTML = data.items.map((item, i) => `<li class="routine-select" data-idx="${i}"><span class="routine-text">${item}</span></li>`).join('');
     const start = exerciseStart();
