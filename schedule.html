@@ -377,7 +377,7 @@ const FIXED_BLOCKS = [
   { start: '14:30', end: '15:30', label: 'Exercise', tags: ['Lift', 'Cardio', 'Stretch'] },
   { start: '15:30', end: '16:00', label: 'Shower', tags: ['SHOWER_TAG'], grooming: true },
   { start: '16:00', end: '21:00', label: 'Rest', tags: [], buffer: true, bufferPriority: 1 },
-  { start: '21:00', end: '22:00', label: 'NR', tags: [] },
+  { start: '21:00', end: '22:00', label: 'NR', tags: ['Checklist'] },
   { start: '22:00', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
 ];
 
@@ -768,6 +768,9 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
       if (t === 'Face Grooming') {
         return `<span class="tag tag-clickable" data-popup="face-grooming">${t}</span>`;
       }
+      if (t === 'Checklist') {
+        return `<span class="tag tag-clickable" data-popup="nr-routine">${t}</span>`;
+      }
       if (t === 'Lift') return `<span class="tag tag-clickable" data-popup="lift">${t}</span>`;
       if (t === 'Cardio') return `<span class="tag tag-clickable" data-popup="cardio">${t}</span>`;
       if (t === 'Stretch') return `<span class="tag">${t}</span>`;
@@ -989,8 +992,9 @@ function render() {
   const _sleepB = enriched.find(b => b.label === 'Sleep');
   if (_sleepB) {
     timelineMarkers.push({ time: _sleepB.dispStartT - 3, cls: 'marker', labelCls: 'marker-label', label: `Last Meal · ${formatTime(_sleepB.dispStartT - 3)}` });
-    timelineMarkers.push({ time: _sleepB.dispStartT - 1, cls: 'marker', labelCls: 'marker-label', label: `All Devices Off · ${formatTime(_sleepB.dispStartT - 1)}` });
   }
+  const _restB = enriched.find(b => b.buffer);
+  if (_restB) timelineMarkers.push({ time: _restB.dispStartT, cls: 'marker', labelCls: 'marker-label', label: `All Devices Off · ${formatTime(_restB.dispStartT)}` });
 
   // Timed reminders due on the viewed day
   const viewedDayReminders = loadReminders().filter(r => r.date === key && r.time);
@@ -1354,6 +1358,7 @@ const POPUPS = {
   'skincare-evening': { title: 'Evening Skincare', items: ['Scrub with toothbrush', 'Cleanser', 'Retin-A', 'Moisturizer'] },
   'grooming': { title: 'Personal Grooming', items: ['Nose Hair', 'Finger & Toe Nails', 'Body Hair', 'Groin Hair', 'Leg Hair'] },
   'face-grooming': { title: 'Face Grooming', items: ['Unibrow', 'Beard', 'Earlobe Hair'] },
+  'nr-routine': { title: 'Night Routine', items: ['Brush Teeth', 'Set Devices', 'Set Clothes & Water'] },
   'lift': { title: 'Lift', items: ['Push', 'Pull', 'Legs'], select: true },
   'cardio': { title: 'Cardio', items: ['Walk', 'Run', 'Sprint', 'Sport', 'Swim'], select: true }
 };
