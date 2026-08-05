@@ -366,7 +366,7 @@ const MIN_BLOCK_HEIGHT = 36;
 // Pomodoro: 25min work / 5min break, repeating
 
 const FIXED_BLOCKS = [
-  { start: '7:00', end: '7:30', label: 'MR', tags: ['MEDITATE_TAG', 'Gratitude - 3 Pts', 'Face Grooming'] },
+  { start: '7:00', end: '7:30', label: 'MR', tags: ['MEDITATE_TAG', 'Gratitude - 3 Pts'] },
   { start: '7:30', end: '9:00', label: 'Deep Work', tags: [] },
   { start: '9:00', end: '9:30', label: 'Rest', tags: [] },
   { start: '9:30', end: '11:00', label: 'Deep Work', tags: [] },
@@ -508,7 +508,7 @@ function toggleMedDone() {
   render();
 }
 function projectedMedMinutes(viewedDate) {
-  return Math.min(15, 1 + Math.max(0, dayNum(viewedDate) - MEDITATE_START)); // +1/day, cap 15
+  return 15; // constant 15 min
 }
 function getMeditationTag(d) {
   const mins = projectedMedMinutes(d);
@@ -917,6 +917,7 @@ function render() {
     // Inject Personal Grooming tag into Shower on Tue/Fri
     let extraTags = [];
     if (b.grooming && (dow === 2 || dow === 5)) extraTags = ['Personal Grooming'];
+    if (b.label === 'MR' && (dow === 2 || dow === 5)) extraTags = ['Face Grooming'];
     const tags = b.tags ? [...b.tags.flatMap(t => {
       if (t === 'EX_TAG') return [getExerciseTag(d)];
       if (t === 'TRAIN_TAG') { const v = getTrainTag(d); return v === 'Rest' ? REST_OPTIONS.slice() : [v]; }
