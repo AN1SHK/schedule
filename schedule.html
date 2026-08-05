@@ -366,14 +366,14 @@ const MIN_BLOCK_HEIGHT = 36;
 // Pomodoro: 25min work / 5min break, repeating
 
 const FIXED_BLOCKS = [
-  { start: '7:00', end: '7:30', label: 'MR', tags: ['MEDITATE_TAG', 'Gratitude - 3 Pts', 'Face Grooming', 'Skincare'] },
+  { start: '7:00', end: '7:30', label: 'MR', tags: ['MEDITATE_TAG', 'Gratitude - 3 Pts', 'Face Grooming'] },
   { start: '7:30', end: '9:00', label: 'Deep Work', tags: [] },
   { start: '9:00', end: '9:30', label: 'Rest', tags: [] },
   { start: '9:30', end: '11:00', label: 'Deep Work', tags: [] },
   { start: '11:00', end: '11:30', label: 'Rest', tags: [] },
   { start: '11:30', end: '12:30', label: 'Shallow Work', tags: [] },
   { start: '12:30', end: '13:30', label: 'Exercise', tags: ['Lift', 'Cardio', 'Stretch'] },
-  { start: '13:30', end: '14:00', label: 'Shower', tags: ['SHOWER_TAG', 'Skincare'], grooming: true },
+  { start: '13:30', end: '14:00', label: 'Shower', tags: ['SHOWER_TAG'], grooming: true },
   { start: '14:00', end: '21:00', label: 'Rest', tags: [], buffer: true, bufferPriority: 1 },
   { start: '21:00', end: '22:00', label: 'NR', tags: [] },
   { start: '22:00', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
@@ -432,7 +432,7 @@ function getExerciseTag(d) {
 // Meditation ramps +1 min/day from 1 min up to 15 min
 // Meditation is adaptive: mark a day done -> +2 next day; any untapped day -> -1.
 // Range clamped to 1..15. MEDITATE_START only seeds the very first value for continuity.
-const MEDITATE_START = dayNum(new Date(2026, 6, 13));
+const MEDITATE_START = dayNum(new Date(2026, 7, 5)); // day 0 = 1 min; +1/day up to 15
 const MED_EPOCH = 'restart-1min'; // bump to force a one-time meditation reset
 let medLoaded = false; // flips true after the first Firebase meditation snapshot
 function legacyMedMinutes(d) {
@@ -508,7 +508,7 @@ function toggleMedDone() {
   render();
 }
 function projectedMedMinutes(viewedDate) {
-  return ensureMeditation().minutes; // credited immediately on tap, so this is the live value
+  return Math.min(15, 1 + Math.max(0, dayNum(viewedDate) - MEDITATE_START)); // +1/day, cap 15
 }
 function getMeditationTag(d) {
   const mins = projectedMedMinutes(d);
@@ -768,14 +768,14 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
       }
       if (t === 'Lift') return `<span class="tag tag-clickable" data-popup="lift">${t}</span>`;
       if (t === 'Cardio') return `<span class="tag tag-clickable" data-popup="cardio">${t}</span>`;
-      if (t === 'Stretch') return `<span class="tag tag-act" data-exset="1">${t}</span>`;
+      if (t === 'Stretch') return `<span class="tag">${t}</span>`;
       return `<span class="tag">${t}</span>`;
     }).join('')}</div>` : '';
     const displayStart = b.displayStart || formatTime(b.dispStartT);
     const displayEnd = b.displayEnd || formatTime(b.dispEndT);
     const noteHtml = b.note ? `<div class="b-note">${b.note}</div>` : '';
-    const _exClickable = (b.label === 'Exercise');
-    const _mrClickable = (b.label === 'MR') && _isToday;
+    const _exClickable = false;
+    const _mrClickable = false;
     const _blockClickable = _exClickable || _mrClickable;
     const _blockDone = _exClickable ? isExDone(currentDayKey, b.start) : (_mrClickable && _medDone);
     if (_blockDone) block.classList.add('block-done');
@@ -1379,7 +1379,7 @@ function renderRoutinePopup() {
     list.innerHTML = data.items.map((item, i) => `<li class="routine-select" data-idx="${i}"><span class="routine-text">${item}</span></li>`).join('');
     const start = exerciseStart();
     list.querySelectorAll('[data-idx]').forEach(li => {
-      li.onclick = (e) => { e.stopPropagation(); if (start) setExDone(dk, start); closeRoutinePopup(); };
+      li.onclick = (e) => { e.stopPropagation(); closeRoutinePopup(); };
     });
     return;
   }
