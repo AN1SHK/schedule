@@ -378,7 +378,7 @@ const FIXED_BLOCKS = [
   { start: '11:30', end: '13:00', label: 'Deep Work', tags: [] },
   { start: '13:00', end: '13:30', label: 'Rest', tags: [] },
   { start: '13:30', end: '14:30', label: 'Shallow Work', tags: [] },
-  { start: '14:30', end: '15:30', label: 'Exercise', tags: ['Lift', 'Cardio'] },
+  { start: '14:30', end: '15:30', label: 'Exercise', tags: [] },
   { start: '15:30', end: '16:00', label: 'Shower', tags: ['SHOWER_TAG'], grooming: true },
   { start: '16:00', end: '20:30', label: 'Rest', tags: [], buffer: true, bufferPriority: 1 },
   { start: '20:30', end: '21:00', label: 'Stretch', tags: [] },
@@ -402,6 +402,9 @@ function formatTime(t) {
 
 // Main exercise rotates on a 12-day cycle, starting July 15 2026
 const EX_START = dayNum(new Date(2026, 6, 24));  // shared anchor so lift+cardio rest align
+const PPL_CYCLE = ['Push', 'Pull', 'Legs', 'Rest'];
+const PPL_START = dayNum(new Date(2026, 7, 5)); // Aug 5 = Push
+function getPPL(d) { const n = PPL_CYCLE.length; return PPL_CYCLE[(((dayNum(d) - PPL_START) % n) + n) % n]; }
 const EX_CYCLE = ['Push', 'Mobility', 'Pull', 'Basketball', 'Legs', 'Mobility', 'Push', 'Basketball', 'Pull', 'Mobility', 'Legs', 'Basketball'];
 // Early exercise (right after MR) rotates on a 3-day cycle from Fri July 17 2026
 const EX_EARLY_START = EX_START;
@@ -931,11 +934,13 @@ function render() {
     const tags = b.tags ? [...b.tags.flatMap(t => {
       if (t === 'EX_TAG') return [getExerciseTag(d)];
       if (t === 'TRAIN_TAG') { const v = getTrainTag(d); return v === 'Rest' ? REST_OPTIONS.slice() : [v]; }
+      if (t === 'PPL_TAG') return [getPPL(d)];
       if (t === 'SHOWER_TAG') { const s = getShowerTag(d); return s ? [s] : []; }
       if (t === 'MEDITATE_TAG') return [getMeditationTag(d)];
       return [t];
     }), ...extraTags] : (extraTags.length ? extraTags : b.tags);
     let displayLabel = b.label;
+    if (b.label === 'Exercise') displayLabel = getPPL(d);
     const startT = parseTime(b.start);
     const endT = parseTime(b.end);
     const dispStartT = packed[i].dispStartT;
@@ -1363,7 +1368,7 @@ const POPUPS = {
   'skincare-evening': { title: 'Evening Skincare', items: ['Scrub with toothbrush', 'Cleanser', 'Retin-A', 'Moisturizer'] },
   'grooming': { title: 'Personal Grooming', items: ['Nose Hair', 'Finger & Toe Nails', 'Body Hair', 'Groin Hair', 'Leg Hair'] },
   'face-grooming': { title: 'Face Grooming', items: ['Unibrow', 'Beard', 'Earlobe Hair'] },
-  'nr-routine': { title: 'Night Routine', items: ['Brush Teeth', 'Set Devices', 'Set Clothes & Water'] },
+  'nr-routine': { title: 'Night Routine', items: ['Brush Teeth', 'Minoxidil', 'Set Devices', 'Set Clothes & Water'] },
   'devices-off': { title: 'All Devices Off', note: true, items: ['Laptop completely off.', 'Phone for messages only. Anything needed to be remembered or done can be put in Impulses.', 'Kindle for reading.'] },
   'lift': { title: 'Lift', items: ['Push', 'Pull', 'Legs'], select: true },
   'cardio': { title: 'Cardio', items: ['Walk', 'Run', 'Sprint', 'Sport', 'Swim'], select: true }
