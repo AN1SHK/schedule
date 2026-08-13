@@ -374,7 +374,7 @@ const MIN_BLOCK_HEIGHT = 36;
 
 const FIXED_BLOCKS = [
   { start: '7:00', end: '7:00', label: 'Rest', wakeRest: true, tags: [] },
-  { start: '7:00', end: '7:30', label: 'MR', tags: ['MEDITATE_TAG', 'Gratitude - 3 Pts'] },
+  { start: '7:00', end: '7:30', label: 'MR', tags: ['Checklist'] },
   { start: '7:30', end: '9:00', label: 'Deep Work', tags: [] },
   { start: '9:00', end: '9:30', label: 'Rest', tags: [] },
   { start: '9:30', end: '11:00', label: 'Deep Work', tags: [] },
@@ -785,7 +785,7 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
         return `<span class="tag tag-clickable" data-popup="face-grooming">${t}</span>`;
       }
       if (t === 'Checklist') {
-        return `<span class="tag tag-clickable" data-popup="nr-routine">${t}</span>`;
+        return `<span class="tag tag-clickable" data-popup="${b.label === 'MR' ? 'mr-routine' : 'nr-routine'}">${t}</span>`;
       }
       if (t === 'Lift') return `<span class="tag tag-clickable" data-popup="lift">${t}</span>`;
       if (t === 'Cardio') return `<span class="tag tag-clickable" data-popup="cardio">${t}</span>`;
@@ -938,7 +938,6 @@ function render() {
     // Inject Personal Grooming tag into Shower on Tue/Fri
     let extraTags = [];
     if (b.grooming && (dow === 2 || dow === 5)) extraTags = ['Personal Grooming'];
-    if (b.label === 'MR' && (dow === 2 || dow === 5)) extraTags = ['Face Grooming'];
     const tags = b.tags ? [...b.tags.flatMap(t => {
       if (t === 'EX_TAG') return [getExerciseTag(d)];
       if (t === 'TRAIN_TAG') { const v = getTrainTag(d); return v === 'Rest' ? REST_OPTIONS.slice() : [v]; }
@@ -1379,6 +1378,7 @@ const POPUPS = {
   'skincare-evening': { title: 'Evening Skincare', items: ['Scrub with toothbrush', 'Cleanser', 'Retin-A', 'Moisturizer'] },
   'grooming': { title: 'Personal Grooming', items: ['Nose Hair', 'Finger & Toe Nails', 'Body Hair', 'Groin Hair', 'Leg Hair'] },
   'face-grooming': { title: 'Face Grooming', items: ['Unibrow', 'Beard', 'Earlobe Hair'] },
+  'mr-routine': { title: 'Morning Routine', items: ['Meditate - 15 Mins', 'Gratitude - 3 Pts', 'Face Grooming'] },
   'nr-routine': { title: 'Night Routine', items: ['Brush Teeth', 'Minoxidil', 'Set Devices', 'Set Clothes & Water'] },
   'devices-off': { title: 'All Devices Off', note: true, items: ['Laptop completely off, except 1 hour of TMKOC if social.', 'Phone for messages only. Anything needed to be remembered or done can be put in Impulses.', 'Kindle for reading.'] },
   'lift': { title: 'Lift', items: ['Push', 'Pull', 'Legs'], select: true },
