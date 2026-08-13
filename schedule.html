@@ -159,6 +159,8 @@ body { padding: 12px; padding-bottom: 40px; }
 .tag-med.med-done { background: #1E293B; color: #FFFFFF; }
 .marker { position: absolute; left: 0; right: 0; height: 1px; background: #556274; z-index: 5; pointer-events: none; }
 .marker-label[data-popup] { cursor: pointer; pointer-events: all; }
+    .routine-list li.routine-group { cursor: default; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); margin-top: 4px; }
+    .routine-list li.routine-sub { padding-left: 16px; }
     .routine-list li.routine-note { cursor: default; align-items: flex-start; gap: 8px; }
     .routine-list li.routine-note::before { content: "•"; color: var(--text-tertiary); line-height: 1.45; }
     .routine-list li.routine-note .routine-text { font-size: 14px; line-height: 1.45; }
@@ -384,7 +386,8 @@ const FIXED_BLOCKS = [
   { start: '13:30', end: '14:30', label: 'Shallow Work', tags: [] },
   { start: '14:30', end: '15:30', label: 'Exercise', tags: ['PPL_REST_TAG'] },
   { start: '15:30', end: '16:00', label: 'Shower', tags: ['SHOWER_TAG'], grooming: true },
-  { start: '16:00', end: '20:30', label: 'Rest', tags: [], buffer: true, bufferPriority: 1 },
+  { start: '16:00', end: '20:00', label: 'Rest', tags: [], buffer: true, bufferPriority: 1 },
+  { start: '20:00', end: '20:30', label: 'Read & Record', tags: [] },
   { start: '20:30', end: '21:00', label: 'Stretch', tags: [] },
   { start: '21:00', end: '22:00', label: 'NR', tags: ['Checklist'] },
   { start: '22:00', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
@@ -956,8 +959,8 @@ function render() {
     return { ...b, tags, displayLabel, i, startT, endT, dispStartT, dispEndT, done: !!(doneState && doneState[i]) };
   }).sort((a, b) => a.startT - b.startT);
 
-  const SPLIT_1 = 11;
-  const SPLIT_2 = 15.5;
+  const SPLIT_1 = 11.5;
+  const SPLIT_2 = 16;
   const morning = enriched.filter(b => b.endT <= SPLIT_1);
   const afternoon = enriched.filter(b => b.endT > SPLIT_1 && b.endT <= SPLIT_2);
   const evening = enriched.filter(b => b.endT > SPLIT_2);
@@ -1378,7 +1381,7 @@ const POPUPS = {
   'skincare-evening': { title: 'Evening Skincare', items: ['Scrub with toothbrush', 'Cleanser', 'Retin-A', 'Moisturizer'] },
   'grooming': { title: 'Personal Grooming', items: ['Nose Hair', 'Finger & Toe Nails', 'Body Hair', 'Groin Hair', 'Leg Hair'] },
   'face-grooming': { title: 'Face Grooming', items: ['Unibrow', 'Beard', 'Earlobe Hair'] },
-  'mr-routine': { title: 'Morning Routine', items: ['Meditate - 15 Mins', 'Gratitude - 3 Pts', 'Face Grooming'] },
+  'mr-routine': { title: 'Morning Routine', items: ['Meditate - 15 Mins', 'Gratitude - 3 Pts', { group: 'Face Grooming', items: ['Unibrow', 'Beard', 'Earlobe Hair'] }] },
   'nr-routine': { title: 'Night Routine', items: ['Brush Teeth', 'Minoxidil', 'Set Devices', 'Set Clothes & Water'] },
   'devices-off': { title: 'All Devices Off', note: true, items: ['Laptop completely off, except 1 hour of TMKOC if social.', 'Phone for messages only. Anything needed to be remembered or done can be put in Impulses.', 'Kindle for reading.'] },
   'lift': { title: 'Lift', items: ['Push', 'Pull', 'Legs'], select: true },
@@ -1419,10 +1422,22 @@ function renderRoutinePopup() {
     });
     return;
   }
-  list.innerHTML = data.items.map((item, i) => {
-    const done = isRoutineDone(dk, openPopupKey, i);
-    return `<li class="${done ? 'done' : ''}" data-idx="${i}"><span class="routine-check"></span><span class="routine-text">${item}</span></li>`;
-  }).join('');
+  let _i = 0, _html = '';
+  data.items.forEach(item => {
+    if (typeof item === 'string') {
+      const done = isRoutineDone(dk, openPopupKey, _i);
+      _html += `<li class="${done ? 'done' : ''}" data-idx="${_i}"><span class="routine-check"></span><span class="routine-text">${item}</span></li>`;
+      _i++;
+    } else if (item.group) {
+      _html += `<li class="routine-group">${item.group}</li>`;
+      item.items.forEach(sub => {
+        const done = isRoutineDone(dk, openPopupKey, _i);
+        _html += `<li class="routine-sub${done ? ' done' : ''}" data-idx="${_i}"><span class="routine-check"></span><span class="routine-text">${sub}</span></li>`;
+        _i++;
+      });
+    }
+  });
+  list.innerHTML = _html;
   list.querySelectorAll('[data-idx]').forEach(li => {
     li.onclick = (e) => { e.stopPropagation(); toggleRoutine(dk, openPopupKey, parseInt(li.dataset.idx, 10)); };
   });
