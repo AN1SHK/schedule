@@ -83,6 +83,7 @@ body { padding: 12px; padding-bottom: 40px; }
     .reminder-pill-groom { background: #C0392B; cursor: pointer; }
     .reminder-pill-blue { background: #3B6FC0; }
     .reminder-pill-black { background: #1A1A1A; }
+    .reminder-pill-bha { background: #0D9488; }
     .tag-clickable { cursor: pointer; background: #E3E9F1; transition: background 0.15s; }
     .tag-clickable:active { background: #D5DEE9; }
     .tag-act { cursor: pointer; background: #E3E9F1; transition: background 0.15s; }
@@ -377,16 +378,13 @@ const MIN_BLOCK_HEIGHT = 36;
 const FIXED_BLOCKS = [
   { start: '7:00', end: '7:00', label: 'Rest', wakeRest: true, tags: [] },
   { start: '7:00', end: '7:30', label: 'MR', tags: ['Checklist'] },
-  { start: '7:30', end: '9:00', label: 'Deep Work', tags: [] },
-  { start: '9:00', end: '9:30', label: 'Rest', tags: [] },
-  { start: '9:30', end: '11:00', label: 'Deep Work', tags: [] },
-  { start: '11:00', end: '11:30', label: 'Rest', tags: [] },
-  { start: '11:30', end: '13:00', label: 'Deep Work', tags: [] },
-  { start: '13:00', end: '13:30', label: 'Rest', tags: [] },
-  { start: '13:30', end: '14:00', label: 'Shallow Work', tags: [] },
-  { start: '14:00', end: '15:00', label: 'Exercise', tags: ['PPL_REST_TAG'] },
-  { start: '15:00', end: '15:30', label: 'Shower', tags: ['SHOWER_TAG'], grooming: true },
-  { start: '15:30', end: '19:30', label: 'Rest', tags: [], buffer: true, bufferPriority: 1 },
+  { start: '7:30', end: '10:30', label: 'Deep Work', tags: [] },
+  { start: '10:30', end: '11:00', label: 'Rest', tags: [] },
+  { start: '11:00', end: '14:00', label: 'Deep Work', tags: [] },
+  { start: '14:00', end: '14:30', label: 'Shallow Work', tags: [] },
+  { start: '14:30', end: '15:30', label: 'Exercise', tags: ['PPL_REST_TAG'] },
+  { start: '15:30', end: '16:00', label: 'Shower', tags: ['SHOWER_TAG'], grooming: true },
+  { start: '16:00', end: '19:30', label: 'Rest', tags: [], buffer: true, bufferPriority: 1 },
   { start: '19:30', end: '20:30', label: 'Learn', tags: ['Checklist'] },
   { start: '20:30', end: '21:00', label: 'Stretch', tags: [] },
   { start: '21:00', end: '22:00', label: 'NR', tags: ['Checklist'] },
@@ -437,6 +435,8 @@ function getAmExerciseTag(d) {
 }
 // Shower alternates Blue / nothing / Black / nothing — 4-day cycle from Fri July 17 2026
 const SHOWER_START = dayNum(new Date(2026, 6, 17));
+const BHA_START = dayNum(new Date(2026, 7, 5)); // every 3 days from Aug 5
+function isBHADay(d) { return ((((dayNum(d) - BHA_START) % 3) + 3) % 3) === 0; }
 const SHOWER_CYCLE = ['Blue', null, 'Black', null];
 function getShowerTag(d) {
   const n = SHOWER_CYCLE.length;
@@ -913,6 +913,7 @@ function render() {
   if (dow === 2 || dow === 5) { pillsHtml += `<div class="reminder-pill reminder-pill-groom" data-popup="grooming">Personal Grooming</div>`; }
   const shampooTag = getShowerTag(d);
   if (shampooTag) { pillsHtml += `<div class="reminder-pill reminder-pill-${shampooTag.toLowerCase()}">${shampooTag} Shampoo</div>`; }
+  if (isBHADay(d)) pillsHtml += `<div class="reminder-pill reminder-pill-bha">BHA</div>`;
 
   const viewDate = new Date(cur * 86400000 + new Date(2026,0,1).getTime());
   viewDate.setHours(0,0,0,0);
@@ -960,7 +961,7 @@ function render() {
     return { ...b, tags, displayLabel, i, startT, endT, dispStartT, dispEndT, done: !!(doneState && doneState[i]) };
   }).sort((a, b) => a.startT - b.startT);
 
-  const SPLIT_1 = 11.5;
+  const SPLIT_1 = 14;
   const SPLIT_2 = 16;
   const morning = enriched.filter(b => b.endT <= SPLIT_1);
   const afternoon = enriched.filter(b => b.endT > SPLIT_1 && b.endT <= SPLIT_2);
