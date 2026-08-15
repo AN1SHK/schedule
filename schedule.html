@@ -377,13 +377,13 @@ const MIN_BLOCK_HEIGHT = 36;
 
 const FIXED_BLOCKS = [
   { start: '7:00', end: '7:00', label: 'Rest', wakeRest: true, tags: [] },
-  { start: '7:00', end: '7:30', label: 'MR', tags: ['Checklist'] },
-  { start: '7:30', end: '11:30', label: 'Deep Work', tags: [] },
-  { start: '11:30', end: '12:00', label: 'Rest', tags: [] },
-  { start: '12:00', end: '12:30', label: 'Shallow Work', tags: [] },
-  { start: '12:30', end: '13:30', label: 'Exercise', tags: ['PPL_REST_TAG'] },
-  { start: '13:30', end: '14:00', label: 'Shower', tags: ['SHOWER_TAG'], grooming: true },
-  { start: '14:00', end: '19:30', label: 'Rest', tags: [], buffer: true, bufferPriority: 1 },
+  { start: '7:00', end: '8:00', label: 'MR', tags: ['Checklist'] },
+  { start: '8:00', end: '12:00', label: 'Deep Work', tags: [] },
+  { start: '12:00', end: '12:30', label: 'Rest', tags: [] },
+  { start: '12:30', end: '13:00', label: 'Shallow Work', tags: [] },
+  { start: '13:00', end: '14:00', label: 'Exercise', tags: ['PPL_REST_TAG'] },
+  { start: '14:00', end: '14:30', label: 'Shower', tags: ['SHOWER_TAG'], grooming: true },
+  { start: '14:30', end: '19:30', label: 'Rest', tags: [], buffer: true, bufferPriority: 1 },
   { start: '19:30', end: '20:30', label: 'Learn', tags: ['Checklist'] },
   { start: '20:30', end: '21:00', label: 'Stretch', tags: [] },
   { start: '21:00', end: '22:00', label: 'NR', tags: ['Checklist'] },
@@ -960,7 +960,7 @@ function render() {
     return { ...b, tags, displayLabel, i, startT, endT, dispStartT, dispEndT, done: !!(doneState && doneState[i]) };
   }).sort((a, b) => a.startT - b.startT);
 
-  const SPLIT_1 = 12.5;
+  const SPLIT_1 = 13;
   const SPLIT_2 = 19.5;
   const morning = enriched.filter(b => b.endT <= SPLIT_1);
   const afternoon = enriched.filter(b => b.endT > SPLIT_1 && b.endT <= SPLIT_2);
@@ -1380,7 +1380,7 @@ const POPUPS = {
   'skincare-evening': { title: 'Evening Skincare', items: ['Scrub with toothbrush', 'Cleanser', 'Retin-A', 'Moisturizer'] },
   'grooming': { title: 'Personal Grooming', items: ['Nose Hair', 'Finger & Toe Nails', 'Body Hair', 'Groin Hair', 'Leg Hair'] },
   'face-grooming': { title: 'Face Grooming', items: ['Unibrow', 'Beard', 'Earlobe Hair'] },
-  'mr-routine': { title: 'Morning Routine', items: ['Meditate - 15 Mins', 'Gratitude - 3 Pts', { group: 'Face Grooming', items: ['Unibrow', 'Beard', 'Earlobe Hair'] }] },
+  'mr-routine': { title: 'Morning Routine', items: ['Make Bed', 'Dental Hygiene', 'Cardio - 30 Mins', 'Face Grooming', 'Cold Shower', 'Skincare', 'Meditate - 15 Mins', 'Gratitude - 3 Pts'] },
   'learn-routine': { title: 'Learn', items: ['Read 20 minutes. Focus on one concept.', 'Record and upload 10 minute YouTube video.', 'Reflect 15 minutes. Rewatch video and self-assess rigorously. Write one micro-goal to focus on.', 'Refine 15 minutes, drilling that micro-goal.'] },
   'nr-routine': { title: 'Night Routine', items: ['Brush Teeth', 'Minoxidil', 'Set Devices', 'Set Clothes & Water'] },
   'devices-off': { title: 'All Devices Off', note: true, items: ['Laptop completely off, except 1 hour of TMKOC if social.', 'Phone for messages only. Anything needed to be remembered or done can be put in Impulses.', 'Kindle for reading.'] },
