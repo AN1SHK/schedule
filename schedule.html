@@ -1011,10 +1011,8 @@ function render() {
   const _dw3 = _dwB[_dwB.length - 1];
   if (_dw3) timelineMarkers.push({ time: _dw3.dispEndT, cls: 'marker', labelCls: 'marker-label', label: `First Meal · ${formatTime(_dw3.dispEndT)}` });
   // First Meal at end of Shower; Last Meal 3h before sleep; All Devices Off 1h before sleep
-  const _sleepB = enriched.find(b => b.label === 'Sleep');
-  if (_sleepB) {
-    timelineMarkers.push({ time: _sleepB.dispStartT - 3, cls: 'marker', labelCls: 'marker-label', label: `Last Meal · ${formatTime(_sleepB.dispStartT - 3)}` });
-  }
+  const _nrB = enriched.find(b => b.label === 'NR');
+  if (_nrB) timelineMarkers.push({ time: _nrB.dispStartT - 3, cls: 'marker', labelCls: 'marker-label', label: `Last Meal · ${formatTime(_nrB.dispStartT - 3)}` });
   const _restB = enriched.find(b => b.buffer);
   if (_restB) timelineMarkers.push({ time: _restB.dispStartT, cls: 'marker', labelCls: 'marker-label', label: `All Devices Off · ${formatTime(_restB.dispStartT)}`, popup: 'devices-off' });
 
