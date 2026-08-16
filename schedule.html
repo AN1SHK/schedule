@@ -278,27 +278,22 @@ body { padding: 12px; padding-bottom: 40px; }
 <div class="sync-indicator" id="sync-indicator"></div>
 
 <script type="module">
-// ── PREVIEW BUILD: localStorage shim (no Firebase, renders standalone) ────────
-const db = {};
-function ref(_db, path) { return { path: path || '' }; }
-function set(r, val) {
-  try { localStorage.setItem('fb_' + r.path, JSON.stringify(val)); } catch (e) {}
-  return Promise.resolve();
-}
-function get(r) {
-  let v = null;
-  try { const raw = localStorage.getItem('fb_' + r.path); v = raw ? JSON.parse(raw) : null; } catch (e) {}
-  return Promise.resolve({ val: () => v, exists: () => v != null });
-}
-function onValue(r, cb) {
-  // Defer like real Firebase: fire after the full module script has run,
-  // so later `let`/`const` bindings are initialized.
-  setTimeout(() => {
-    let v = null;
-    try { const raw = localStorage.getItem('fb_' + r.path); v = raw ? JSON.parse(raw) : null; } catch (e) {}
-    cb({ val: () => v, exists: () => v != null });
-  }, 0);
-}
+// ── Firebase ──────────────────────────────────────────────────────────────────
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getDatabase, ref, set, onValue, get } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAIlMRgVKpN_xe48WKJihiQ1ZgiVLRouMs",
+  authDomain: "my-schedule-a0ded.firebaseapp.com",
+  databaseURL: "https://my-schedule-a0ded-default-rtdb.firebaseio.com",
+  projectId: "my-schedule-a0ded",
+  storageBucket: "my-schedule-a0ded.firebasestorage.app",
+  messagingSenderId: "941701290759",
+  appId: "1:941701290759:web:86d0c144ee0425fad983a2"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
 // Sync indicator
 const syncEl = document.getElementById('sync-indicator');
