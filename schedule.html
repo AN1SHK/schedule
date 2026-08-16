@@ -278,22 +278,27 @@ body { padding: 12px; padding-bottom: 40px; }
 <div class="sync-indicator" id="sync-indicator"></div>
 
 <script type="module">
-// ── Firebase ──────────────────────────────────────────────────────────────────
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getDatabase, ref, set, onValue, get } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
-
-const firebaseConfig = {
-  apiKey: "AIzaSyAIlMRgVKpN_xe48WKJihiQ1ZgiVLRouMs",
-  authDomain: "my-schedule-a0ded.firebaseapp.com",
-  databaseURL: "https://my-schedule-a0ded-default-rtdb.firebaseio.com",
-  projectId: "my-schedule-a0ded",
-  storageBucket: "my-schedule-a0ded.firebasestorage.app",
-  messagingSenderId: "941701290759",
-  appId: "1:941701290759:web:86d0c144ee0425fad983a2"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+// ── PREVIEW BUILD: localStorage shim (no Firebase, renders standalone) ────────
+const db = {};
+function ref(_db, path) { return { path: path || '' }; }
+function set(r, val) {
+  try { localStorage.setItem('fb_' + r.path, JSON.stringify(val)); } catch (e) {}
+  return Promise.resolve();
+}
+function get(r) {
+  let v = null;
+  try { const raw = localStorage.getItem('fb_' + r.path); v = raw ? JSON.parse(raw) : null; } catch (e) {}
+  return Promise.resolve({ val: () => v, exists: () => v != null });
+}
+function onValue(r, cb) {
+  // Defer like real Firebase: fire after the full module script has run,
+  // so later `let`/`const` bindings are initialized.
+  setTimeout(() => {
+    let v = null;
+    try { const raw = localStorage.getItem('fb_' + r.path); v = raw ? JSON.parse(raw) : null; } catch (e) {}
+    cb({ val: () => v, exists: () => v != null });
+  }, 0);
+}
 
 // Sync indicator
 const syncEl = document.getElementById('sync-indicator');
@@ -383,10 +388,8 @@ const FIXED_BLOCKS = [
   { start: '12:30', end: '13:30', label: 'Shallow Work', tags: [] },
   { start: '13:30', end: '14:30', label: 'Exercise', tags: ['PPL_REST_TAG'] },
   { start: '14:30', end: '15:00', label: 'Shower', tags: ['SHOWER_TAG'], grooming: true },
-  { start: '15:00', end: '19:30', label: 'Rest', tags: [], buffer: true, bufferPriority: 1 },
-  { start: '19:30', end: '20:30', label: 'Learn', tags: ['Checklist'] },
-  { start: '20:30', end: '21:00', label: 'Stretch', tags: [] },
-  { start: '21:00', end: '22:00', label: 'NR', tags: ['Checklist'] },
+  { start: '15:00', end: '21:00', label: 'Rest', tags: [], buffer: true, bufferPriority: 1 },
+  { start: '21:00', end: '22:00', label: 'NR', tags: [] },
   { start: '22:00', end: '31:00', label: 'Sleep', displayEnd: '7:00', capHeight: true }
 ];
 
@@ -964,7 +967,7 @@ function render() {
   }).sort((a, b) => a.startT - b.startT);
 
   const SPLIT_1 = 12.5;
-  const SPLIT_2 = 19.5;
+  const SPLIT_2 = 16;
   const morning = enriched.filter(b => b.endT <= SPLIT_1);
   const afternoon = enriched.filter(b => b.endT > SPLIT_1 && b.endT <= SPLIT_2);
   const evening = enriched.filter(b => b.endT > SPLIT_2);
@@ -1006,9 +1009,7 @@ function render() {
   const afternoonMarkers = [];
   const eveningMarkers = [];
 
-  const timelineMarkers = [
-    { time: 14.5, cls: 'marker', labelCls: 'marker-label', label: 'Last Nap · 14:30' }
-  ];
+  const timelineMarkers = [];
   // First Meal at the end of the last (third) Deep Work block
   const _dwB = enriched.filter(b => b.label === 'Deep Work');
   const _dw3 = _dwB[_dwB.length - 1];
@@ -1016,8 +1017,8 @@ function render() {
   // First Meal at end of Shower; Last Meal 3h before sleep; All Devices Off 1h before sleep
   const _nrB = enriched.find(b => b.label === 'NR');
   if (_nrB) timelineMarkers.push({ time: _nrB.dispStartT - 3, cls: 'marker', labelCls: 'marker-label', label: `Last Meal · ${formatTime(_nrB.dispStartT - 3)}` });
-  const _restB = enriched.find(b => b.buffer);
-  if (_restB) timelineMarkers.push({ time: _restB.dispStartT, cls: 'marker', labelCls: 'marker-label', label: `All Devices Off · ${formatTime(_restB.dispStartT)}`, popup: 'devices-off' });
+  const _nrOff = enriched.find(b => b.label === 'NR');
+  if (_nrOff) timelineMarkers.push({ time: _nrOff.dispStartT, cls: 'marker', labelCls: 'marker-label', label: `All Devices Off · ${formatTime(_nrOff.dispStartT)}` });
 
   // Timed reminders due on the viewed day
   const viewedDayReminders = loadReminders().filter(r => r.date === key && r.time);
