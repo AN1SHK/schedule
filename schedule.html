@@ -1011,8 +1011,8 @@ function render() {
   const _dw3 = _dwB[_dwB.length - 1];
   if (_dw3) timelineMarkers.push({ time: _dw3.dispEndT, cls: 'marker', labelCls: 'marker-label', label: `First Meal · ${formatTime(_dw3.dispEndT)}` });
   // Last Meal fixed at 17:00; All Devices Off fixed at 20:00
-  timelineMarkers.push({ time: 17, cls: 'marker', labelCls: 'marker-label', label: `Last Meal · ${formatTime(17)}` });
-  timelineMarkers.push({ time: 20, cls: 'marker', labelCls: 'marker-label', label: `All Devices Off · ${formatTime(20)}` });
+  timelineMarkers.push({ time: 18, cls: 'marker', labelCls: 'marker-label', label: `Last Meal · ${formatTime(18)}` });
+  timelineMarkers.push({ time: 20.5, cls: 'marker', labelCls: 'marker-label', label: `All Devices Off · ${formatTime(20.5)}` });
 
   // Timed reminders due on the viewed day
   const viewedDayReminders = loadReminders().filter(r => r.date === key && r.time);
