@@ -29,14 +29,17 @@ body { padding: 12px; padding-bottom: 40px; }
 .side-rail { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
 @media (max-width: 1000px) {
   .board-row { flex-direction: column; }
-  .side-rail { width: 100%; flex-direction: row; }
-  .side-rail .snags-section, .side-rail .skin-section { flex: 1; }
+  .columns { flex: 1 1 auto; width: 100%; }
+  .side-rail { flex: 1 1 auto; width: 100%; flex-direction: row; }
+  .side-rail .snags-section, .side-rail .skin-section, .side-rail .rail-reminders { flex: 1; min-width: 0; }
   .side-rail .snags-grid, .side-rail .skin-section { flex-direction: row; flex-wrap: wrap; }
   .side-rail .snags-grid > *, .side-rail .skin-section > * { flex: 1; min-width: 200px; }
 }
 @media (max-width: 720px) {
-  .side-rail { flex-direction: column; }
-  .columns { grid-template-columns: 1fr; gap: 16px; }
+  .columns { flex: 1 1 auto; width: 100%; grid-template-columns: 1fr; gap: 16px; }
+  .side-rail { flex: 1 1 auto; width: 100%; flex-direction: column; }
+  .side-rail .snags-grid, .side-rail .skin-section { flex-direction: column; }
+  .side-rail .snags-grid > *, .side-rail .skin-section > * { min-width: 0; }
   .column-label { padding-top: 8px; }
 }
 .column-label { font-size: 10px; font-weight: 700; color: #B4B2A9; text-transform: uppercase; letter-spacing: 0.08em; text-align: center; padding-bottom: 6px; }
