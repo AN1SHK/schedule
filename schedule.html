@@ -113,22 +113,15 @@ body { padding: 12px; padding-bottom: 40px; }
 .now-banner-wrap:not(:empty) { margin-top: 6px; }
 .now-banner { display: inline-block; background: #1E293B; color: #FFFFFF; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer; user-select: none; -webkit-user-select: none; }
 .now-banner-time { font-size: 10px; opacity: 0.85; margin-left: 8px; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; font-weight: 500; }
-    /* Snags to-do dock: fixed right-side panel on wide screens, top list on narrow */
-    .snags-dock { display: none; }
-    .snags-dock:not(:empty) { display: block; }
-    .snags-dock { position: fixed; top: 150px; left: calc(50% + 512px); width: 200px; z-index: 1500; }
-    @media (max-width: 1440px) { .snags-dock { left: auto; right: 16px; } }
-    .snags-dock .snags-head { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-tertiary); margin: 0 0 8px 2px; }
-    .snags-dock .snag-row { display: flex; align-items: flex-start; gap: 8px; padding: 7px 9px; background: var(--surface); border: 0.5px solid var(--border-strong); border-left: 2px solid #C0392B; border-radius: 6px; margin-bottom: 6px; cursor: pointer; }
-    .snags-dock .snag-row:active { background: rgba(0,0,0,0.03); }
-    .snags-dock .snag-box { width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid rgba(192,57,43,0.6); flex-shrink: 0; margin-top: 1px; }
-    .snags-dock .snag-name { font-size: 11.5px; font-weight: 500; color: var(--text-primary); line-height: 1.35; word-break: break-word; }
-    @media (max-width: 1240px) {
-      .snags-dock { position: static; width: auto; max-width: 1000px; margin: 12px auto 0; }
-      .snags-dock:not(:empty) { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-      .snags-dock .snags-head { grid-column: 1 / -1; }
-    }
-    @media (max-width: 620px) { .snags-dock:not(:empty) { grid-template-columns: 1fr; } }
+    /* Snags — full-width section under the schedule */
+    .snags-section { max-width: 1000px; margin: 22px auto 0; }
+    .snags-section .snags-head { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #B4B2A9; text-align: center; padding-bottom: 10px; }
+    .snags-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    @media (max-width: 720px) { .snags-grid { grid-template-columns: 1fr; } }
+    .snag-row { display: flex; align-items: flex-start; gap: 9px; padding: 9px 11px; background: var(--surface); border: 0.5px solid var(--border-strong); border-left: 2px solid #C0392B; border-radius: 6px; cursor: pointer; }
+    .snag-row:active { background: rgba(0,0,0,0.03); }
+    .snag-box { width: 13px; height: 13px; border-radius: 3px; border: 1.5px solid rgba(192,57,43,0.6); flex-shrink: 0; margin-top: 1px; }
+    .snag-name { font-size: 12.5px; font-weight: 500; color: var(--text-primary); line-height: 1.4; word-break: break-word; }
 .shift-wrap { position: absolute; right: 0; top: 50%; transform: translateY(-50%); white-space: nowrap; }
 .shift-btn { text-decoration: none; box-sizing: border-box; background: none; border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 4px 10px; cursor: pointer; font-size: 14px; color: var(--text-primary); font-family: inherit; margin-left: 4px; }
 .shift-btn:active { background: rgba(0,0,0,0.04); }
@@ -240,7 +233,6 @@ body { padding: 12px; padding-bottom: 40px; }
     </div>
   </div>
   <div class="now-banner-wrap" id="now-banner-wrap"></div>
-  <div class="snags-dock" id="snags-dock"></div>
   <div class="reminder-wrap" id="reminder-wrap"></div>
   <div class="timeline-wrap">
     <div class="columns">
@@ -257,6 +249,7 @@ body { padding: 12px; padding-bottom: 40px; }
         <div class="timeline" id="timeline-evening"></div>
       </div>
     </div>
+    <div class="snags-section" id="snags-dock"></div>
   </div>
 </div>
 <div class="reminders-overlay" id="reminders-overlay">
@@ -1251,19 +1244,18 @@ function renderImpulses() {
   if (countEl) countEl.textContent = openCount ? `${openCount} open` : '';
   const badgeEl = document.getElementById('impulse-badge');
   if (badgeEl) { badgeEl.textContent = openCount > 9 ? '9+' : openCount; badgeEl.classList.toggle('show', openCount > 0); }
-  // Snags to-do dock — open impulses as a checkable list, always visible
+  // Snags — full-width checkable section under the schedule
   const dock = document.getElementById('snags-dock');
   if (dock) {
     const open = arr.filter(i => !i.done);
     if (open.length === 0) {
       dock.innerHTML = '';
     } else {
-      let sh = `<div class="snags-head">Snags · ${open.length}</div>`;
-      sh += open.map(i => {
+      const cards = open.map(i => {
         const t = String(i.text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         return `<div class="snag-row" data-snag="${i.id}"><span class="snag-box"></span><span class="snag-name">${t}</span></div>`;
       }).join('');
-      dock.innerHTML = sh;
+      dock.innerHTML = `<div class="snags-head">Snags · ${open.length}</div><div class="snags-grid">${cards}</div>`;
       dock.querySelectorAll('[data-snag]').forEach(row => {
         row.onclick = (e) => { e.stopPropagation(); toggleImpulse(row.dataset.snag); };
       });
