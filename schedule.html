@@ -23,9 +23,19 @@
 html, body { background: var(--bg); color: var(--text-primary); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; -webkit-font-smoothing: antialiased; }
 body { padding: 12px; padding-bottom: 40px; }
 
-.sched { padding: 0.25rem 0; max-width: 1000px; margin: 0 auto; }
-.columns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.sched { padding: 0.25rem 0; max-width: 1300px; margin: 0 auto; }
+.columns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; flex: 1; min-width: 0; }
+.board-row { display: flex; gap: 14px; align-items: flex-start; }
+.side-rail { width: 250px; flex-shrink: 0; display: flex; flex-direction: column; gap: 14px; }
+@media (max-width: 1000px) {
+  .board-row { flex-direction: column; }
+  .side-rail { width: 100%; flex-direction: row; }
+  .side-rail .snags-section, .side-rail .skin-section { flex: 1; }
+  .side-rail .snags-grid, .side-rail .skin-section { flex-direction: row; flex-wrap: wrap; }
+  .side-rail .snags-grid > *, .side-rail .skin-section > * { flex: 1; min-width: 200px; }
+}
 @media (max-width: 720px) {
+  .side-rail { flex-direction: column; }
   .columns { grid-template-columns: 1fr; gap: 16px; }
   .column-label { padding-top: 8px; }
 }
@@ -110,10 +120,9 @@ body { padding: 12px; padding-bottom: 40px; }
 .now-banner { display: inline-block; background: #1E293B; color: #FFFFFF; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer; user-select: none; -webkit-user-select: none; }
 .now-banner-time { font-size: 10px; opacity: 0.85; margin-left: 8px; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; font-weight: 500; }
     /* Snags — full-width section under the schedule */
-    .snags-section { max-width: 1000px; margin: 22px auto 0; }
-    .snags-section .snags-head { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #B4B2A9; text-align: center; padding-bottom: 10px; }
-    .snags-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    @media (max-width: 720px) { .snags-grid { grid-template-columns: 1fr; } }
+    .snags-section { margin: 0; }
+    .snags-section .snags-head { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #B4B2A9; padding-bottom: 10px; }
+    .snags-grid { display: flex; flex-direction: column; gap: 8px; }
     .snag-row { display: flex; align-items: flex-start; gap: 9px; padding: 9px 11px; background: var(--surface); border: 0.5px solid var(--border-strong); border-left: 2px solid #C0392B; border-radius: 6px; cursor: pointer; }
     .snag-row:active { background: rgba(0,0,0,0.03); }
     .snag-box { width: 13px; height: 13px; border-radius: 3px; border: 1.5px solid rgba(192,57,43,0.6); flex-shrink: 0; margin-top: 1px; }
@@ -160,8 +169,8 @@ body { padding: 12px; padding-bottom: 40px; }
 .subitem.done::before { background: #1D9E75; border-color: #1D9E75; }
 .subitem.done::after { content: ''; position: absolute; left: 5.5px; top: 8.5px; width: 4px; height: 2px; border-left: 1.5px solid white; border-bottom: 1.5px solid white; transform: rotate(-45deg); }
 .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-.skin-section { max-width: 1000px; margin: 14px auto 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px; }
-@media (max-width: 720px) { .skin-section { grid-template-columns: 1fr; } }
+.skin-section { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+
 .skin-card { background: var(--surface); border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 11px 14px; }
 .skin-card .skin-k { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #B4B2A9; margin-bottom: 5px; }
 .skin-card .skin-steps { font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; }
@@ -239,22 +248,26 @@ body { padding: 12px; padding-bottom: 40px; }
   <div class="now-banner-wrap" id="now-banner-wrap"></div>
   <div class="reminder-wrap" id="reminder-wrap"></div>
   <div class="timeline-wrap">
-    <div class="columns">
-      <div>
-        <div class="column-label">Morning</div>
-        <div class="timeline" id="timeline-morning"></div>
+    <div class="board-row">
+      <div class="columns">
+        <div>
+          <div class="column-label">Morning</div>
+          <div class="timeline" id="timeline-morning"></div>
+        </div>
+        <div>
+          <div class="column-label">Afternoon</div>
+          <div class="timeline" id="timeline-afternoon"></div>
+        </div>
+        <div>
+          <div class="column-label">Evening</div>
+          <div class="timeline" id="timeline-evening"></div>
+        </div>
       </div>
-      <div>
-        <div class="column-label">Afternoon</div>
-        <div class="timeline" id="timeline-afternoon"></div>
-      </div>
-      <div>
-        <div class="column-label">Evening</div>
-        <div class="timeline" id="timeline-evening"></div>
+      <div class="side-rail">
+        <div class="snags-section" id="snags-dock"></div>
+        <div class="skin-section" id="skin-strip"></div>
       </div>
     </div>
-    <div class="snags-section" id="snags-dock"></div>
-    <div class="skin-section" id="skin-strip"></div>
   </div>
 </div>
 <div class="reminders-overlay" id="reminders-overlay">
