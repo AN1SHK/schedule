@@ -132,17 +132,15 @@ body { padding: 12px; padding-bottom: 40px; }
     .rail-reminders { display: none; }
     .rail-reminders:not(:empty) { display: block; }
     .rail-reminders .rail-head { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #B4B2A9; text-align: center; padding: 4px 0 10px; }
-    .rail-reminders .rr-item { cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; background: var(--surface); border: 0.5px solid var(--border-strong); border-left: 2px solid #6E6D67; border-radius: 6px; padding: 8px 11px; margin-bottom: 7px; }
-    .rail-reminders .rr-item.due-today { border-left-color: #C8413A; }
-    .rail-reminders .rr-item.due-soon { border-left-color: #CA8A04; }
+    .rail-reminders .rr-item { cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; background: var(--surface); border: 0.5px solid var(--border-strong); border-left: 2px solid #C0392B; border-radius: 6px; padding: 8px 11px; margin-bottom: 7px; }
     .rail-reminders .rr-name { font-size: 12px; font-weight: 500; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .rail-reminders .rr-count { font-size: 11px; color: var(--text-tertiary); flex-shrink: 0; font-variant-numeric: tabular-nums; }
     .rail-reminders .rr-item.due-today .rr-count { color: #C8413A; font-weight: 600; }
     .rail-reminders .rr-item.due-soon .rr-count { color: #CA8A04; font-weight: 600; }
     .snags-grid { display: flex; flex-direction: column; gap: 8px; }
-    .snag-row { display: flex; align-items: flex-start; gap: 9px; padding: 9px 11px; background: var(--surface); border: 0.5px solid var(--border-strong); border-left: 2px solid #C0392B; border-radius: 6px; cursor: pointer; }
+    .snag-row { display: flex; align-items: flex-start; gap: 9px; padding: 9px 11px; background: var(--surface); border: 0.5px solid var(--border-strong); border-left: 2px solid #1A1A1A; border-radius: 6px; cursor: pointer; }
     .snag-row:active { background: rgba(0,0,0,0.03); }
-    .snag-box { width: 13px; height: 13px; border-radius: 3px; border: 1.5px solid rgba(192,57,43,0.6); flex-shrink: 0; margin-top: 1px; }
+    .snag-box { width: 13px; height: 13px; border-radius: 3px; border: 1.5px solid rgba(26,26,26,0.5); flex-shrink: 0; margin-top: 1px; }
     .snag-name { font-size: 12.5px; font-weight: 500; color: var(--text-primary); line-height: 1.4; word-break: break-word; cursor: text; flex: 1; }
     .snag-box { cursor: pointer; }
 .shift-wrap { position: absolute; right: 0; top: 50%; transform: translateY(-50%); white-space: nowrap; }
