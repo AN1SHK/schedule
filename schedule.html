@@ -26,7 +26,7 @@ body { padding: 12px; padding-bottom: 40px; }
 .sched { padding: 0.25rem 0; max-width: 1300px; margin: 0 auto; }
 .columns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; flex: 3; min-width: 0; }
 .board-row { display: flex; gap: 14px; align-items: flex-start; }
-.side-rail { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.side-rail { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
 @media (max-width: 1000px) {
   .board-row { flex-direction: column; }
   .side-rail { width: 100%; flex-direction: row; }
@@ -121,7 +121,7 @@ body { padding: 12px; padding-bottom: 40px; }
 .now-banner-time { font-size: 10px; opacity: 0.85; margin-left: 8px; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; font-weight: 500; }
     /* Snags — full-width section under the schedule */
     .snags-section { margin: 0; }
-    .snags-section .snags-head { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #B4B2A9; padding-bottom: 10px; }
+    .snags-section .snags-head { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #B4B2A9; text-align: center; padding: 4px 0 10px; }
     .snags-grid { display: flex; flex-direction: column; gap: 8px; }
     .snag-row { display: flex; align-items: flex-start; gap: 9px; padding: 9px 11px; background: var(--surface); border: 0.5px solid var(--border-strong); border-left: 2px solid #C0392B; border-radius: 6px; cursor: pointer; }
     .snag-row:active { background: rgba(0,0,0,0.03); }
@@ -264,6 +264,7 @@ body { padding: 12px; padding-bottom: 40px; }
         </div>
       </div>
       <div class="side-rail">
+        <div class="column-label">Care</div>
         <div class="skin-section" id="skin-strip"></div>
         <div class="snags-section" id="snags-dock"></div>
       </div>
