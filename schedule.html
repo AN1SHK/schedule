@@ -122,7 +122,8 @@ body { padding: 12px; padding-bottom: 40px; }
     /* Snags — full-width section under the schedule */
     .snags-section { margin: 0; }
     .snags-section .snags-head { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #B4B2A9; text-align: center; padding: 4px 0 10px; }
-    .rail-add { display: block; width: 100%; text-align: center; background: none; border: 0.5px dashed var(--border-strong); border-radius: 6px; padding: 6px 0; margin: -4px 0 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: var(--text-tertiary); cursor: pointer; font-family: inherit; text-transform: uppercase; }
+    .rail-add { display: block; width: auto; margin: 2px 0 8px; padding: 2px 4px; background: none; border: none; font-size: 15px; line-height: 1; color: var(--text-tertiary); opacity: 0.5; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
+    .rail-add:hover { opacity: 1; }
     .rail-add:active { background: rgba(0,0,0,0.03); }
     .rail-addbox { display: none; flex-direction: column; gap: 5px; margin: -2px 0 6px; }
     .rail-addbox.show { display: flex; }
@@ -263,11 +264,10 @@ body { padding: 12px; padding-bottom: 40px; }
       <div class="side-rail">
         <div class="column-label">Hygiene</div>
         <div class="skin-section" id="skin-strip"></div>
-        <button class="rail-add" data-add="hygiene">+ add</button>
         <div class="rail-reminders" id="rail-reminders"></div>
-        <button class="rail-add" data-add="reminder">+ add</button>
+        <button class="rail-add" data-add="reminder">+</button>
         <div class="snags-section" id="snags-dock"></div>
-        <button class="rail-add" data-add="snag">+ add</button>
+        <button class="rail-add" data-add="snag">+</button>
       </div>
     </div>
   </div>
