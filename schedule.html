@@ -80,10 +80,6 @@ body { padding: 12px; padding-bottom: 40px; }
 .date-nav button:active { background: rgba(0,0,0,0.04); }
 .date-label { font-size: 15px; font-weight: 500; color: var(--text-primary); min-width: 220px; text-align: center; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border-strong); }
 .reminder-pill { display: inline-block; background: #556274; color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
-    .reminder-pill-groom { background: #C0392B; cursor: pointer; }
-    .reminder-pill-blue { background: #3B6FC0; }
-    .reminder-pill-black { background: #1A1A1A; }
-    .reminder-pill-bha { background: #0D9488; }
     .tag-clickable { cursor: pointer; background: #E3E9F1; transition: background 0.15s; }
     .tag-clickable:active { background: #D5DEE9; }
     .tag-act { cursor: pointer; background: #E3E9F1; transition: background 0.15s; }
@@ -164,6 +160,14 @@ body { padding: 12px; padding-bottom: 40px; }
 .subitem.done::before { background: #1D9E75; border-color: #1D9E75; }
 .subitem.done::after { content: ''; position: absolute; left: 5.5px; top: 8.5px; width: 4px; height: 2px; border-left: 1.5px solid white; border-bottom: 1.5px solid white; transform: rotate(-45deg); }
 .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.skin-section { max-width: 1000px; margin: 14px auto 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px; }
+@media (max-width: 720px) { .skin-section { grid-template-columns: 1fr; } }
+.skin-card { background: var(--surface); border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 11px 14px; }
+.skin-card .skin-k { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #B4B2A9; margin-bottom: 5px; }
+.skin-card .skin-steps { font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; }
+.skin-card .skin-arrow { opacity: 0.45; margin: 0 3px; }
+.skin-card .skin-link { cursor: pointer; text-decoration: underline; text-decoration-color: rgba(110,109,103,0.35); text-underline-offset: 2px; }
+.skin-card .skin-link:active { color: var(--text-primary); }
 .tag { display: inline-block; background: #EEF1F6; color: #556274; font-size: 10px; font-weight: 600; padding: 4px 9px; border-radius: 6px; letter-spacing: 0.03em; text-transform: uppercase; }
 .tag-med { cursor: pointer; user-select: none; -webkit-user-select: none; }
 .tag-med.med-done { background: #1E293B; color: #FFFFFF; }
@@ -250,6 +254,7 @@ body { padding: 12px; padding-bottom: 40px; }
       </div>
     </div>
     <div class="snags-section" id="snags-dock"></div>
+    <div class="skin-section" id="skin-strip"></div>
   </div>
 </div>
 <div class="reminders-overlay" id="reminders-overlay">
@@ -397,7 +402,7 @@ const FIXED_BLOCKS = [
   { start: '14:30', end: '15:30', label: 'Read', tags: [] },
   { start: '15:30', end: '20:30', label: 'Rest', tags: [], buffer: true, bufferPriority: 1 },
   { start: '20:30', end: '21:00', label: 'Yoga', tags: [] },
-  { start: '21:00', end: '22:00', label: 'NR', tags: [] },
+  { start: '21:00', end: '22:00', label: 'NR', tags: ['Checklist'] },
   { start: '22:00', end: '30:00', label: 'Sleep', displayEnd: '6:00', capHeight: true }
 ];
 
@@ -422,6 +427,13 @@ const PPL_START = dayNum(new Date(2026, 7, 5)); // Aug 5 = Push
 function getPPL(d) { const n = PPL_CYCLE.length; return PPL_CYCLE[(((dayNum(d) - PPL_START) % n) + n) % n]; }
 const MORNING_CARDIO = ['Run - 30 Minutes', 'Skip - 30 Minutes'];
 function getMorningCardio(d) { return MORNING_CARDIO[(((dayNum(d) - PPL_START) % 2) + 2) % 2]; }
+const SKINCARE_AM = ['Cleanser', 'PM Lotion', 'LRP 70'];
+function getSkincarePM(d) {
+  const dow = d.getDay(); // 0=Sun..6=Sat
+  if (dow === 1 || dow === 4) return ['Cleanser', 'BHA', 'Lotion'];           // Mon, Thu
+  if (dow === 2 || dow === 5) return ['Cleanser', 'Lotion', 'Retin-A', 'Lotion']; // Tue, Fri
+  return ['Cleanser', 'Lotion'];                                              // Wed, Sat, Sun
+}
 const EX_CYCLE = ['Push', 'Mobility', 'Pull', 'Basketball', 'Legs', 'Mobility', 'Push', 'Basketball', 'Pull', 'Mobility', 'Legs', 'Basketball'];
 // Early exercise (right after MR) rotates on a 3-day cycle from Fri July 17 2026
 const EX_EARLY_START = EX_START;
@@ -447,8 +459,6 @@ function getAmExerciseTag(d) {
 }
 // Shower alternates Blue / nothing / Black / nothing — 4-day cycle from Fri July 17 2026
 const SHOWER_START = dayNum(new Date(2026, 6, 17));
-const BHA_START = dayNum(new Date(2026, 7, 5)); // every 3 days from Aug 5
-function isBHADay(d) { return ((((dayNum(d) - BHA_START) % 3) + 3) % 3) === 0; }
 const SHOWER_CYCLE = ['Blue', null, 'Black', null];
 function getShowerTag(d) {
   const n = SHOWER_CYCLE.length;
@@ -786,13 +796,6 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
       if (_isExercise && _isToday && !REST_OPTIONS.includes(t)) {
         return `<span class="tag">${t}</span>`;
       }
-      if (t === 'Skincare') {
-        const _when = b.label === 'MR' ? 'morning' : 'evening';
-        return `<span class="tag tag-skincare" data-skincare="${_when}">${t}</span>`;
-      }
-      if (t === 'Skincare') {
-        return `<span class="tag tag-clickable" data-popup="skincare-${b.label === 'MR' ? 'morning' : 'evening'}">${t}</span>`;
-      }
       if (t === 'Personal Grooming') {
         return `<span class="tag tag-clickable" data-popup="grooming">${t}</span>`;
       }
@@ -922,10 +925,6 @@ function render() {
   const dow = d.getDay();
   const reminderWrap = document.getElementById('reminder-wrap');
   let pillsHtml = '';
-  if (dow === 2 || dow === 5) { pillsHtml += `<div class="reminder-pill reminder-pill-groom" data-popup="grooming">Personal Grooming</div>`; }
-  const shampooTag = getShowerTag(d);
-  if (shampooTag) { pillsHtml += `<div class="reminder-pill reminder-pill-${shampooTag.toLowerCase()}">${shampooTag} Shampoo</div>`; }
-  if (isBHADay(d)) pillsHtml += `<div class="reminder-pill reminder-pill-bha">BHA</div>`;
 
   const viewDate = new Date(cur * 86400000 + new Date(2026,0,1).getTime());
   viewDate.setHours(0,0,0,0);
@@ -1244,6 +1243,28 @@ function renderImpulses() {
   if (countEl) countEl.textContent = openCount ? `${openCount} open` : '';
   const badgeEl = document.getElementById('impulse-badge');
   if (badgeEl) { badgeEl.textContent = openCount > 9 ? '9+' : openCount; badgeEl.classList.toggle('show', openCount > 0); }
+  // Care dashboard — skincare + today's shampoo/grooming, always visible
+  const skin = document.getElementById('skin-strip');
+  if (skin) {
+    const _sd = dateFromNum(cur);
+    const _dow = _sd.getDay();
+    const arrow = ' <span class="skin-arrow">\u2192</span> ';
+    // Today reminders: shampoo colour + grooming
+    const _sh = getShowerTag(_sd);
+    let todayBits = [];
+    if (_sh) todayBits.push(`${_sh} Shampoo`);
+    if (_dow === 2 || _dow === 5) todayBits.push('<span class="skin-link" data-popup="grooming">Personal Grooming</span>');
+    const todayCard = todayBits.length
+      ? `<div class="skin-card"><span class="skin-k">Today</span><span class="skin-steps">${todayBits.join(arrow)}</span></div>`
+      : '';
+    skin.innerHTML =
+      `<div class="skin-card"><span class="skin-k">AM Skincare</span><span class="skin-steps">${SKINCARE_AM.join(arrow)}</span></div>` +
+      `<div class="skin-card"><span class="skin-k">PM Skincare</span><span class="skin-steps">${getSkincarePM(_sd).join(arrow)}</span></div>` +
+      todayCard;
+    skin.querySelectorAll('[data-popup]').forEach(el => {
+      el.onclick = (e) => { e.stopPropagation(); openRoutinePopup(el.dataset.popup); };
+    });
+  }
   // Snags — full-width checkable section under the schedule
   const dock = document.getElementById('snags-dock');
   if (dock) {
@@ -1405,11 +1426,12 @@ render();
 const POPUPS = {
   'skincare-morning': { title: 'Morning Skincare', items: ['Scrub with toothbrush', 'Moisturizer', 'Sunscreen'] },
   'skincare-evening': { title: 'Evening Skincare', items: ['Scrub with toothbrush', 'Cleanser', 'Retin-A', 'Moisturizer'] },
-  'grooming': { title: 'Personal Grooming', items: ['Nose Hair', 'Finger & Toe Nails', 'Body Hair', 'Groin Hair', 'Leg Hair'] },
+  'grooming': { title: 'Personal Grooming', items: ['Unibrow', 'Nose Hair', 'Finger & Toe Nails', 'Body Hair', 'Groin Hair', 'Leg Hair'] },
   'face-grooming': { title: 'Face Grooming', items: ['Unibrow', 'Beard', 'Earlobe Hair'] },
-  'mr-routine': { title: 'Morning Routine', items: ['Make Bed', 'Dental Hygiene', 'Meditate - 15 Mins', 'Gratitude - 3 Pts', 'Face Grooming', 'Skincare'] },
+  'mr-routine': { title: 'Morning Routine', items: ['Make Bed', 'Dental Hygiene', 'Meditate - 15 Mins', 'Gratitude - 3 Pts', 'Face Grooming', '__SKINCARE_AM__'] },
+  'skincare-am': { title: 'AM Skincare', note: true, items: SKINCARE_AM },
   'learn-routine': { title: 'Learn', items: ['Read 20 minutes. Focus on one concept.', 'Record and upload 10 minute YouTube video.', 'Reflect 15 minutes. Rewatch video and self-assess rigorously. Write one micro-goal to focus on.', 'Refine 15 minutes, drilling that micro-goal.'] },
-  'nr-routine': { title: 'Night Routine', items: ['Brush Teeth', 'Minoxidil', 'Set Devices', 'Set Clothes & Water'] },
+  'nr-routine': { title: 'Night Routine', items: ['Brush Teeth', 'Minoxidil', '__SKINCARE_PM__', 'Set Devices', 'Set Clothes & Water'] },
   'devices-off': { title: 'All Devices Off', note: true, items: ['Laptop completely off, except 1 hour of TMKOC if social.', 'Phone for messages only. Anything needed to be remembered or done can be put in Impulses.', 'Kindle for reading.'] },
   'lift': { title: 'Lift', items: ['Push', 'Pull', 'Legs'], select: true },
   'cardio': { title: 'Cardio', items: ['Walk', 'Run', 'Sprint', 'Sport', 'Swim'], select: true }
@@ -1449,8 +1471,14 @@ function renderRoutinePopup() {
     });
     return;
   }
+  const _vd = dateFromNum(cur);
+  const _expand = (item) => {
+    if (item === '__SKINCARE_AM__') return { group: 'Skincare', items: SKINCARE_AM.slice() };
+    if (item === '__SKINCARE_PM__') return { group: 'Skincare', items: getSkincarePM(_vd) };
+    return item;
+  };
   let _i = 0, _html = '';
-  data.items.forEach(item => {
+  data.items.map(_expand).forEach(item => {
     if (typeof item === 'string') {
       const done = isRoutineDone(dk, openPopupKey, _i);
       _html += `<li class="${done ? 'done' : ''}" data-idx="${_i}"><span class="routine-check"></span><span class="routine-text">${item}</span></li>`;
