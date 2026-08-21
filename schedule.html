@@ -132,7 +132,7 @@ body { padding: 12px; padding-bottom: 40px; }
     .rail-reminders { display: none; }
     .rail-reminders:not(:empty) { display: block; }
     .rail-reminders .rail-head { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #B4B2A9; text-align: center; padding: 4px 0 10px; }
-    .rail-reminders .rr-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: var(--surface); border: 0.5px solid var(--border-strong); border-left: 2px solid #6E6D67; border-radius: 6px; padding: 8px 11px; margin-bottom: 7px; }
+    .rail-reminders .rr-item { cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; background: var(--surface); border: 0.5px solid var(--border-strong); border-left: 2px solid #6E6D67; border-radius: 6px; padding: 8px 11px; margin-bottom: 7px; }
     .rail-reminders .rr-item.due-today { border-left-color: #C8413A; }
     .rail-reminders .rr-item.due-soon { border-left-color: #CA8A04; }
     .rail-reminders .rr-name { font-size: 12px; font-weight: 500; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -143,7 +143,8 @@ body { padding: 12px; padding-bottom: 40px; }
     .snag-row { display: flex; align-items: flex-start; gap: 9px; padding: 9px 11px; background: var(--surface); border: 0.5px solid var(--border-strong); border-left: 2px solid #C0392B; border-radius: 6px; cursor: pointer; }
     .snag-row:active { background: rgba(0,0,0,0.03); }
     .snag-box { width: 13px; height: 13px; border-radius: 3px; border: 1.5px solid rgba(192,57,43,0.6); flex-shrink: 0; margin-top: 1px; }
-    .snag-name { font-size: 12.5px; font-weight: 500; color: var(--text-primary); line-height: 1.4; word-break: break-word; }
+    .snag-name { font-size: 12.5px; font-weight: 500; color: var(--text-primary); line-height: 1.4; word-break: break-word; cursor: text; flex: 1; }
+    .snag-box { cursor: pointer; }
 .shift-wrap { position: absolute; right: 0; top: 50%; transform: translateY(-50%); white-space: nowrap; }
 .shift-btn { text-decoration: none; box-sizing: border-box; background: none; border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 4px 10px; cursor: pointer; font-size: 14px; color: var(--text-primary); font-family: inherit; margin-left: 4px; }
 .shift-btn:active { background: rgba(0,0,0,0.04); }
@@ -182,7 +183,9 @@ body { padding: 12px; padding-bottom: 40px; }
 .skin-card { background: var(--surface); border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 11px 14px; }
 .skin-card .skin-k { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #B4B2A9; margin-bottom: 5px; }
 .skin-card .skin-steps { font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; }
-.skin-card .skin-arrow { opacity: 0.45; margin: 0 3px; }
+.skin-card .skin-list { display: flex; flex-direction: column; gap: 3px; }
+.skin-card .skin-step { font-size: 12.5px; color: var(--text-secondary); line-height: 1.45; padding-left: 12px; position: relative; }
+.skin-card .skin-step::before { content: '·'; position: absolute; left: 2px; color: var(--text-tertiary); }
 .skin-card .skin-link { cursor: pointer; text-decoration: underline; text-decoration-color: rgba(110,109,103,0.35); text-underline-offset: 2px; }
 .skin-card .skin-link:active { color: var(--text-primary); }
 .tag { display: inline-block; background: #EEF1F6; color: #556274; font-size: 10px; font-weight: 600; padding: 4px 9px; border-radius: 6px; letter-spacing: 0.03em; text-transform: uppercase; }
@@ -1196,9 +1199,23 @@ function renderReminders() {
         else if (r.days <= 2) { cls += ' due-soon'; cd = `${r.days}d${r.time ? ' · ' + r.time : ''}`; }
         else { cd = `${r.days}d${r.time ? ' · ' + r.time : ''}`; }
         const nm = String(r.name).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        return `<div class="${cls}"><span class="rr-name">${nm}</span><span class="rr-count">${cd}</span></div>`;
+        return `<div class="${cls}" data-redit="${r.id}"><span class="rr-name">${nm}</span><span class="rr-count">${cd}</span></div>`;
       }).join('');
       rail.innerHTML = `<div class="rail-head">Reminders</div>${rows}`;
+      rail.querySelectorAll('[data-redit]').forEach(row => {
+        row.onclick = (e) => {
+          e.stopPropagation();
+          const cur = loadReminders().find(x => x.id === row.dataset.redit);
+          if (!cur) return;
+          const nv = prompt('Edit reminder name (blank to delete):', cur.name);
+          if (nv === null) return;
+          if (nv.trim() === '') { saveReminders(loadReminders().filter(x => x.id !== row.dataset.redit)); return; }
+          const dv = prompt('Date (YYYY-MM-DD):', cur.date);
+          if (dv === null) return;
+          const tv = prompt('Time (HH:MM, blank for none):', cur.time || '');
+          saveReminders(loadReminders().map(x => x.id === row.dataset.redit ? { ...x, name: nv.trim(), date: dv.trim() || cur.date, time: (tv && tv.trim()) ? tv.trim() : null } : x));
+        };
+      });
     }
   }
 }
@@ -1310,18 +1327,18 @@ function renderImpulses() {
   if (skin) {
     const _sd = dateFromNum(cur);
     const _dow = _sd.getDay();
-    const arrow = ' <span class="skin-arrow">\u2192</span> ';
+    const stack = (items) => `<div class="skin-list">${items.map(s => `<div class="skin-step">${s}</div>`).join('')}</div>`;
     // Today reminders: shampoo colour + grooming
     const _sh = getShowerTag(_sd);
     let todayBits = [];
     if (_sh) todayBits.push(`${_sh} Shampoo`);
     if (_dow === 2 || _dow === 5) todayBits.push('<span class="skin-link" data-popup="grooming">Personal Grooming</span>');
     const todayCard = todayBits.length
-      ? `<div class="skin-card"><span class="skin-k">Today</span><span class="skin-steps">${todayBits.join(arrow)}</span></div>`
+      ? `<div class="skin-card"><span class="skin-k">Today</span>${stack(todayBits)}</div>`
       : '';
     skin.innerHTML =
-      `<div class="skin-card"><span class="skin-k">AM Skincare</span><span class="skin-steps">${SKINCARE_AM.join(arrow)}</span></div>` +
-      `<div class="skin-card"><span class="skin-k">PM Skincare</span><span class="skin-steps">${getSkincarePM(_sd).join(arrow)}</span></div>` +
+      `<div class="skin-card"><span class="skin-k">AM Skincare</span>${stack(SKINCARE_AM)}</div>` +
+      `<div class="skin-card"><span class="skin-k">PM Skincare</span>${stack(getSkincarePM(_sd))}</div>` +
       todayCard;
     skin.querySelectorAll('[data-popup]').forEach(el => {
       el.onclick = (e) => { e.stopPropagation(); openRoutinePopup(el.dataset.popup); };
@@ -1336,11 +1353,23 @@ function renderImpulses() {
     } else {
       const cards = open.map(i => {
         const t = String(i.text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        return `<div class="snag-row" data-snag="${i.id}"><span class="snag-box"></span><span class="snag-name">${t}</span></div>`;
+        return `<div class="snag-row"><span class="snag-box" data-toggle="${i.id}"></span><span class="snag-name" data-edit="${i.id}">${t}</span></div>`;
       }).join('');
       dock.innerHTML = `<div class="snags-head">Snags</div><div class="snags-grid">${cards}</div>`;
-      dock.querySelectorAll('[data-snag]').forEach(row => {
-        row.onclick = (e) => { e.stopPropagation(); toggleImpulse(row.dataset.snag); };
+      dock.querySelectorAll('[data-toggle]').forEach(box => {
+        box.onclick = (e) => { e.stopPropagation(); toggleImpulse(box.dataset.toggle); };
+      });
+      dock.querySelectorAll('[data-edit]').forEach(nm => {
+        nm.onclick = (e) => {
+          e.stopPropagation();
+          const cur = loadImpulses().find(x => x.id === nm.dataset.edit);
+          if (!cur) return;
+          const v = prompt('Edit snag:', cur.text);
+          if (v === null) return;
+          const t2 = v.trim();
+          if (t2 === '') { saveImpulses(loadImpulses().filter(x => x.id !== nm.dataset.edit)); }
+          else { saveImpulses(loadImpulses().map(x => x.id === nm.dataset.edit ? { ...x, text: t2 } : x)); }
+        };
       });
     }
   }
