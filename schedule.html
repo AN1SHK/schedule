@@ -1255,7 +1255,7 @@ function renderImpulses() {
         const t = String(i.text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         return `<div class="snag-row" data-snag="${i.id}"><span class="snag-box"></span><span class="snag-name">${t}</span></div>`;
       }).join('');
-      dock.innerHTML = `<div class="snags-head">Snags · ${open.length}</div><div class="snags-grid">${cards}</div>`;
+      dock.innerHTML = `<div class="snags-head">Snags</div><div class="snags-grid">${cards}</div>`;
       dock.querySelectorAll('[data-snag]').forEach(row => {
         row.onclick = (e) => { e.stopPropagation(); toggleImpulse(row.dataset.snag); };
       });
