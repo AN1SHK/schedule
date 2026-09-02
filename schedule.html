@@ -23,9 +23,9 @@
 html, body { background: var(--bg); color: var(--text-primary); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; -webkit-font-smoothing: antialiased; }
 body { padding: 12px; padding-bottom: 40px; }
 
-.sched { padding: 0.25rem 0; max-width: 1300px; margin: 0 auto; }
-.columns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; flex: 3; min-width: 0; }
-.board-row { display: flex; gap: 14px; align-items: flex-start; }
+.sched { padding: 0.25rem 0; max-width: 720px; margin: 0 auto; }
+.columns { display: grid; grid-template-columns: 1fr; gap: 14px; flex: 1; min-width: 0; }
+.board-row { display: flex; gap: 20px; align-items: flex-start; justify-content: center; }
 .side-rail { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
 @media (max-width: 1000px) {
   .board-row { flex-direction: column; }
@@ -165,11 +165,11 @@ body { padding: 12px; padding-bottom: 40px; }
 .block.block-done .ex-check-overlay { opacity: 1; }
 .block.block-done { background: #EEF2F6; }
 .block.block-done .block-content { opacity: 0.38; transition: opacity 0.25s; }
-.block { position: absolute; left: 0; right: 0; background: var(--surface); border-radius: 0; overflow: hidden; user-select: none; -webkit-user-select: none; padding: 14px 14px; display: flex; align-items: flex-start; gap: 10px; transition: opacity 0.3s; }
+.block { position: absolute; left: 0; right: 0; background: var(--surface); border-radius: 0; overflow: hidden; user-select: none; -webkit-user-select: none; padding: 14px 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; transition: opacity 0.3s; }
 .block.past { opacity: 0.35; }
 .block-content { flex: 1; min-width: 0; }
-.b-label { font-size: 11px; color: var(--text-secondary); line-height: 1.2; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
-.b-time { font-size: 10px; color: var(--text-secondary); margin-top: 2px; font-variant-numeric: tabular-nums; }
+.b-label { font-size: 11px; color: var(--text-secondary); line-height: 1.2; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; text-align: center; }
+.b-time { font-size: 10px; color: var(--text-secondary); margin-top: 2px; font-variant-numeric: tabular-nums; text-align: center; }
 .b-note { font-size: 10px; color: var(--text-tertiary); margin-top: 6px; font-style: italic; letter-spacing: 0.02em; }
 .subitems { list-style: none; margin-top: 10px; margin-bottom: 4px; padding-left: 0; position: relative; }
 .subitems::before { content: ''; position: absolute; left: 8px; top: 6px; bottom: 6px; width: 1px; background: rgba(110, 109, 103, 0.25); }
@@ -251,16 +251,7 @@ body { padding: 12px; padding-bottom: 40px; }
     <div class="board-row">
       <div class="columns">
         <div>
-          <div class="column-label">Morning</div>
-          <div class="timeline" id="timeline-morning"></div>
-        </div>
-        <div>
-          <div class="column-label">Afternoon</div>
-          <div class="timeline" id="timeline-afternoon"></div>
-        </div>
-        <div>
-          <div class="column-label">Evening</div>
-          <div class="timeline" id="timeline-evening"></div>
+          <div class="timeline" id="timeline-all"></div>
         </div>
       </div>
       <div class="side-rail">
@@ -409,16 +400,9 @@ const MIN_BLOCK_HEIGHT = 36;
 
 const FIXED_BLOCKS = [
   { start: '6:00', end: '6:00', label: 'Rest', wakeRest: true, tags: [] },
-  { start: '6:00', end: '7:00', label: 'MR', tags: ['Cardio', 'Cold Shower', 'Meditate - 15 Minutes', 'Gratitude - 3 Points'] },
+  { start: '6:00', end: '7:00', label: 'MR', tags: [] },
   { start: '7:00', end: '11:00', label: 'Deep Work', tags: [] },
-  { start: '11:00', end: '11:30', label: 'Rest', tags: [] },
-  { start: '11:30', end: '12:30', label: 'Shallow Work', tags: [] },
-  { start: '12:30', end: '13:30', label: 'Exercise', tags: [] },
-  { start: '13:30', end: '14:00', label: 'Sauna', tags: [] },
-  { start: '14:00', end: '14:30', label: 'Shower', tags: ['SHOWER_TAG'], grooming: true },
-  { start: '14:30', end: '15:30', label: 'Read', tags: [] },
-  { start: '15:30', end: '20:30', label: 'Rest', tags: [], buffer: true, bufferPriority: 1 },
-  { start: '20:30', end: '21:00', label: 'Yoga', tags: [] },
+  { start: '11:00', end: '21:00', label: 'Rest', tags: [], buffer: true, bufferPriority: 1 },
   { start: '21:00', end: '22:00', label: 'NR', tags: [] },
   { start: '22:00', end: '30:00', label: 'Sleep', displayEnd: '6:00', capHeight: true }
 ];
@@ -753,6 +737,7 @@ function computeBlockHeight(b) {
   const contentMin = 54 + (tagRows ? 8 + tagRows * 26 : 0);
   let height = Math.max(naturalHeight, contentMin);
   if (b.capHeight) height = Math.min(height, 80);
+  else height = Math.min(height, 130); // keep long blocks (Rest) from towering
   return height;
 }
 function columnNaturalHeight(blocks) {
@@ -774,16 +759,8 @@ function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey
   }).filter(b => b !== null);
   // Equal columns: grow blocks to fill a shared height, distributing the extra space in
   // proportion to each block's duration so sizes still track time within the column.
-  if (targetHeight && layout.length) {
-    const naturalBottom = 2 * TOP_PAD + layout.reduce((s, b) => s + b.height + 3, 0) - 3;
-    const extra = targetHeight - naturalBottom;
-    if (extra > 0.5) {
-      let growable = layout.filter(b => !b.capHeight);
-      if (!growable.length) growable = layout;
-      const totalNatural = growable.reduce((s, b) => s + b.natural, 0) || 1;
-      growable.forEach(b => { b.height += extra * (b.natural / totalNatural); });
-    }
-  }
+  // No fill-stretch: every block keeps a compact card height (see cap below), so columns
+  // read as tidy equal-ish cards instead of one giant block towering over short ones.
   // Stack blocks contiguously (flush), sized by duration — no time-gap spacing
   let _cursor = TOP_PAD;
   for (let k = 0; k < layout.length; k++) {
@@ -988,11 +965,7 @@ function render() {
     return { ...b, tags, displayLabel, i, startT, endT, dispStartT, dispEndT, done: !!(doneState && doneState[i]) };
   }).sort((a, b) => a.startT - b.startT);
 
-  const SPLIT_1 = 11.5;
-  const SPLIT_2 = 15;
-  const morning = enriched.filter(b => b.endT <= SPLIT_1);
-  const afternoon = enriched.filter(b => b.endT > SPLIT_1 && b.endT <= SPLIT_2);
-  const evening = enriched.filter(b => b.endT > SPLIT_2);
+  const allBlocks = enriched;
 
   const today = new Date();
   const showNow = dayNum(today) === cur;
@@ -1027,17 +1000,10 @@ function render() {
 
   // Fixed clock-time markers + reminders + the now-line, each placed in the column whose
   // (packed) displayed range contains its time — so they track the re-packed day.
-  const morningMarkers = [];
-  const afternoonMarkers = [];
-  const eveningMarkers = [];
+  const allMarkers = [];
 
   const timelineMarkers = [];
-  // First Meal at the end of the last (third) Deep Work block
-  const _dwB = enriched.filter(b => b.label === 'Deep Work');
-  const _dw3 = _dwB[_dwB.length - 1];
-  if (_dw3) timelineMarkers.push({ time: _dw3.dispEndT, cls: 'marker', labelCls: 'marker-label', label: `First Meal · ${formatTime(_dw3.dispEndT)}` });
-  // Last Meal fixed at 17:00; All Devices Off fixed at 20:00
-  timelineMarkers.push({ time: 18, cls: 'marker', labelCls: 'marker-label', label: `Last Meal · ${formatTime(18)}` });
+  // All Devices Off fixed at 20:30
   timelineMarkers.push({ time: 20.5, cls: 'marker', labelCls: 'marker-label', label: `All Devices Off · ${formatTime(20.5)}` });
 
   // Timed reminders due on the viewed day
@@ -1053,26 +1019,14 @@ function render() {
     timelineMarkers.push({ time: nowTime, cls: 'now-line', labelCls: 'now-label', label: `Now · ${hh}:${mm}` });
   }
 
-  const dispHas = (blocks, t) => blocks.some(b => {
-    const s = b.dispStartT !== undefined ? b.dispStartT : b.startT;
-    const e = b.dispEndT !== undefined ? b.dispEndT : b.endT;
-    return (s <= t && t < e) || (s <= t + 24 && t + 24 < e); // +24 handles the wrapped Sleep block
-  });
-  timelineMarkers.forEach(m => {
-    if (dispHas(morning, m.time)) morningMarkers.push(m);
-    else if (dispHas(afternoon, m.time)) afternoonMarkers.push(m);
-    else if (dispHas(evening, m.time)) eveningMarkers.push(m);
-  });
+  timelineMarkers.forEach(m => allMarkers.push(m));
 
-  const _maxColH = Math.max(columnNaturalHeight(morning), columnNaturalHeight(afternoon), columnNaturalHeight(evening));
-  renderColumn('timeline-morning', morning, START_HOUR, morningMarkers, doneState, key, nowTime, _maxColH);
-  renderColumn('timeline-afternoon', afternoon, SPLIT_1, afternoonMarkers, doneState, key, nowTime, _maxColH);
-  renderColumn('timeline-evening', evening, SPLIT_2, eveningMarkers, doneState, key, nowTime, _maxColH);
+  renderColumn('timeline-all', allBlocks, START_HOUR, allMarkers, doneState, key, nowTime, null);
 
   // Column bottoms: set all columns to the tallest natural height (empty space fills
   // shorter columns) so blocks stay proportional and same-duration blocks match across columns.
   requestAnimationFrame(() => {
-    const tls = ['timeline-morning','timeline-afternoon','timeline-evening'].map(id => document.getElementById(id));
+    const tls = ['timeline-all'].map(id => document.getElementById(id));
     const maxH = Math.max(...tls.map(t => parseInt(t.style.height) || 0));
     tls.forEach(t => { t.style.height = maxH + 'px'; });
   });
