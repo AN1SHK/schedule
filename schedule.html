@@ -409,11 +409,11 @@ const MIN_BLOCK_HEIGHT = 36;
 
 const FIXED_BLOCKS = [
   { start: '6:00', end: '6:00', label: 'Rest', wakeRest: true, tags: [] },
-  { start: '6:00', end: '7:00', label: 'MR', tags: ['MORNING_CARDIO_TAG', 'Cold Shower', 'Meditate - 15 Minutes', 'Gratitude - 3 Points'] },
+  { start: '6:00', end: '7:00', label: 'MR', tags: ['Cardio', 'Cold Shower', 'Meditate - 15 Minutes', 'Gratitude - 3 Points'] },
   { start: '7:00', end: '11:00', label: 'Deep Work', tags: [] },
   { start: '11:00', end: '11:30', label: 'Rest', tags: [] },
   { start: '11:30', end: '12:30', label: 'Shallow Work', tags: [] },
-  { start: '12:30', end: '13:30', label: 'Exercise', tags: ['PPL_REST_TAG'] },
+  { start: '12:30', end: '13:30', label: 'Exercise', tags: [] },
   { start: '13:30', end: '14:00', label: 'Sauna', tags: [] },
   { start: '14:00', end: '14:30', label: 'Shower', tags: ['SHOWER_TAG'], grooming: true },
   { start: '14:30', end: '15:30', label: 'Read', tags: [] },
@@ -478,8 +478,10 @@ function getAmExerciseTag(d) {
 const SHOWER_START = dayNum(new Date(2026, 6, 17));
 const SHOWER_CYCLE = ['Blue', null, 'Black', null];
 function getShowerTag(d) {
-  const n = SHOWER_CYCLE.length;
-  return SHOWER_CYCLE[(((dayNum(d) - SHOWER_START) % n) + n) % n];
+  const dow = d.getDay(); // 0=Sun..6=Sat
+  if (dow === 1 || dow === 5) return 'Black';  // Mon, Fri
+  if (dow === 3 || dow === 0) return 'Blue';   // Wed, Sun
+  return null;
 }
 function getExerciseTag(d) {
   const n = EX_CYCLE.length;
@@ -974,15 +976,11 @@ function render() {
     const tags = b.tags ? [...b.tags.flatMap(t => {
       if (t === 'EX_TAG') return [getExerciseTag(d)];
       if (t === 'TRAIN_TAG') { const v = getTrainTag(d); return v === 'Rest' ? REST_OPTIONS.slice() : [v]; }
-      if (t === 'PPL_TAG') return [getPPL(d)];
-      if (t === 'MORNING_CARDIO_TAG') return [getMorningCardio(d)];
-      if (t === 'PPL_REST_TAG') return getPPL(d) === 'Rest' ? ['Sport'] : [];
       if (t === 'SHOWER_TAG') { const s = getShowerTag(d); return s ? [s] : []; }
       if (t === 'MEDITATE_TAG') return [getMeditationTag(d)];
       return [t];
     }), ...extraTags] : (extraTags.length ? extraTags : b.tags);
     let displayLabel = b.label;
-    if (b.label === 'Exercise') { const _v = getPPL(d); displayLabel = _v === 'Rest' ? 'Recover' : _v; }
     const startT = parseTime(b.start);
     const endT = parseTime(b.end);
     const dispStartT = packed[i].dispStartT;
@@ -1348,7 +1346,7 @@ function renderImpulses() {
   // Snags — full-width checkable section under the schedule
   const dock = document.getElementById('snags-dock');
   if (dock) {
-    const open = arr.filter(i => !i.done);
+    const open = arr.filter(i => !i.done && i.text && !/^(Provided Input|Dictated Text)$/i.test(String(i.text).trim()));
     if (open.length === 0) {
       dock.innerHTML = '';
     } else {
