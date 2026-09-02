@@ -190,6 +190,19 @@ body { padding: 12px; padding-bottom: 40px; }
 
 .skin-card .skin-link { cursor: pointer; text-decoration: underline; text-decoration-color: rgba(110,109,103,0.35); text-underline-offset: 2px; }
 .skin-card .skin-link:active { color: var(--text-primary); }
+.am-card { display: flex; align-items: baseline; gap: 10px; }
+.am-card .am-k { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #A9A79E; flex-shrink: 0; }
+.am-card .am-steps { font-size: 12px; color: var(--text-secondary); }
+.week-card { padding: 2px 0; }
+.week-row { display: flex; gap: 12px; padding: 9px 14px; border-bottom: 0.5px solid var(--border); }
+.week-row:last-child { border-bottom: none; }
+.week-row.week-today { background: rgba(0,0,0,0.035); }
+.week-day { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #B4B2A9; width: 30px; flex-shrink: 0; padding-top: 1px; }
+.week-today .week-day { color: var(--text-primary); }
+.week-body { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+.wk-line { display: flex; gap: 8px; align-items: baseline; }
+.wk-tag { font-size: 8.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #C4C2B9; width: 34px; flex-shrink: 0; }
+.wk-val { font-size: 11.5px; color: var(--text-secondary); line-height: 1.35; }
 .tag { display: inline-block; background: #EEF1F6; color: #556274; font-size: 10px; font-weight: 600; padding: 4px 9px; border-radius: 6px; letter-spacing: 0.03em; text-transform: uppercase; }
 .tag-med { cursor: pointer; user-select: none; -webkit-user-select: none; }
 .tag-med.med-done { background: #1E293B; color: #FFFFFF; }
@@ -1289,22 +1302,28 @@ function renderImpulses() {
   if (skin) {
     const _sd = dateFromNum(cur);
     const _dow = _sd.getDay();
-    const stack = (items) => `<div class="skin-list">${items.map(s => `<div class="skin-step">${s}</div>`).join('')}</div>`;
-    // Today reminders: shampoo colour + grooming
-    const _sh = getShowerTag(_sd);
-    let todayBits = [];
-    if (_sh) todayBits.push(`${_sh} Shampoo`);
-    if (_dow === 2 || _dow === 5) todayBits.push('<span class="skin-link" data-popup="grooming">Personal Grooming</span>');
-    const todayCard = todayBits.length
-      ? `<div class="skin-card"><span class="skin-k">Today</span>${stack(todayBits)}</div>`
-      : '';
-    skin.innerHTML =
-      `<div class="skin-card"><span class="skin-k">AM Skincare</span>${stack(SKINCARE_AM)}</div>` +
-      `<div class="skin-card"><span class="skin-k">PM Skincare</span>${stack(getSkincarePM(_sd))}</div>` +
-      todayCard;
-    skin.querySelectorAll('[data-popup]').forEach(el => {
-      el.onclick = (e) => { e.stopPropagation(); openRoutinePopup(el.dataset.popup); };
+    const DOW_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    // AM is the same every day — one compact line at top
+    let html = `<div class="skin-card am-card"><span class="am-k">AM</span><span class="am-steps">${SKINCARE_AM.join(' → ')}</span></div>`;
+    // Weekly PM plan: one row per day, Mon-first
+    const order = [1,2,3,4,5,6,0];
+    let week = '<div class="skin-card week-card">';
+    order.forEach(dw => {
+      const dObj = new Date(2026,0,4 + dw);
+      const pm = getSkincarePM(dObj);
+      const sh = getShowerTag(dObj);
+      const groom = (dw === 2 || dw === 5);
+      const isToday = dw === _dow;
+      let lines = `<div class="wk-line"><span class="wk-tag">PM</span><span class="wk-val">${pm.join(' → ')}</span></div>`;
+      if (sh) lines += `<div class="wk-line"><span class="wk-tag">Hair</span><span class="wk-val">${sh} Shampoo</span></div>`;
+      if (groom) lines += `<div class="wk-line"><span class="wk-tag">Groom</span><span class="wk-val">Grooming</span></div>`;
+      week += `<div class="week-row${isToday ? ' week-today' : ''}">` +
+        `<div class="week-day">${DOW_NAMES[dw].slice(0,3)}</div>` +
+        `<div class="week-body">${lines}</div>` +
+        `</div>`;
     });
+    week += '</div>';
+    skin.innerHTML = html + week;
   }
   // Snags — full-width checkable section under the schedule
   const dock = document.getElementById('snags-dock');
