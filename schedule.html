@@ -192,7 +192,7 @@ body { padding: 12px; padding-bottom: 40px; }
 .skin-card .skin-link:active { color: var(--text-primary); }
 .am-card { display: flex; align-items: baseline; gap: 10px; }
 .am-card .am-k { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #A9A79E; flex-shrink: 0; }
-.am-card .am-steps { font-size: 12px; color: var(--text-secondary); }
+.am-card .am-steps { font-size: 12px; color: var(--text-secondary); display: flex; flex-direction: column; gap: 1px; }
 .week-card { padding: 2px 0; }
 .week-row { display: flex; gap: 12px; padding: 9px 14px; border-bottom: 0.5px solid var(--border); }
 .week-row:last-child { border-bottom: none; }
@@ -202,7 +202,8 @@ body { padding: 12px; padding-bottom: 40px; }
 .week-body { display: flex; flex-direction: column; gap: 3px; flex: 1; }
 .wk-line { display: flex; gap: 8px; align-items: baseline; }
 .wk-tag { font-size: 8.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #C4C2B9; width: 34px; flex-shrink: 0; }
-.wk-val { font-size: 11.5px; color: var(--text-secondary); line-height: 1.35; }
+.wk-val { font-size: 11.5px; color: var(--text-secondary); line-height: 1.35; display: flex; flex-direction: column; gap: 1px; }
+.stp { display: block; }
 .tag { display: inline-block; background: #EEF1F6; color: #556274; font-size: 10px; font-weight: 600; padding: 4px 9px; border-radius: 6px; letter-spacing: 0.03em; text-transform: uppercase; }
 .tag-med { cursor: pointer; user-select: none; -webkit-user-select: none; }
 .tag-med.med-done { background: #1E293B; color: #FFFFFF; }
@@ -1304,7 +1305,7 @@ function renderImpulses() {
     const _dow = _sd.getDay();
     const DOW_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     // AM is the same every day — one compact line at top
-    let html = `<div class="skin-card am-card"><span class="am-k">AM</span><span class="am-steps">${SKINCARE_AM.join(' → ')}</span></div>`;
+    let html = `<div class="skin-card am-card"><span class="am-k">AM</span><span class="am-steps">${SKINCARE_AM.map(s => `<span class="stp">${s}</span>`).join('')}</span></div>`;
     // Weekly PM plan: one row per day, Mon-first
     const order = [1,2,3,4,5,6,0];
     let week = '<div class="skin-card week-card">';
@@ -1314,7 +1315,7 @@ function renderImpulses() {
       const sh = getShowerTag(dObj);
       const groom = (dw === 2 || dw === 5);
       const isToday = dw === _dow;
-      let lines = `<div class="wk-line"><span class="wk-tag">PM</span><span class="wk-val">${pm.join(' → ')}</span></div>`;
+      let lines = `<div class="wk-line"><span class="wk-tag">PM</span><span class="wk-val">${pm.map(s => `<span class="stp">${s}</span>`).join('')}</span></div>`;
       if (sh) lines += `<div class="wk-line"><span class="wk-tag">Hair</span><span class="wk-val">${sh} Shampoo</span></div>`;
       if (groom) lines += `<div class="wk-line"><span class="wk-tag">Groom</span><span class="wk-val">Grooming</span></div>`;
       week += `<div class="week-row${isToday ? ' week-today' : ''}">` +
