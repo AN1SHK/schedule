@@ -1305,7 +1305,7 @@ function renderImpulses() {
     const _dow = _sd.getDay();
     const DOW_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     // AM is the same every day — one compact line at top
-    let html = `<div class="skin-card am-card"><span class="am-k">AM</span><span class="am-steps">${SKINCARE_AM.map(s => `<span class="stp">${s}</span>`).join('')}</span></div>`;
+    let html = `<div class="skin-card week-card"><div class="week-row"><div class="week-day">QD</div><div class="week-body"><div class="wk-line"><span class="wk-tag">AM</span><span class="wk-val">${SKINCARE_AM.map(s => `<span class="stp">${s}</span>`).join('')}</span></div></div></div></div>`;
     // Weekly PM plan: one row per day, Mon-first
     const order = [1,2,3,4,5,6,0];
     let week = '<div class="skin-card week-card">';
