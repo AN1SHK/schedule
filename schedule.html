@@ -24,14 +24,15 @@ html, body { background: var(--bg); color: var(--text-primary); font-family: -ap
 body { padding: 12px; padding-bottom: 40px; }
 
 .sched { padding: 0.25rem 0; max-width: 720px; margin: 0 auto; }
-.columns { display: grid; grid-template-columns: 1fr; gap: 14px; flex: 1; min-width: 0; }
-.board-row { display: flex; gap: 20px; align-items: flex-start; justify-content: center; }
-.side-rail { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.columns { display: grid; grid-template-columns: 1fr; gap: 14px; width: 100%; }
+.board-row { display: flex; flex-direction: column; gap: 20px; align-items: stretch; }
+.side-rail { width: 100%; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; align-items: start; }
+.rail-col { display: flex; flex-direction: column; gap: 8px; }
 @media (max-width: 1000px) {
   .board-row { flex-direction: column; }
   .columns { flex: 1 1 auto; width: 100%; }
   .side-rail { flex: 1 1 auto; width: 100%; flex-direction: row; }
-  .side-rail .snags-section, .side-rail .skin-section, .side-rail .rail-reminders { flex: 1; min-width: 0; }
+  .side-rail { grid-template-columns: 1fr; }
   .side-rail .snags-grid, .side-rail .skin-section { flex-direction: row; flex-wrap: wrap; }
   .side-rail .snags-grid > *, .side-rail .skin-section > * { flex: 1; min-width: 200px; }
 }
@@ -135,13 +136,13 @@ body { padding: 12px; padding-bottom: 40px; }
     .rail-reminders { display: none; }
     .rail-reminders:not(:empty) { display: block; }
     .rail-reminders .rail-head { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #B4B2A9; text-align: center; padding: 4px 0 10px; }
-    .rail-reminders .rr-item { cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; background: var(--surface); border: 0.5px solid var(--border-strong); border-left: 2px solid #C0392B; border-radius: 6px; padding: 8px 11px; margin-bottom: 7px; }
+    .rail-reminders .rr-item { cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; text-align: center; background: var(--surface); border: 0.5px solid var(--border-strong); border-left: 2px solid #C0392B; border-radius: 6px; padding: 8px 11px; margin-bottom: 7px; }
     .rail-reminders .rr-name { font-size: 12px; font-weight: 500; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .rail-reminders .rr-count { font-size: 11px; color: var(--text-tertiary); flex-shrink: 0; font-variant-numeric: tabular-nums; }
     .rail-reminders .rr-item.due-today .rr-count { color: #C8413A; font-weight: 600; }
     .rail-reminders .rr-item.due-soon .rr-count { color: #CA8A04; font-weight: 600; }
     .snags-grid { display: flex; flex-direction: column; gap: 8px; }
-    .snag-row { display: flex; align-items: flex-start; gap: 9px; padding: 9px 11px; background: var(--surface); border: 0.5px solid var(--border-strong); border-left: 2px solid #1A1A1A; border-radius: 6px; cursor: pointer; }
+    .snag-row { display: flex; align-items: center; justify-content: center; gap: 8px; text-align: center; padding: 9px 11px; background: var(--surface); border: 0.5px solid var(--border-strong); border-left: 2px solid #1A1A1A; border-radius: 6px; cursor: pointer; }
     .snag-row:active { background: rgba(0,0,0,0.03); }
     .snag-box { width: 13px; height: 13px; border-radius: 3px; border: 1.5px solid rgba(26,26,26,0.5); flex-shrink: 0; margin-top: 1px; }
     .snag-name { font-size: 12.5px; font-weight: 500; color: var(--text-primary); line-height: 1.4; word-break: break-word; cursor: text; flex: 1; }
@@ -165,7 +166,7 @@ body { padding: 12px; padding-bottom: 40px; }
 .block.block-done .ex-check-overlay { opacity: 1; }
 .block.block-done { background: #EEF2F6; }
 .block.block-done .block-content { opacity: 0.38; transition: opacity 0.25s; }
-.block { position: absolute; left: 0; right: 0; background: var(--surface); border-radius: 0; overflow: hidden; user-select: none; -webkit-user-select: none; padding: 14px 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; transition: opacity 0.3s; }
+.block { position: absolute; left: 0; right: 0; background: var(--surface); border-radius: 0; overflow: hidden; user-select: none; -webkit-user-select: none; padding: 14px 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; transition: opacity 0.3s; box-sizing: border-box; }
 .block.past { opacity: 0.35; }
 .block-content { flex: 1; min-width: 0; }
 .b-label { font-size: 11px; color: var(--text-secondary); line-height: 1.2; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; text-align: center; }
@@ -182,11 +183,11 @@ body { padding: 12px; padding-bottom: 40px; }
 .skin-section { margin: 0; display: flex; flex-direction: column; gap: 8px; }
 
 .skin-card { background: var(--surface); border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 11px 14px; }
-.skin-card .skin-k { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #B4B2A9; margin-bottom: 5px; }
+.skin-card .skin-k { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #B4B2A9; margin-bottom: 5px; text-align: center; }
 .skin-card .skin-steps { font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; }
 .skin-card .skin-list { display: flex; flex-direction: column; gap: 3px; }
-.skin-card .skin-step { font-size: 12.5px; color: var(--text-secondary); line-height: 1.45; padding-left: 12px; position: relative; }
-.skin-card .skin-step::before { content: '·'; position: absolute; left: 2px; color: var(--text-tertiary); }
+.skin-card .skin-step { font-size: 12.5px; color: var(--text-secondary); line-height: 1.45; text-align: center; }
+
 .skin-card .skin-link { cursor: pointer; text-decoration: underline; text-decoration-color: rgba(110,109,103,0.35); text-underline-offset: 2px; }
 .skin-card .skin-link:active { color: var(--text-primary); }
 .tag { display: inline-block; background: #EEF1F6; color: #556274; font-size: 10px; font-weight: 600; padding: 4px 9px; border-radius: 6px; letter-spacing: 0.03em; text-transform: uppercase; }
@@ -255,12 +256,20 @@ body { padding: 12px; padding-bottom: 40px; }
         </div>
       </div>
       <div class="side-rail">
-        <div class="column-label">Hygiene</div>
-        <div class="skin-section" id="skin-strip"></div>
-        <div class="rail-reminders" id="rail-reminders"></div>
-        <button class="rail-add" data-add="reminder">+</button>
-        <div class="snags-section" id="snags-dock"></div>
-        <button class="rail-add" data-add="snag">+</button>
+        <div class="rail-col">
+          <div class="column-label">Hygiene</div>
+          <div class="skin-section" id="skin-strip"></div>
+        </div>
+        <div class="rail-col">
+          <div class="column-label">Reminders</div>
+          <div class="rail-reminders" id="rail-reminders"></div>
+          <button class="rail-add" data-add="reminder">+</button>
+        </div>
+        <div class="rail-col">
+          <div class="column-label">Snags</div>
+          <div class="snags-section" id="snags-dock"></div>
+          <button class="rail-add" data-add="snag">+</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1152,7 +1161,7 @@ function renderReminders() {
         const nm = String(r.name).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         return `<div class="${cls}" data-redit="${r.id}"><span class="rr-name">${nm}</span><span class="rr-count">${cd}</span></div>`;
       }).join('');
-      rail.innerHTML = `<div class="rail-head">Reminders</div>${rows}`;
+      rail.innerHTML = rows;
       rail.querySelectorAll('[data-redit]').forEach(row => {
         row.onclick = (e) => {
           e.stopPropagation();
@@ -1308,7 +1317,7 @@ function renderImpulses() {
         const t = String(i.text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         return `<div class="snag-row"><span class="snag-box" data-toggle="${i.id}"></span><span class="snag-name" data-edit="${i.id}">${t}</span></div>`;
       }).join('');
-      dock.innerHTML = `<div class="snags-head">Snags</div><div class="snags-grid">${cards}</div>`;
+      dock.innerHTML = `<div class="snags-grid">${cards}</div>`;
       dock.querySelectorAll('[data-toggle]').forEach(box => {
         box.onclick = (e) => { e.stopPropagation(); toggleImpulse(box.dataset.toggle); };
       });
