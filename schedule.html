@@ -1026,8 +1026,6 @@ function render() {
   const allMarkers = [];
 
   const timelineMarkers = [];
-  // All Devices Off fixed at 20:30
-  timelineMarkers.push({ time: 20.5, cls: 'marker', labelCls: 'marker-label', label: `All Devices Off · ${formatTime(20.5)}` });
 
   // Timed reminders due on the viewed day
   const viewedDayReminders = loadReminders().filter(r => r.date === key && r.time);
