@@ -721,7 +721,7 @@ function renderOneThing() {
   if (ed) ed.onclick = (e) => {
     e.stopPropagation();
     const cur = loadOneThing();
-    const v = prompt('Your ONE thing for today:', (cur && !cur.done) ? cur.text : '');
+    const v = prompt('What\'s the one thing such that by doing makes everything else easier or unnecessary?', (cur && !cur.done) ? cur.text : '');
     if (v === null) return;
     const txt = v.trim();
     if (txt === '') { saveOneThing({ text: '', done: true }); }
