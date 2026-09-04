@@ -123,6 +123,14 @@ body { padding: 12px; padding-bottom: 40px; }
 .now-banner-wrap:not(:empty) { margin-top: 6px; }
 .now-banner { display: inline-block; background: #1E293B; color: #FFFFFF; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer; user-select: none; -webkit-user-select: none; }
 .now-banner-time { font-size: 10px; opacity: 0.85; margin-left: 8px; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; font-weight: 500; }
+    .onething-wrap { display: flex; justify-content: center; margin-top: 10px; }
+    .onething { display: inline-flex; align-items: center; gap: 8px; max-width: 560px; background: #C0392B; color: #FFFFFF; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer; user-select: none; -webkit-user-select: none; }
+    .onething:active { opacity: 0.9; }
+    .onething .ot-k { flex-shrink: 0; opacity: 0.75; }
+    .onething .ot-text { font-weight: 700; }
+    .onething.empty .ot-text { opacity: 0.85; }
+    .onething .ot-check { width: 13px; height: 13px; border-radius: 3px; border: 1.5px solid rgba(255,255,255,0.7); flex-shrink: 0; cursor: pointer; }
+    .onething .ot-check:active { background: rgba(255,255,255,0.2); }
     /* Snags — full-width section under the schedule */
     .snags-section { margin: 0; }
     .snags-section .snags-head { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #B4B2A9; text-align: center; padding: 4px 0 10px; }
@@ -261,6 +269,7 @@ body { padding: 12px; padding-bottom: 40px; }
     </div>
   </div>
   <div class="now-banner-wrap" id="now-banner-wrap"></div>
+  <div class="onething-wrap" id="onething-wrap"></div>
   <div class="reminder-wrap" id="reminder-wrap"></div>
   <div class="timeline-wrap">
     <div class="board-row">
@@ -408,6 +417,13 @@ function fbSetExDone(map) {
 function fbSetImpulses(arr) {
   showSync('syncing', 'Syncing…');
   set(ref(db, 'impulses'), arr)
+    .then(() => showSync('synced', 'Synced'))
+    .catch(() => showSync('error', 'Sync failed'));
+}
+
+function fbSetOneThing(obj) {
+  showSync('syncing', 'Syncing…');
+  set(ref(db, 'onething'), obj)
     .then(() => showSync('synced', 'Synced'))
     .catch(() => showSync('error', 'Sync failed'));
 }
@@ -681,6 +697,37 @@ onValue(ref(db, 'impulses'), snap => {
   normalizeImpulses();
   renderImpulses();
 });
+
+onValue(ref(db, 'onething'), snap => {
+  fbCache.onething = snap.val() || null;
+  renderOneThing();
+});
+function loadOneThing() { return fbCache.onething || null; }
+function saveOneThing(obj) { fbCache.onething = obj; fbSetOneThing(obj); renderOneThing(); }
+function renderOneThing() {
+  const wrap = document.getElementById('onething-wrap');
+  if (!wrap) return;
+  const ot = loadOneThing();
+  const active = ot && ot.text && !ot.done;
+  if (active) {
+    const t = String(ot.text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    wrap.innerHTML = `<div class="onething"><span class="ot-check" data-otdone="1"></span><span class="ot-k">One Thing</span><span class="ot-text" data-otedit="1">${t}</span></div>`;
+  } else {
+    wrap.innerHTML = `<div class="onething empty"><span class="ot-text" data-otedit="1">One Thing</span></div>`;
+  }
+  const chk = wrap.querySelector('[data-otdone]');
+  if (chk) chk.onclick = (e) => { e.stopPropagation(); saveOneThing({ text: '', done: true }); };
+  const ed = wrap.querySelector('[data-otedit]');
+  if (ed) ed.onclick = (e) => {
+    e.stopPropagation();
+    const cur = loadOneThing();
+    const v = prompt('Your ONE thing for today:', (cur && !cur.done) ? cur.text : '');
+    if (v === null) return;
+    const txt = v.trim();
+    if (txt === '') { saveOneThing({ text: '', done: true }); }
+    else { saveOneThing({ text: txt, done: false }); }
+  };
+}
 
 // Start listening for today
 listenToDay(dayKey(new Date()));
