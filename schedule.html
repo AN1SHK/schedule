@@ -796,7 +796,7 @@ function renderHabits() {
     const isT = dayKey(d) === todayK;
     html += `<th class="${isT ? 'h-today' : ''}">${DOW[d.getDay()]}<br>${d.getDate()}</th>`;
   });
-  html += '<th>Cur</th><th>Max</th><th>Tot</th></tr></thead><tbody>';
+  html += '<th>Streak</th></tr></thead><tbody>';
   habits.forEach(hb => {
     const marks = hb.marks || {};
     const st = habitStreaks(marks);
@@ -808,7 +808,7 @@ function renderHabits() {
       const isT = dk === todayK;
       html += `<td><div class="h-cell${done ? ' done' : ''}${isT ? ' today' : ''}" data-hid="${hb.id}" data-hdk="${dk}"></div></td>`;
     });
-    html += `<td class="h-streak cur">${st.cur}</td><td class="h-streak">${st.longest}</td><td class="h-streak">${st.total}</td></tr>`;
+    html += `<td class="h-streak cur">${st.cur}</td></tr>`;
   });
   html += '</tbody></table><button class="habit-add" id="habit-add">+</button>';
   wrap.innerHTML = html;
