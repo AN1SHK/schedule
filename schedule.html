@@ -143,6 +143,22 @@ body { padding: 12px; padding-bottom: 40px; }
     .ot-cancel:active { background: rgba(0,0,0,0.04); }
     .ot-save { background: #C0392B; color: #FFFFFF; border: none; }
     .ot-save:active { opacity: 0.9; }
+    .habits-wrap { max-width: 720px; margin: 26px auto 0; }
+    .habits-head { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #B4B2A9; text-align: center; padding-bottom: 12px; }
+    .habits-table { width: 100%; border-collapse: collapse; }
+    .habits-table th { font-size: 8.5px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.04em; padding: 2px; text-align: center; font-variant-numeric: tabular-nums; }
+    .habits-table th.h-name { text-align: left; width: 120px; }
+    .habits-table th.h-today { color: var(--text-primary); }
+    .habits-table td { padding: 0; }
+    .habits-table td.h-name { font-size: 12px; color: var(--text-primary); padding: 0 8px 0 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; cursor: pointer; }
+    .h-cell { width: 22px; height: 22px; border: 0.5px solid var(--bg); border-radius: 3px; background: rgba(0,0,0,0.04); cursor: pointer; }
+    .h-cell.done { background: #4CAF50; }
+    .h-cell.today { outline: 1.5px solid rgba(0,0,0,0.25); outline-offset: -1px; }
+    .h-streak { font-size: 11px; color: var(--text-secondary); text-align: center; font-variant-numeric: tabular-nums; width: 30px; }
+    .h-streak.cur { font-weight: 700; color: var(--text-primary); }
+    .habit-add { display: block; margin: 12px auto 0; background: none; border: none; font-size: 15px; color: var(--text-tertiary); opacity: 0.5; cursor: pointer; font-family: inherit; }
+    .habit-add:hover { opacity: 1; }
+    @media (max-width: 760px) { .habits-table th.h-name, .habits-table td.h-name { width: 84px; max-width: 84px; font-size: 11px; } .h-cell { width: 18px; height: 18px; } }
     /* Snags — full-width section under the schedule */
     .snags-section { margin: 0; }
     .snags-section .snags-head { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #B4B2A9; text-align: center; padding: 4px 0 10px; }
@@ -302,8 +318,6 @@ body { padding: 12px; padding-bottom: 40px; }
       </div>
       <div class="side-rail">
         <div class="rail-col">
-          <div class="column-label">Hygiene</div>
-          <div class="skin-section" id="skin-strip"></div>
         </div>
         <div class="rail-col">
           <div class="column-label">Reminders</div>
@@ -318,6 +332,7 @@ body { padding: 12px; padding-bottom: 40px; }
       </div>
     </div>
   </div>
+  <div class="habits-wrap" id="habits-wrap"></div>
 </div>
 <div class="reminders-overlay" id="reminders-overlay">
   <div class="reminders-header">
@@ -446,6 +461,13 @@ function fbSetImpulses(arr) {
 function fbSetOneThing(obj) {
   showSync('syncing', 'Syncing…');
   set(ref(db, 'onething'), obj)
+    .then(() => showSync('synced', 'Synced'))
+    .catch(() => showSync('error', 'Sync failed'));
+}
+
+function fbSetHabits(arr) {
+  showSync('syncing', 'Syncing…');
+  set(ref(db, 'habits'), arr)
     .then(() => showSync('synced', 'Synced'))
     .catch(() => showSync('error', 'Sync failed'));
 }
@@ -724,6 +746,94 @@ onValue(ref(db, 'onething'), snap => {
   fbCache.onething = snap.val() || null;
   renderOneThing();
 });
+
+onValue(ref(db, 'habits'), snap => {
+  fbCache.habits = snap.val() || [];
+  renderHabits();
+});
+function loadHabits() { return Array.isArray(fbCache.habits) ? fbCache.habits : []; }
+function saveHabits(arr) { fbCache.habits = arr; fbSetHabits(arr); renderHabits(); }
+function habitStreaks(marks) {
+  marks = marks || {};
+  const keys = Object.keys(marks).filter(k => marks[k]).sort();
+  const total = keys.length;
+  // longest run of consecutive days
+  let longest = 0, run = 0, prev = null;
+  keys.forEach(k => {
+    const d = new Date(k + 'T00:00:00');
+    if (prev && (d - prev) === 86400000) run++; else run = 1;
+    if (run > longest) longest = run;
+    prev = d;
+  });
+  // current streak counting back from today (or yesterday if today unmarked)
+  let cur = 0;
+  let day = new Date(); day.setHours(0,0,0,0);
+  if (!marks[dayKey(day)]) day.setDate(day.getDate() - 1);
+  while (marks[dayKey(day)]) { cur++; day.setDate(day.getDate() - 1); }
+  return { cur, longest, total };
+}
+function toggleHabitMark(id, dk) {
+  const arr = loadHabits().map(hb => {
+    if (hb.id !== id) return hb;
+    const marks = Object.assign({}, hb.marks || {});
+    if (marks[dk]) delete marks[dk]; else marks[dk] = true;
+    return Object.assign({}, hb, { marks });
+  });
+  saveHabits(arr);
+}
+function renderHabits() {
+  const wrap = document.getElementById('habits-wrap');
+  if (!wrap) return;
+  const habits = loadHabits();
+  const NDAYS = 10;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const days = [];
+  for (let i = NDAYS - 1; i >= 0; i--) { const d = new Date(today); d.setDate(d.getDate() - i); days.push(d); }
+  const todayK = dayKey(today);
+  const DOW = ['S','M','T','W','T','F','S'];
+  let html = '<div class="habits-head">Habits</div><table class="habits-table"><thead><tr><th class="h-name">Habit</th>';
+  days.forEach(d => {
+    const isT = dayKey(d) === todayK;
+    html += `<th class="${isT ? 'h-today' : ''}">${DOW[d.getDay()]}<br>${d.getDate()}</th>`;
+  });
+  html += '<th>Cur</th><th>Max</th><th>Tot</th></tr></thead><tbody>';
+  habits.forEach(hb => {
+    const marks = hb.marks || {};
+    const st = habitStreaks(marks);
+    const nm = String(hb.name).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    html += `<tr><td class="h-name" data-hedit="${hb.id}">${nm}</td>`;
+    days.forEach(d => {
+      const dk = dayKey(d);
+      const done = !!marks[dk];
+      const isT = dk === todayK;
+      html += `<td><div class="h-cell${done ? ' done' : ''}${isT ? ' today' : ''}" data-hid="${hb.id}" data-hdk="${dk}"></div></td>`;
+    });
+    html += `<td class="h-streak cur">${st.cur}</td><td class="h-streak">${st.longest}</td><td class="h-streak">${st.total}</td></tr>`;
+  });
+  html += '</tbody></table><button class="habit-add" id="habit-add">+</button>';
+  wrap.innerHTML = html;
+  wrap.querySelectorAll('[data-hid]').forEach(c => {
+    c.onclick = (e) => { e.stopPropagation(); toggleHabitMark(c.dataset.hid, c.dataset.hdk); };
+  });
+  wrap.querySelectorAll('[data-hedit]').forEach(n => {
+    n.onclick = (e) => {
+      e.stopPropagation();
+      const hb = loadHabits().find(x => x.id === n.dataset.hedit);
+      if (!hb) return;
+      const v = prompt('Rename habit (blank to delete):', hb.name);
+      if (v === null) return;
+      if (v.trim() === '') { saveHabits(loadHabits().filter(x => x.id !== n.dataset.hedit)); }
+      else { saveHabits(loadHabits().map(x => x.id === n.dataset.hedit ? Object.assign({}, x, { name: v.trim() }) : x)); }
+    };
+  });
+  const addBtn = document.getElementById('habit-add');
+  if (addBtn) addBtn.onclick = (e) => {
+    e.stopPropagation();
+    const v = prompt('New habit:');
+    if (!v || !v.trim()) return;
+    saveHabits(loadHabits().concat([{ id: String(Date.now()), name: v.trim(), marks: {} }]));
+  };
+}
 function loadOneThing() { return fbCache.onething || null; }
 function saveOneThing(obj) { fbCache.onething = obj; fbSetOneThing(obj); renderOneThing(); }
 function openOtModal() {
@@ -1384,34 +1494,6 @@ function renderImpulses() {
   if (countEl) countEl.textContent = openCount ? `${openCount} open` : '';
   const badgeEl = document.getElementById('impulse-badge');
   if (badgeEl) { badgeEl.textContent = openCount > 9 ? '9+' : openCount; badgeEl.classList.toggle('show', openCount > 0); }
-  // Care dashboard — skincare + today's shampoo/grooming, always visible
-  const skin = document.getElementById('skin-strip');
-  if (skin) {
-    const _sd = dateFromNum(cur);
-    const _dow = _sd.getDay();
-    const DOW_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-    // AM is the same every day — one compact line at top
-    let html = `<div class="skin-card week-card"><div class="week-row"><div class="week-day">QD</div><div class="week-body"><div class="wk-line"><span class="wk-tag">AM</span><span class="wk-val">${SKINCARE_AM.map(s => `<span class="stp">${s}</span>`).join('')}</span></div></div></div></div>`;
-    // Weekly PM plan: one row per day, Mon-first
-    const order = [1,2,3,4,5,6,0];
-    let week = '<div class="skin-card week-card">';
-    order.forEach(dw => {
-      const dObj = new Date(2026,0,4 + dw);
-      const pm = getSkincarePM(dObj);
-      const sh = getShowerTag(dObj);
-      const groom = (dw === 2 || dw === 5);
-      const isToday = dw === _dow;
-      let lines = `<div class="wk-line"><span class="wk-tag">PM</span><span class="wk-val">${pm.map(s => `<span class="stp">${s}</span>`).join('')}</span></div>`;
-      if (sh) lines += `<div class="wk-line"><span class="wk-tag">Hair</span><span class="wk-val">${sh} Shampoo</span></div>`;
-      if (groom) lines += `<div class="wk-line"><span class="wk-tag">Groom</span><span class="wk-val">Grooming</span></div>`;
-      week += `<div class="week-row${isToday ? ' week-today' : ''}">` +
-        `<div class="week-day">${DOW_NAMES[dw].slice(0,3)}</div>` +
-        `<div class="week-body">${lines}</div>` +
-        `</div>`;
-    });
-    week += '</div>';
-    skin.innerHTML = html + week;
-  }
   // Snags — full-width checkable section under the schedule
   const dock = document.getElementById('snags-dock');
   if (dock) {
