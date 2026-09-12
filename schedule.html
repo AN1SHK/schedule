@@ -23,8 +23,8 @@
 html, body { background: var(--bg); color: var(--text-primary); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; -webkit-font-smoothing: antialiased; }
 body { padding: 12px; padding-bottom: 40px; }
 
-.sched { padding: 0.25rem 0; max-width: 920px; margin: 0 auto; }
-.columns { display: grid; grid-template-columns: 1fr; gap: 14px; flex: 1.3; min-width: 0; }
+.sched { padding: 0.25rem 0; max-width: 860px; margin: 0 auto; }
+.columns { display: grid; grid-template-columns: 1fr; gap: 10px; flex: 1; min-width: 0; }
 .board-row { display: flex; flex-direction: row; gap: 22px; align-items: flex-start; justify-content: center; }
 .side-rail { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
 .rail-col { display: flex; flex-direction: column; gap: 8px; }
@@ -956,9 +956,8 @@ function computeBlockHeight(b) {
   // (always-visible) pills legible for very short blocks.
   const tagRows = (b.tags && b.tags.length) ? (b.tags.length <= 3 ? 1 : 2) : 0;
   const contentMin = 54 + (tagRows ? 8 + tagRows * 26 : 0);
-  let height = Math.max(naturalHeight, contentMin);
-  if (b.capHeight) height = Math.min(height, 80);
-  else height = Math.min(height, 130); // keep long blocks (Rest) from towering
+  // Compact: size to content, not duration — no hollow tall blocks.
+  let height = contentMin;
   return height;
 }
 function columnNaturalHeight(blocks) {
