@@ -127,7 +127,7 @@ body { padding: 12px; padding-bottom: 40px; }
     .onething { display: inline-flex; align-items: center; gap: 8px; max-width: 560px; background: #C0392B; color: #FFFFFF; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer; user-select: none; -webkit-user-select: none; }
     .onething:active { opacity: 0.9; }
     .onething.ot-collapsed { font-size: 13px; padding: 4px 9px; letter-spacing: 0; }
-    .onething .ot-k { flex-shrink: 0; opacity: 0.75; }
+    .onething .ot-k { flex-shrink: 0; opacity: 0.75; cursor: pointer; }
     .onething .ot-text { font-weight: 700; }
     .onething.empty .ot-text { opacity: 0.85; }
     .onething .ot-check { width: 13px; height: 13px; border-radius: 3px; border: 1.5px solid rgba(255,255,255,0.7); flex-shrink: 0; cursor: pointer; }
@@ -321,12 +321,10 @@ body { padding: 12px; padding-bottom: 40px; }
         <div class="rail-col">
         </div>
         <div class="rail-col">
-          <div class="column-label">Reminders</div>
           <div class="rail-reminders" id="rail-reminders"></div>
           <button class="rail-add" data-add="reminder">+</button>
         </div>
         <div class="rail-col">
-          <div class="column-label">Snags</div>
           <div class="snags-section" id="snags-dock"></div>
           <button class="rail-add" data-add="snag">+</button>
         </div>
@@ -878,14 +876,17 @@ function renderOneThing() {
   }
   if (active) {
     const t = String(ot.text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    wrap.innerHTML = `<div class="onething"><span class="ot-check" data-otdone="1"></span><span class="ot-k">One Thing</span><span class="ot-text" data-otedit="1">${t}</span></div>`;
+    wrap.innerHTML = `<div class="onething"><span class="ot-check" data-otdone="1"></span><span class="ot-k" data-otcollapse="1">One Thing</span><span class="ot-text" data-otedit="1">${t}</span></div>`;
   } else {
-    wrap.innerHTML = `<div class="onething empty"><span class="ot-text" data-otedit="1">One Thing</span></div>`;
+    wrap.innerHTML = `<div class="onething empty" data-otcollapse="1"><span class="ot-text" data-otedit="1">One Thing</span></div>`;
   }
   const chk = wrap.querySelector('[data-otdone]');
   if (chk) chk.onclick = (e) => { e.stopPropagation(); saveOneThing({ text: '', done: true }); };
   const ed = wrap.querySelector('[data-otedit]');
   if (ed) ed.onclick = (e) => { e.stopPropagation(); openOtModal(); };
+  wrap.querySelectorAll('[data-otcollapse]').forEach(el => {
+    el.onclick = (e) => { e.stopPropagation(); otExpanded = false; renderOneThing(); };
+  });
 }
 
 // Start listening for today
