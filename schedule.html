@@ -126,6 +126,7 @@ body { padding: 12px; padding-bottom: 40px; }
     .onething-wrap { display: flex; justify-content: center; margin-top: 10px; }
     .onething { display: inline-flex; align-items: center; gap: 8px; max-width: 560px; background: #C0392B; color: #FFFFFF; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer; user-select: none; -webkit-user-select: none; }
     .onething:active { opacity: 0.9; }
+    .onething.ot-collapsed { font-size: 13px; padding: 4px 9px; letter-spacing: 0; }
     .onething .ot-k { flex-shrink: 0; opacity: 0.75; }
     .onething .ot-text { font-weight: 700; }
     .onething.empty .ot-text { opacity: 0.85; }
@@ -863,11 +864,18 @@ function commitOtModal() {
     if (e.key === 'Escape') closeOtModal();
   };
 })();
+let otExpanded = false;
 function renderOneThing() {
   const wrap = document.getElementById('onething-wrap');
   if (!wrap) return;
   const ot = loadOneThing();
   const active = ot && ot.text && !ot.done;
+  if (!otExpanded) {
+    // collapsed: a tiny icon pill; tap to expand
+    wrap.innerHTML = `<div class="onething ot-collapsed" id="ot-collapsed" title="One Thing">\u25CE</div>`;
+    document.getElementById('ot-collapsed').onclick = (e) => { e.stopPropagation(); otExpanded = true; renderOneThing(); };
+    return;
+  }
   if (active) {
     const t = String(ot.text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     wrap.innerHTML = `<div class="onething"><span class="ot-check" data-otdone="1"></span><span class="ot-k">One Thing</span><span class="ot-text" data-otedit="1">${t}</span></div>`;
@@ -1181,29 +1189,7 @@ function render() {
   const mm = showNow ? String(today.getMinutes()).padStart(2,'0') : '';
 
   const nowBanner = document.getElementById('now-banner-wrap');
-  if (showNow) {
-    const cur_block = enriched.find(b => {
-      const s = b.dispStartT !== undefined ? b.dispStartT : b.startT;
-      const e = b.dispEndT !== undefined ? b.dispEndT : b.endT;
-      return nowTime >= s && nowTime < e;
-    });
-    if (cur_block) {
-      const s = cur_block.dispStartT !== undefined ? cur_block.dispStartT : cur_block.startT;
-      const e = cur_block.dispEndT !== undefined ? cur_block.dispEndT : cur_block.endT;
-      const isScrubbing = nowScrub !== null;
-      const segRemaining = (e - nowTime) * 60;
-      const remH = Math.floor(segRemaining / 60);
-      const remM = Math.round(segRemaining % 60);
-      const remStr = remH > 0 ? `${remH}h ${remM}m left` : `${remM} min left`;
-      currentBlockLabel = cur_block.label;
-      nowBanner.innerHTML = `<div class="now-banner" id="now-banner-pill" style="${isScrubbing ? 'opacity:0.75;' : ''}">${isScrubbing ? '⟳ ' : ''}Now: ${cur_block.label}<span class="now-banner-time">${isScrubbing ? 'tap to reset' : remStr}</span></div>`;
-      document.getElementById('now-banner-pill').onclick = () => { nowScrub = null; cur = dayNum(new Date()); render(); };
-    } else {
-      nowBanner.innerHTML = '';
-    }
-  } else {
-    nowBanner.innerHTML = '';
-  }
+  if (nowBanner) nowBanner.innerHTML = '';
 
   // Fixed clock-time markers + reminders + the now-line, each placed in the column whose
   // (packed) displayed range contains its time — so they track the re-packed day.
