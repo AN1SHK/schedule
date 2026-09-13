@@ -746,8 +746,18 @@ onValue(ref(db, 'onething'), snap => {
   renderOneThing();
 });
 
+let _habitsSeeded = false;
 onValue(ref(db, 'habits'), snap => {
-  fbCache.habits = snap.val() || [];
+  const v = snap.val();
+  fbCache.habits = Array.isArray(v) ? v : [];
+  // Seed default habits once if none exist yet
+  if (!_habitsSeeded && v == null) {
+    _habitsSeeded = true;
+    const defaults = ['Meditate', 'Gratitude', 'Exercise'].map((n, i) => ({ id: String(Date.now() + i), name: n, marks: {} }));
+    saveHabits(defaults);
+    return;
+  }
+  _habitsSeeded = true;
   renderHabits();
 });
 function loadHabits() { return Array.isArray(fbCache.habits) ? fbCache.habits : []; }
