@@ -145,20 +145,20 @@ body { padding: 12px; padding-bottom: 40px; }
     .ot-save { background: #C0392B; color: #FFFFFF; border: none; }
     .ot-save:active { opacity: 0.9; }
     .habits-wrap { max-width: 620px; margin: 30px auto 0; }
-    .habits-head { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #B4B2A9; text-align: center; padding-bottom: 12px; }
+    .habits-head { font-size: 10px; font-weight: 700; color: #B4B2A9; text-transform: uppercase; letter-spacing: 0.08em; text-align: center; padding-bottom: 14px; }
     .habits-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-    .habits-table th { font-size: 8.5px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 0; text-align: center; font-variant-numeric: tabular-nums; }
-    .habits-table th.h-name { text-align: left; width: 96px; }
+    .habits-table th { font-size: 9px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 0 8px; text-align: center; font-variant-numeric: tabular-nums; line-height: 1.35; }
+    .habits-table th.h-name { text-align: left; width: 96px; letter-spacing: 0.08em; }
     .habits-table th.h-today { color: var(--text-primary); }
     .habits-table td { padding: 3px 0; text-align: center; }
-    .habits-table td.h-name { font-size: 12px; color: var(--text-primary); padding: 0 8px 0 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; cursor: pointer; }
-    .h-cell { width: 22px; height: 22px; margin: 0 auto; border: 0.5px solid var(--border-strong); border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; color: #1A1A1A; line-height: 1; }
-    .h-cell.done { background: rgba(0,0,0,0.04); }
+    .habits-table td.h-name { font-size: 12.5px; font-weight: 500; color: var(--text-primary); padding: 0 10px 0 2px; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 96px; cursor: pointer; }
+    .h-cell { width: 22px; height: 22px; margin: 0 auto; border: 0.5px solid var(--border-strong); border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--text-primary); line-height: 1; }
+    .h-cell.done { background: transparent; }
     .h-cell.done::after { content: '\2713'; font-weight: 700; }
-    .h-cell.today { border-color: #1A1A1A; border-width: 1px; }
-    .h-streak { font-size: 11px; color: var(--text-secondary); text-align: center; font-variant-numeric: tabular-nums; width: 44px; }
+    .h-cell.today { border-color: var(--text-primary); }
+    .h-streak { font-size: 12px; color: var(--text-secondary); text-align: center; font-variant-numeric: tabular-nums; width: 44px; }
     .h-streak.cur { font-weight: 700; color: var(--text-primary); }
-    .habit-add { display: block; margin: 12px auto 0; background: none; border: none; font-size: 15px; color: var(--text-tertiary); opacity: 0.5; cursor: pointer; font-family: inherit; }
+    .habit-add { display: block; margin: 14px auto 0; background: none; border: none; font-size: 15px; line-height: 1; color: var(--text-tertiary); opacity: 0.5; cursor: pointer; font-family: inherit; }
     .habit-add:hover { opacity: 1; }
     @media (max-width: 760px) { .habits-table th.h-name, .habits-table td.h-name { width: 84px; max-width: 84px; font-size: 11px; } .h-cell { width: 18px; height: 18px; } }
     /* Snags — full-width section under the schedule */
