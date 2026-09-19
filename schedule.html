@@ -123,13 +123,13 @@ body { padding: 12px; padding-bottom: 40px; }
 .now-banner-wrap:not(:empty) { margin-top: 6px; }
 .now-banner { display: inline-block; background: #1E293B; color: #FFFFFF; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer; user-select: none; -webkit-user-select: none; }
 .now-banner-time { font-size: 10px; opacity: 0.85; margin-left: 8px; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; font-weight: 500; }
-    .habits-wrap { max-width: 620px; margin: 8px auto 0; }
+    .habits-wrap { flex: 0 0 340px; width: 340px; margin: 0; align-self: flex-start; }
     .collapse-toggle { cursor: pointer; user-select: none; -webkit-user-select: none; }
     .collapse-caret { display: inline-block; font-weight: 700; transition: transform 0.15s; opacity: 0.6; }
     .collapse-toggle.open .collapse-caret { transform: rotate(90deg); }
     .collapsed { display: none !important; }
     .habits-head { font-size: 10px; font-weight: 700; color: #B4B2A9; text-transform: uppercase; letter-spacing: 0.08em; text-align: center; padding-bottom: 14px; }
-    .habits-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-family: inherit; }
+    .habits-table { width: 100%; border-collapse: collapse; font-family: inherit; }
     .habits-table th, .habits-table td, .habits-table .h-cell, .habits-table .h-streak { font-family: inherit; }
     .habits-table th { font-size: 9px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 0 8px; text-align: center; font-variant-numeric: tabular-nums; line-height: 1.35; }
     .habits-table th.h-name { text-align: center; width: 110px; letter-spacing: 0.08em; }
@@ -143,6 +143,9 @@ body { padding: 12px; padding-bottom: 40px; }
     .h-streak { font-size: 12px; color: var(--text-secondary); text-align: center; font-variant-numeric: tabular-nums; width: 44px; }
     .h-streak.cur { font-weight: 700; color: var(--text-primary); }
     .habits-table tr[draggable] { cursor: grab; }
+    .h-del { display: none; margin-left: 6px; color: var(--text-tertiary); font-weight: 400; cursor: pointer; }
+    .habits-table tr:hover .h-del { display: inline; }
+    .h-del:hover { color: #C0392B; }
     .habits-table tr.h-dragging { opacity: 0.4; }
     .habits-table tr.h-dragover td { box-shadow: inset 0 2px 0 var(--text-primary); }
     .habit-add { display: block; margin: 16px auto 0; background: none; border: 0.5px dashed var(--border-strong); border-radius: 6px; padding: 6px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); cursor: pointer; font-family: inherit; }
@@ -290,6 +293,7 @@ body { padding: 12px; padding-bottom: 40px; }
   <div class="reminder-wrap" id="reminder-wrap"></div>
   <div class="timeline-wrap">
     <div class="board-row">
+      <div class="habits-wrap" id="habits-wrap"></div>
       <div class="columns">
         <div>
           <div class="timeline" id="timeline-all"></div>
@@ -317,7 +321,6 @@ body { padding: 12px; padding-bottom: 40px; }
       </div>
     </div>
   </div>
-  <div class="habits-wrap" id="habits-wrap"></div>
 </div>
 <div class="reminders-overlay" id="reminders-overlay">
   <div class="reminders-header">
@@ -770,7 +773,7 @@ function renderHabits() {
   const wrap = document.getElementById('habits-wrap');
   if (!wrap) return;
   const habits = loadHabits();
-  const NDAYS = 10;
+  const NDAYS = 6;
   const today = new Date(); today.setHours(0,0,0,0);
   const days = [];
   for (let i = NDAYS - 1; i >= 0; i--) { const d = new Date(today); d.setDate(d.getDate() - i); days.push(d); }
@@ -786,7 +789,7 @@ function renderHabits() {
     const marks = hb.marks || {};
     const st = habitStreaks(marks);
     const nm = String(hb.name).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    html += `<tr draggable="true" data-hrow="${hb.id}"><td class="h-name" data-hedit="${hb.id}">${nm}</td>`;
+    html += `<tr draggable="true" data-hrow="${hb.id}"><td class="h-name" data-hedit="${hb.id}">${nm}<span class="h-del" data-hdel="${hb.id}" title="Remove">×</span></td>`;
     days.forEach(d => {
       const dk = dayKey(d);
       const done = !!marks[dk];
@@ -804,13 +807,21 @@ function renderHabits() {
   });
   wrap.querySelectorAll('[data-hedit]').forEach(n => {
     n.onclick = (e) => {
+      if (e.target.classList.contains('h-del')) return; // let delete handler take it
       e.stopPropagation();
       const hb = loadHabits().find(x => x.id === n.dataset.hedit);
       if (!hb) return;
-      const v = prompt('Rename habit (blank to delete):', hb.name);
-      if (v === null) return;
-      if (v.trim() === '') { saveHabits(loadHabits().filter(x => x.id !== n.dataset.hedit)); }
-      else { saveHabits(loadHabits().map(x => x.id === n.dataset.hedit ? Object.assign({}, x, { name: v.trim() }) : x)); }
+      const v = prompt('Rename habit:', hb.name);
+      if (v === null || v.trim() === '') return;
+      saveHabits(loadHabits().map(x => x.id === n.dataset.hedit ? Object.assign({}, x, { name: v.trim() }) : x));
+    };
+  });
+  wrap.querySelectorAll('[data-hdel]').forEach(x => {
+    x.onclick = (e) => {
+      e.stopPropagation();
+      const hb = loadHabits().find(y => y.id === x.dataset.hdel);
+      if (!hb) return;
+      if (confirm(`Remove habit "${hb.name}"?`)) saveHabits(loadHabits().filter(y => y.id !== x.dataset.hdel));
     };
   });
   const addBtn = document.getElementById('habit-add');
