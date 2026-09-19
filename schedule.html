@@ -301,12 +301,18 @@ body { padding: 12px; padding-bottom: 40px; }
           <div class="skin-section collapsed" id="skin-strip"></div>
         </div>
         <div class="rail-col">
-          <div class="rail-reminders" id="rail-reminders"></div>
-          <button class="rail-add" data-add="reminder">+</button>
+          <div class="column-label collapse-toggle" id="reminders-toggle">Reminders <span class="collapse-caret">›</span></div>
+          <div class="rail-body collapsed" id="reminders-body">
+            <div class="rail-reminders" id="rail-reminders"></div>
+            <button class="rail-add" data-add="reminder">+</button>
+          </div>
         </div>
         <div class="rail-col">
-          <div class="snags-section" id="snags-dock"></div>
-          <button class="rail-add" data-add="snag">+</button>
+          <div class="column-label collapse-toggle" id="snags-toggle">Snags <span class="collapse-caret">›</span></div>
+          <div class="rail-body collapsed" id="snags-body">
+            <div class="snags-section" id="snags-dock"></div>
+            <button class="rail-add" data-add="snag">+</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1173,9 +1179,11 @@ function render() {
 
   renderImpulses(); // keep the impulse panel in sync with the viewed day
   renderHygiene();
+  wireCollapse('reminders-toggle', document.getElementById('reminders-body'), () => _remindersOpen, v => _remindersOpen = v);
+  wireCollapse('snags-toggle', document.getElementById('snags-body'), () => _snagsOpen, v => _snagsOpen = v);
 }
 
-let _hygieneOpen = false, _habitsOpen = false;
+let _hygieneOpen = false, _habitsOpen = false, _remindersOpen = false, _snagsOpen = false;
 function wireCollapse(toggleId, bodyEl, isOpenGetter, setOpen) {
   const t = document.getElementById(toggleId);
   if (!t) return;
