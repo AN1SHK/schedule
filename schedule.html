@@ -293,6 +293,8 @@ body { padding: 12px; padding-bottom: 40px; }
       </div>
       <div class="side-rail">
         <div class="rail-col">
+          <div class="column-label">Hygiene</div>
+          <div class="skin-section" id="skin-strip"></div>
         </div>
         <div class="rail-col">
           <div class="rail-reminders" id="rail-reminders"></div>
@@ -478,12 +480,12 @@ const PPL_START = dayNum(new Date(2026, 7, 5)); // Aug 5 = Push
 function getPPL(d) { const n = PPL_CYCLE.length; return PPL_CYCLE[(((dayNum(d) - PPL_START) % n) + n) % n]; }
 const MORNING_CARDIO = ['Run - 30 Minutes', 'Skip - 30 Minutes'];
 function getMorningCardio(d) { return MORNING_CARDIO[(((dayNum(d) - PPL_START) % 2) + 2) % 2]; }
-const SKINCARE_AM = ['Cleanser', 'Moisturizer', 'LRP 70'];
+const SKINCARE_AM = ['Dental Hygiene', 'Wash Hands with Soap', 'Cleanser', 'Moisturizer', 'LRP 70'];
 function getSkincarePM(d) {
   const dow = d.getDay(); // 0=Sun..6=Sat
-  if (dow === 1 || dow === 4) return ['Cleanser', 'BHA', 'Moisturizer'];           // Mon, Thu
-  if (dow === 2 || dow === 5) return ['Cleanser', 'Moisturizer', 'Retin-A', 'Moisturizer']; // Tue, Fri
-  return ['Cleanser', 'Moisturizer'];                                              // Wed, Sat, Sun
+  if (dow === 1 || dow === 4) return ['Dental Hygiene', 'Wash Hands with Soap', 'Cleanser', 'BHA', 'Moisturizer', 'Minoxidil'];           // Mon, Thu
+  if (dow === 2 || dow === 5) return ['Dental Hygiene', 'Wash Hands with Soap', 'Cleanser', 'Moisturizer', 'Wait 20 Mins (Dry)', 'Retin-A', 'Moisturizer', 'Minoxidil']; // Tue, Fri
+  return ['Dental Hygiene', 'Wash Hands with Soap', 'Cleanser', 'Moisturizer', 'Minoxidil'];                                              // Wed, Sat, Sun
 }
 const EX_CYCLE = ['Push', 'Mobility', 'Pull', 'Basketball', 'Legs', 'Mobility', 'Push', 'Basketball', 'Pull', 'Mobility', 'Legs', 'Basketball'];
 // Early exercise (right after MR) rotates on a 3-day cycle from Fri July 17 2026
@@ -1164,6 +1166,33 @@ function render() {
   });
 
   renderImpulses(); // keep the impulse panel in sync with the viewed day
+  renderHygiene();
+}
+
+function renderHygiene() {
+  const skin = document.getElementById('skin-strip');
+  if (!skin) return;
+  const _sd = dateFromNum(cur);
+  const _dow = _sd.getDay();
+  const DOW_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  // AM: same every day — QD row
+  let html = `<div class="skin-card week-card"><div class="week-row"><div class="week-day">QD</div><div class="week-body"><div class="wk-line"><span class="wk-tag">AM</span><span class="wk-val">${SKINCARE_AM.map(s => `<span class="stp">${s}</span>`).join('')}</span></div></div></div></div>`;
+  // Weekly PM plan: Mon-first
+  const order = [1,2,3,4,5,6,0];
+  let week = '<div class="skin-card week-card">';
+  order.forEach(dw => {
+    const dObj = new Date(2026,0,4 + dw);
+    const pm = getSkincarePM(dObj);
+    const sh = getShowerTag(dObj);
+    const groom = (dw === 2 || dw === 5);
+    const isToday = dw === _dow;
+    let lines = `<div class="wk-line"><span class="wk-tag">PM</span><span class="wk-val">${pm.map(s => `<span class="stp">${s}</span>`).join('')}</span></div>`;
+    if (sh) lines += `<div class="wk-line"><span class="wk-tag">Hair</span><span class="wk-val">${sh} Shampoo</span></div>`;
+    if (groom) lines += `<div class="wk-line"><span class="wk-tag">Groom</span><span class="wk-val">Grooming</span></div>`;
+    week += `<div class="week-row${isToday ? ' week-today' : ''}"><div class="week-day">${DOW_NAMES[dw].slice(0,3)}</div><div class="week-body">${lines}</div></div>`;
+  });
+  week += '</div>';
+  skin.innerHTML = html + week;
 }
 
 setInterval(render, 10000);
