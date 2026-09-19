@@ -127,7 +127,7 @@ body { padding: 12px; padding-bottom: 40px; }
     .collapse-toggle { cursor: pointer; user-select: none; -webkit-user-select: none; }
     .collapse-caret { display: inline-block; font-weight: 700; transition: transform 0.15s; opacity: 0.6; }
     .collapse-toggle.open .collapse-caret { transform: rotate(90deg); }
-    .collapsed { display: none; }
+    .collapsed { display: none !important; }
     .habits-head { font-size: 10px; font-weight: 700; color: #B4B2A9; text-transform: uppercase; letter-spacing: 0.08em; text-align: center; padding-bottom: 14px; }
     .habits-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-family: inherit; }
     .habits-table th, .habits-table td, .habits-table .h-cell, .habits-table .h-streak { font-family: inherit; }
@@ -297,7 +297,7 @@ body { padding: 12px; padding-bottom: 40px; }
       </div>
       <div class="side-rail">
         <div class="rail-col">
-          <div class="column-label collapse-toggle" id="hygiene-toggle">Hygiene <span class="collapse-caret">\u203A</span></div>
+          <div class="column-label collapse-toggle" id="hygiene-toggle">Hygiene <span class="collapse-caret">›</span></div>
           <div class="skin-section collapsed" id="skin-strip"></div>
         </div>
         <div class="rail-col">
@@ -770,7 +770,7 @@ function renderHabits() {
   for (let i = NDAYS - 1; i >= 0; i--) { const d = new Date(today); d.setDate(d.getDate() - i); days.push(d); }
   const todayK = dayKey(today);
   const DOW = ['S','M','T','W','T','F','S'];
-  let html = '<div class="habits-head collapse-toggle" id="habits-toggle">Habits <span class="collapse-caret">\u203A</span></div><div class="habits-body collapsed" id="habits-body"><table class="habits-table"><thead><tr><th class="h-name">Habit</th>';
+  let html = '<div class="habits-head collapse-toggle" id="habits-toggle">Habits <span class="collapse-caret">›</span></div><div class="habits-body collapsed" id="habits-body"><table class="habits-table"><thead><tr><th class="h-name">Habit</th>';
   days.forEach(d => {
     const isT = dayKey(d) === todayK;
     html += `<th class="${isT ? 'h-today' : ''}">${DOW[d.getDay()]}<br>${d.getDate()}</th>`;
