@@ -124,6 +124,10 @@ body { padding: 12px; padding-bottom: 40px; }
 .now-banner { display: inline-block; background: #1E293B; color: #FFFFFF; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer; user-select: none; -webkit-user-select: none; }
 .now-banner-time { font-size: 10px; opacity: 0.85; margin-left: 8px; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; font-weight: 500; }
     .habits-wrap { max-width: 620px; margin: 8px auto 0; }
+    .collapse-toggle { cursor: pointer; user-select: none; -webkit-user-select: none; }
+    .collapse-caret { display: inline-block; font-weight: 700; transition: transform 0.15s; opacity: 0.6; }
+    .collapse-toggle.open .collapse-caret { transform: rotate(90deg); }
+    .collapsed { display: none; }
     .habits-head { font-size: 10px; font-weight: 700; color: #B4B2A9; text-transform: uppercase; letter-spacing: 0.08em; text-align: center; padding-bottom: 14px; }
     .habits-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-family: inherit; }
     .habits-table th, .habits-table td, .habits-table .h-cell, .habits-table .h-streak { font-family: inherit; }
@@ -293,8 +297,8 @@ body { padding: 12px; padding-bottom: 40px; }
       </div>
       <div class="side-rail">
         <div class="rail-col">
-          <div class="column-label">Hygiene</div>
-          <div class="skin-section" id="skin-strip"></div>
+          <div class="column-label collapse-toggle" id="hygiene-toggle">Hygiene <span class="collapse-caret">\u203A</span></div>
+          <div class="skin-section collapsed" id="skin-strip"></div>
         </div>
         <div class="rail-col">
           <div class="rail-reminders" id="rail-reminders"></div>
@@ -766,7 +770,7 @@ function renderHabits() {
   for (let i = NDAYS - 1; i >= 0; i--) { const d = new Date(today); d.setDate(d.getDate() - i); days.push(d); }
   const todayK = dayKey(today);
   const DOW = ['S','M','T','W','T','F','S'];
-  let html = '<div class="habits-head">Habits</div><table class="habits-table"><thead><tr><th class="h-name">Habit</th>';
+  let html = '<div class="habits-head collapse-toggle" id="habits-toggle">Habits <span class="collapse-caret">\u203A</span></div><div class="habits-body collapsed" id="habits-body"><table class="habits-table"><thead><tr><th class="h-name">Habit</th>';
   days.forEach(d => {
     const isT = dayKey(d) === todayK;
     html += `<th class="${isT ? 'h-today' : ''}">${DOW[d.getDay()]}<br>${d.getDate()}</th>`;
@@ -785,8 +789,10 @@ function renderHabits() {
     });
     html += `<td class="h-streak cur">${st.cur}</td></tr>`;
   });
-  html += '</tbody></table><button class="habit-add" id="habit-add">+ Add Habit</button>';
+  html += '</tbody></table><button class="habit-add" id="habit-add">+ Add Habit</button></div>';
   wrap.innerHTML = html;
+  const habBody = document.getElementById('habits-body');
+  if (habBody) wireCollapse('habits-toggle', habBody, () => _habitsOpen, v => _habitsOpen = v);
   wrap.querySelectorAll('[data-hid]').forEach(c => {
     c.onclick = (e) => { e.stopPropagation(); toggleHabitMark(c.dataset.hid, c.dataset.hdk); };
   });
@@ -1169,6 +1175,14 @@ function render() {
   renderHygiene();
 }
 
+let _hygieneOpen = false, _habitsOpen = false;
+function wireCollapse(toggleId, bodyEl, isOpenGetter, setOpen) {
+  const t = document.getElementById(toggleId);
+  if (!t) return;
+  if (isOpenGetter()) { t.classList.add('open'); bodyEl.classList.remove('collapsed'); }
+  else { t.classList.remove('open'); bodyEl.classList.add('collapsed'); }
+  t.onclick = (e) => { e.stopPropagation(); const nv = !isOpenGetter(); setOpen(nv); t.classList.toggle('open', nv); bodyEl.classList.toggle('collapsed', !nv); };
+}
 function renderHygiene() {
   const skin = document.getElementById('skin-strip');
   if (!skin) return;
@@ -1193,6 +1207,7 @@ function renderHygiene() {
   });
   week += '</div>';
   skin.innerHTML = html + week;
+  wireCollapse('hygiene-toggle', skin, () => _hygieneOpen, v => _hygieneOpen = v);
 }
 
 setInterval(render, 10000);
