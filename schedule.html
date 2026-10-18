@@ -28,19 +28,15 @@ body { padding: 12px; padding-bottom: 40px; }
 .board-row { display: flex; flex-direction: row; gap: 22px; align-items: flex-start; justify-content: center; }
 .side-rail { flex: 0 0 300px; width: 300px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
 .rail-col { display: flex; flex-direction: column; gap: 8px; }
+.board-spacer { flex: 0 0 300px; width: 300px; }
 @media (max-width: 1000px) {
   .board-row { flex-direction: column; }
+  .board-spacer { display: none; }
   .columns { flex: 1 1 auto; width: 100%; }
-  .side-rail { flex: 1 1 auto; width: 100%; flex-direction: row; }
-  .side-rail { grid-template-columns: 1fr; }
-  .side-rail .snags-grid, .side-rail .skin-section { flex-direction: row; flex-wrap: wrap; }
-  .side-rail .snags-grid > *, .side-rail .skin-section > * { flex: 1; min-width: 200px; }
+  .side-rail { flex: 1 1 auto; width: 100%; flex-direction: column; }
 }
 @media (max-width: 720px) {
   .columns { flex: 1 1 auto; width: 100%; grid-template-columns: 1fr; gap: 16px; }
-  .side-rail { flex: 1 1 auto; width: 100%; flex-direction: column; }
-  .side-rail .snags-grid, .side-rail .skin-section { flex-direction: column; }
-  .side-rail .snags-grid > *, .side-rail .skin-section > * { min-width: 0; }
   .column-label { padding-top: 8px; }
 }
 .column-label { font-size: 10px; font-weight: 700; color: #B4B2A9; text-transform: uppercase; letter-spacing: 0.08em; text-align: center; padding-bottom: 6px; }
@@ -49,21 +45,6 @@ body { padding: 12px; padding-bottom: 40px; }
 .reminders-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 0.5px solid var(--border-strong); }
 .reminders-overlay { display: none; position: fixed; top: 70px; right: 20px; background: var(--surface); border-radius: 12px; padding: 16px 18px; box-shadow: 0 8px 28px rgba(0,0,0,0.18); z-index: 2000; width: 320px; max-width: calc(100vw - 40px); }
 .reminders-overlay.show { display: block; }
-.impulse-overlay .reminders-list { max-height: 300px; overflow-y: auto; }
-.impulse-capture { display: flex; gap: 6px; margin-top: 10px; }
-.impulse-capture .reminder-input { flex: 1; min-width: 0; }
-.impulse-count { font-size: 10px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
-    #impulse-btn { position: relative; overflow: visible; }
-    .impulse-badge { position: absolute; top: -5px; right: -5px; min-width: 15px; height: 15px; padding: 0 3px; box-sizing: border-box; background: #C0392B; color: #fff; border-radius: 8px; font-size: 9px; font-weight: 700; line-height: 1; display: none; align-items: center; justify-content: center; }
-    .impulse-badge.show { display: flex; }
-.impulse-item { display: flex; align-items: flex-start; gap: 8px; background: var(--surface); border-radius: 6px; padding: 6px 10px; border: 0.5px solid var(--border-strong); width: 100%; box-sizing: border-box; }
-.impulse-cb { width: 11px; height: 11px; border-radius: 50%; border: 1.5px solid rgba(110,109,103,0.35); flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-top: 3px; }
-.impulse-item.done .impulse-cb { background: rgba(110,109,103,0.15); border-color: rgba(110,109,103,0.4); }
-.impulse-item.done .impulse-cb::after { content: ''; display: block; width: 3px; height: 2px; border-left: 1.5px solid var(--text-secondary); border-bottom: 1.5px solid var(--text-secondary); transform: rotate(-45deg) translateY(-0.5px); }
-.impulse-item.done .impulse-text { text-decoration: line-through; opacity: 0.4; }
-.impulse-body { flex: 1; min-width: 0; }
-.impulse-text { font-size: 12px; color: var(--text-primary); word-break: break-word; }
-.impulse-daylabel { font-size: 10px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; }
 .reminders-overlay .reminders-list { display: flex; flex-direction: column; flex-wrap: nowrap; gap: 6px; margin-top: 10px; }
 .reminders-overlay .reminder-item { width: 100%; box-sizing: border-box; }
 .reminders-overlay .reminder-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -89,7 +70,7 @@ body { padding: 12px; padding-bottom: 40px; }
 .reminder-input { font-size: 12px; padding: 5px 10px; border: 0.5px solid var(--border-strong); border-radius: 6px; font-family: inherit; color: var(--text-primary); background: transparent; }
 #reminder-name { flex: 1; min-width: 140px; }
 .reminder-save-btn { background: var(--text-primary); color: var(--surface); border: 0; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
-.date-nav { display: flex; align-items: center; gap: 8px; position: relative; padding-right: 126px; padding-left: 126px; overflow: visible; }
+.date-nav { display: flex; align-items: center; gap: 8px; position: relative; overflow: visible; }
 .date-nav button { background: none; border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 4px 10px; cursor: pointer; font-size: 14px; color: var(--text-primary); font-family: inherit; }
 .date-nav button:active { background: rgba(0,0,0,0.04); }
 .date-label { font-size: 15px; font-weight: 500; color: var(--text-primary); min-width: 220px; text-align: center; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border-strong); }
@@ -123,37 +104,10 @@ body { padding: 12px; padding-bottom: 40px; }
 .now-banner-wrap:not(:empty) { margin-top: 6px; }
 .now-banner { display: inline-block; background: #1E293B; color: #FFFFFF; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer; user-select: none; -webkit-user-select: none; }
 .now-banner-time { font-size: 10px; opacity: 0.85; margin-left: 8px; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; font-weight: 500; }
-    .habits-wrap { flex: 0 0 300px; width: 300px; margin: 0; align-self: flex-start; }
     .collapse-toggle { cursor: pointer; user-select: none; -webkit-user-select: none; }
     .collapse-caret { display: inline-block; font-weight: 700; transition: transform 0.15s; opacity: 0.6; }
     .collapse-toggle.open .collapse-caret { transform: rotate(90deg); }
     .collapsed { display: none !important; }
-    .habits-head { font-size: 10px; font-weight: 700; color: #B4B2A9; text-transform: uppercase; letter-spacing: 0.08em; text-align: center; padding-bottom: 14px; }
-    .habits-table { width: 100%; border-collapse: collapse; font-family: inherit; }
-    .habits-table th, .habits-table td, .habits-table .h-cell, .habits-table .h-streak { font-family: inherit; }
-    .habits-table th { font-size: 9px; font-weight: 700; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 0 8px; text-align: center; font-variant-numeric: tabular-nums; line-height: 1.35; }
-    .habits-table th.h-name { text-align: center; width: 110px; letter-spacing: 0.08em; }
-    .habits-table th.h-today { color: var(--text-primary); }
-    .habits-table td { padding: 3px 0; text-align: center; }
-    .habits-table td.h-name { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; padding: 0 10px 0 2px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; cursor: pointer; }
-    .h-cell { width: 22px; height: 22px; margin: 0 auto; border: 0.5px solid var(--border-strong); border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--text-primary); line-height: 1; }
-    .h-cell.done { background: transparent; }
-    .h-cell.done::after { content: '\2713'; font-weight: 700; }
-    .h-cell.today { border-color: var(--text-primary); }
-    .h-streak { font-size: 12px; color: var(--text-secondary); text-align: center; font-variant-numeric: tabular-nums; width: 44px; }
-    .h-streak.cur { font-weight: 700; color: var(--text-primary); }
-    .habits-table tr[draggable] { cursor: grab; }
-    .h-del { display: none; margin-left: 6px; color: var(--text-tertiary); font-weight: 400; cursor: pointer; }
-    .habits-table tr:hover .h-del { display: inline; }
-    .h-del:hover { color: #C0392B; }
-    .habits-table tr.h-dragging { opacity: 0.4; }
-    .habits-table tr.h-dragover td { box-shadow: inset 0 2px 0 var(--text-primary); }
-    .habit-add { display: block; margin: 16px auto 0; background: none; border: 0.5px dashed var(--border-strong); border-radius: 6px; padding: 6px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); cursor: pointer; font-family: inherit; }
-    .habit-add:hover { color: var(--text-secondary); border-color: var(--text-tertiary); }
-    @media (max-width: 760px) { .habits-table th.h-name, .habits-table td.h-name { width: 84px; max-width: 84px; font-size: 11px; } .h-cell { width: 18px; height: 18px; } }
-    /* Snags — full-width section under the schedule */
-    .snags-section { margin: 0; }
-    .snags-section .snags-head { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #B4B2A9; text-align: center; padding: 4px 0 10px; }
     .rail-add { display: block; width: auto; margin: 2px 0 8px; padding: 2px 4px; background: none; border: none; font-size: 15px; line-height: 1; color: var(--text-tertiary); opacity: 0.5; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
     .rail-add:hover { opacity: 1; }
     .rail-add:active { background: rgba(0,0,0,0.03); }
@@ -169,12 +123,6 @@ body { padding: 12px; padding-bottom: 40px; }
     .rail-reminders .rr-count { font-size: 11px; color: var(--text-tertiary); flex-shrink: 0; font-variant-numeric: tabular-nums; }
     .rail-reminders .rr-item.due-today .rr-count { color: #C8413A; font-weight: 600; }
     .rail-reminders .rr-item.due-soon .rr-count { color: #CA8A04; font-weight: 600; }
-    .snags-grid { display: flex; flex-direction: column; gap: 8px; }
-    .snag-row { display: flex; align-items: center; justify-content: center; gap: 8px; text-align: center; padding: 9px 11px; background: var(--surface); border: 0.5px solid var(--border-strong); border-left: 2px solid #1A1A1A; border-radius: 6px; cursor: pointer; }
-    .snag-row:active { background: rgba(0,0,0,0.03); }
-    .snag-box { width: 13px; height: 13px; border-radius: 3px; border: 1.5px solid rgba(26,26,26,0.5); flex-shrink: 0; margin-top: 1px; }
-    .snag-name { font-size: 12.5px; font-weight: 500; color: var(--text-primary); line-height: 1.4; word-break: break-word; cursor: text; flex: 1; }
-    .snag-box { cursor: pointer; }
 .shift-wrap { position: absolute; right: 0; top: 50%; transform: translateY(-50%); white-space: nowrap; }
 .shift-btn { text-decoration: none; box-sizing: border-box; background: none; border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 4px 10px; cursor: pointer; font-size: 14px; color: var(--text-primary); font-family: inherit; margin-left: 4px; }
 .shift-btn:active { background: rgba(0,0,0,0.04); }
@@ -208,30 +156,6 @@ body { padding: 12px; padding-bottom: 40px; }
 .subitem.done::before { background: #1D9E75; border-color: #1D9E75; }
 .subitem.done::after { content: ''; position: absolute; left: 5.5px; top: 8.5px; width: 4px; height: 2px; border-left: 1.5px solid white; border-bottom: 1.5px solid white; transform: rotate(-45deg); }
 .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-.skin-section { margin: 0; display: flex; flex-direction: column; gap: 8px; }
-
-.skin-card { background: var(--surface); border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 11px 14px; }
-.skin-card .skin-k { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #B4B2A9; margin-bottom: 5px; text-align: center; }
-.skin-card .skin-steps { font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; }
-.skin-card .skin-list { display: flex; flex-direction: column; gap: 3px; }
-.skin-card .skin-step { font-size: 12.5px; color: var(--text-secondary); line-height: 1.45; text-align: center; }
-
-.skin-card .skin-link { cursor: pointer; text-decoration: underline; text-decoration-color: rgba(110,109,103,0.35); text-underline-offset: 2px; }
-.skin-card .skin-link:active { color: var(--text-primary); }
-.am-card { display: flex; align-items: baseline; gap: 10px; }
-.am-card .am-k { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #A9A79E; flex-shrink: 0; }
-.am-card .am-steps { font-size: 12px; color: var(--text-secondary); display: flex; flex-direction: column; gap: 1px; }
-.week-card { padding: 2px 0; }
-.week-row { display: flex; gap: 12px; padding: 9px 14px; border-bottom: 0.5px solid var(--border); }
-.week-row:last-child { border-bottom: none; }
-.week-row.week-today { background: rgba(0,0,0,0.035); }
-.week-day { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #B4B2A9; width: 30px; flex-shrink: 0; padding-top: 1px; }
-.week-today .week-day { color: var(--text-primary); }
-.week-body { display: flex; flex-direction: column; gap: 3px; flex: 1; }
-.wk-line { display: flex; gap: 8px; align-items: baseline; }
-.wk-tag { font-size: 8.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #C4C2B9; width: 34px; flex-shrink: 0; }
-.wk-val { font-size: 11.5px; color: var(--text-secondary); line-height: 1.35; display: flex; flex-direction: column; gap: 1px; }
-.stp { display: block; }
 .tag { display: inline-block; background: #EEF1F6; color: #556274; font-size: 10px; font-weight: 600; padding: 4px 9px; border-radius: 6px; letter-spacing: 0.03em; text-transform: uppercase; }
 .tag-med { cursor: pointer; user-select: none; -webkit-user-select: none; }
 .tag-med.med-done { background: #1E293B; color: #FFFFFF; }
@@ -293,7 +217,7 @@ body { padding: 12px; padding-bottom: 40px; }
   <div class="reminder-wrap" id="reminder-wrap"></div>
   <div class="timeline-wrap">
     <div class="board-row">
-      <div class="habits-wrap" id="habits-wrap"></div>
+      <div class="board-spacer"></div>
       <div class="columns">
         <div>
           <div class="timeline" id="timeline-all"></div>
@@ -301,21 +225,10 @@ body { padding: 12px; padding-bottom: 40px; }
       </div>
       <div class="side-rail">
         <div class="rail-col">
-          <div class="column-label collapse-toggle" id="hygiene-toggle">Hygiene <span class="collapse-caret">›</span></div>
-          <div class="skin-section collapsed" id="skin-strip"></div>
-        </div>
-        <div class="rail-col">
           <div class="column-label collapse-toggle" id="reminders-toggle">Reminders <span class="collapse-caret">›</span></div>
           <div class="rail-body collapsed" id="reminders-body">
             <div class="rail-reminders" id="rail-reminders"></div>
             <button class="rail-add" data-add="reminder">+</button>
-          </div>
-        </div>
-        <div class="rail-col">
-          <div class="column-label collapse-toggle" id="snags-toggle">Snags <span class="collapse-caret">›</span></div>
-          <div class="rail-body collapsed" id="snags-body">
-            <div class="snags-section" id="snags-dock"></div>
-            <button class="rail-add" data-add="snag">+</button>
           </div>
         </div>
       </div>
@@ -334,17 +247,6 @@ body { padding: 12px; padding-bottom: 40px; }
     <input type="time" id="reminder-time" class="reminder-input">
     <button id="reminder-save" class="reminder-save-btn">Add</button>
   </div>
-</div>
-<div class="reminders-overlay impulse-overlay" id="impulse-overlay">
-  <div class="reminders-header">
-    <span class="reminders-title">Impulses</span>
-    <span class="impulse-count" id="impulse-count"></span>
-  </div>
-  <div class="impulse-capture">
-    <input type="text" id="impulse-text" class="reminder-input" autocomplete="off">
-    <button id="impulse-save" class="reminder-save-btn">Log</button>
-  </div>
-  <div class="reminders-list" id="impulse-list"></div>
 </div>
 <div class="reminders-overlay skincare-overlay" id="skincare-overlay">
   <div class="reminders-header"><span class="reminders-title" id="skincare-title"></span></div>
@@ -439,21 +341,6 @@ function fbSetExDone(map) {
     .catch(() => showSync('error', 'Sync failed'));
 }
 
-function fbSetImpulses(arr) {
-  showSync('syncing', 'Syncing…');
-  set(ref(db, 'impulses'), arr)
-    .then(() => showSync('synced', 'Synced'))
-    .catch(() => showSync('error', 'Sync failed'));
-}
-
-
-function fbSetHabits(arr) {
-  showSync('syncing', 'Syncing…');
-  set(ref(db, 'habits'), arr)
-    .then(() => showSync('synced', 'Synced'))
-    .catch(() => showSync('error', 'Sync failed'));
-}
-
 // ── Schedule constants ────────────────────────────────────────────────────────
 const KEY = 'schedule_v2';
 const START_HOUR = 6;
@@ -493,13 +380,51 @@ const PPL_START = dayNum(new Date(2026, 7, 5)); // Aug 5 = Push
 function getPPL(d) { const n = PPL_CYCLE.length; return PPL_CYCLE[(((dayNum(d) - PPL_START) % n) + n) % n]; }
 const MORNING_CARDIO = ['Run - 30 Minutes', 'Skip - 30 Minutes'];
 function getMorningCardio(d) { return MORNING_CARDIO[(((dayNum(d) - PPL_START) % 2) + 2) % 2]; }
-const SKINCARE_AM = ['Dental Hygiene', 'Wash Hands with Soap', 'Cleanser', 'Moisturizer', 'LRP 70'];
-function getSkincarePM(d) {
+const SKINCARE_AM = [
+  'Wash face with CeraVe Hydrating Cleanser (or just rinse with cool water if dry).',
+  'Apply CeraVe Daily Moisturizing Lotion (from the big blue pump bottle).',
+  'Apply La Roche-Posay SPF 70 Sunscreen generously.'
+];
+const RETIN_SKIP_DATE = '2026-09-26'; // one-time: Retin-A used that morning -> simple rest night
+function getFacePlan(d) {
   const dow = d.getDay(); // 0=Sun..6=Sat
-  if (dow === 1 || dow === 4) return ['Dental Hygiene', 'Wash Hands with Soap', 'Cleanser', 'BHA', 'Moisturizer', 'Minoxidil'];           // Mon, Thu
-  if (dow === 2 || dow === 5) return ['Dental Hygiene', 'Wash Hands with Soap', 'Cleanser', 'Moisturizer', 'Wait 20 Mins (Dry)', 'Retin-A', 'Moisturizer', 'Minoxidil']; // Tue, Fri
-  return ['Dental Hygiene', 'Wash Hands with Soap', 'Cleanser', 'Moisturizer', 'Minoxidil'];                                              // Wed, Sat, Sun
+  const MINOX = 'Apply scalp Minoxidil and wash hands thoroughly with soap right after.';
+  if (dayKey(d) === RETIN_SKIP_DATE) {
+    return { title: 'Tonight only: Rest Night \u2014 skip Retin-A (used this AM)', alert: true, steps: [
+      { t: 'Wash face with CeraVe Hydrating Cleanser.' },
+      { t: 'Apply CeraVe Daily Moisturizing Lotion.' },
+      { t: MINOX }
+    ]};
+  }
+  if (dow === 1 || dow === 3 || dow === 5) { // Mon, Wed, Fri
+    return { title: 'Beard Grooming + Rest' + (dow === 3 ? ' \u00b7 Gym Day' : ''), steps: [
+      { t: 'Wash hair as scheduled. Wash face with CeraVe Hydrating Cleanser in the shower.' },
+      { t: 'Wait 3 minutes for skin to cool down, then use trimmer (no guard) to clean up beard and mustache lines. Strictly no foil shavers.' },
+      { t: 'Apply a generous layer of CeraVe Daily Moisturizing Lotion to soothe the freshly shaved skin.' },
+      { t: MINOX }
+    ]};
+  }
+  if (dow === 2 || dow === 4 || dow === 6) { // Tue, Thu, Sat
+    const note = dow === 6
+      ? "Sat Exception: Completely skip the upper lip/mustache area to let the skin recover from Friday's trim."
+      : 'Tues & Thu Exception: Blend lightly over the upper lip/mustache area to treat ingrowns.';
+    return { title: 'Whole-Face Retin-A' + (dow !== 4 ? ' \u00b7 Gym Day' : ''), steps: [
+      { t: 'Wash face with CeraVe Hydrating Cleanser right after the gym.' },
+      { t: 'Apply a thin layer of CeraVe Daily Moisturizing Lotion (Sandwich Layer 1).' },
+      { t: 'Dab a tiny bit of Vaseline into nose creases to prevent flaking.' },
+      { t: 'Wait 20 minutes for skin to dry completely.' },
+      { t: 'Apply a single pea-sized amount of Retin-A across the entire face (dotting evenly on forehead, cheeks, chin, and nose before blending).', note },
+      { t: 'Apply another layer of CeraVe Daily Moisturizing Lotion (Sandwich Layer 2).' },
+      { t: MINOX }
+    ]};
+  }
+  return { title: 'Pure Rest + Gym', steps: [ // Sun
+    { t: 'Wash face with CeraVe Hydrating Cleanser right after the gym shower.' },
+    { t: 'Apply CeraVe Daily Moisturizing Lotion.' },
+    { t: MINOX }
+  ]};
 }
+function getSkincarePM(d) { return getFacePlan(d).steps.map(s => s.t); }
 const EX_CYCLE = ['Push', 'Mobility', 'Pull', 'Basketball', 'Legs', 'Mobility', 'Push', 'Basketball', 'Pull', 'Mobility', 'Legs', 'Basketball'];
 // Early exercise (right after MR) rotates on a 3-day cycle from Fri July 17 2026
 const EX_EARLY_START = EX_START;
@@ -648,11 +573,9 @@ const fbCache = {
   reminders: null,
   shifts: {},  // { [dayKey]: hours }
   meditation: null,  // { minutes, lastEval:'YYYY-MM-DD', done:{ 'YYYY-MM-DD':true } }
-  impulses: null,    // [{ id, text, ts, block, dayKey }]
   exdone: null,      // { 'YYYY-MM-DD_H:MM': true } — exercise blocks ticked done
   routines: null     // { 'YYYY-MM-DD': { popupKey: { i0:true, ... } } } — skincare/grooming checklists
 };
-let currentBlockLabel = ''; // set by render(); declared here so render can't hit a TDZ
 
 // Listen to today + tomorrow tasks/tallies
 function listenToDay(dk) {
@@ -716,143 +639,6 @@ onValue(ref(db, 'exdone'), snap => {
   fbCache.exdone = snap.val() || {};
   render();
 });
-
-// Impulse log — synced across devices
-onValue(ref(db, 'impulses'), snap => {
-  fbCache.impulses = snap.val() || [];
-  normalizeImpulses();
-  renderImpulses();
-});
-
-
-let _habitsSeeded = false;
-onValue(ref(db, 'habits'), snap => {
-  const v = snap.val();
-  fbCache.habits = Array.isArray(v) ? v : [];
-  // Seed default habits once if none exist yet
-  if (!_habitsSeeded && v == null) {
-    _habitsSeeded = true;
-    const defaults = ['Meditate', 'Gratitude', 'Exercise'].map((n, i) => ({ id: String(Date.now() + i), name: n, marks: {} }));
-    saveHabits(defaults);
-    return;
-  }
-  _habitsSeeded = true;
-  renderHabits();
-});
-function loadHabits() { return Array.isArray(fbCache.habits) ? fbCache.habits : []; }
-function saveHabits(arr) { fbCache.habits = arr; fbSetHabits(arr); renderHabits(); }
-function habitStreaks(marks) {
-  marks = marks || {};
-  const keys = Object.keys(marks).filter(k => marks[k]).sort();
-  const total = keys.length;
-  // longest run of consecutive days
-  let longest = 0, run = 0, prev = null;
-  keys.forEach(k => {
-    const d = new Date(k + 'T00:00:00');
-    if (prev && (d - prev) === 86400000) run++; else run = 1;
-    if (run > longest) longest = run;
-    prev = d;
-  });
-  // current streak counting back from today (or yesterday if today unmarked)
-  let cur = 0;
-  let day = new Date(); day.setHours(0,0,0,0);
-  if (!marks[dayKey(day)]) day.setDate(day.getDate() - 1);
-  while (marks[dayKey(day)]) { cur++; day.setDate(day.getDate() - 1); }
-  return { cur, longest, total };
-}
-function toggleHabitMark(id, dk) {
-  const arr = loadHabits().map(hb => {
-    if (hb.id !== id) return hb;
-    const marks = Object.assign({}, hb.marks || {});
-    if (marks[dk]) delete marks[dk]; else marks[dk] = true;
-    return Object.assign({}, hb, { marks });
-  });
-  saveHabits(arr);
-}
-function renderHabits() {
-  const wrap = document.getElementById('habits-wrap');
-  if (!wrap) return;
-  const habits = loadHabits();
-  const NDAYS = 3;
-  const today = new Date(); today.setHours(0,0,0,0);
-  const days = [];
-  for (let i = NDAYS - 1; i >= 0; i--) { const d = new Date(today); d.setDate(d.getDate() - i); days.push(d); }
-  const todayK = dayKey(today);
-  const DOW = ['S','M','T','W','T','F','S'];
-  let html = '<div class="habits-head collapse-toggle" id="habits-toggle">Habits <span class="collapse-caret">›</span></div><div class="habits-body collapsed" id="habits-body"><table class="habits-table"><thead><tr><th class="h-name">Habit</th>';
-  days.forEach(d => {
-    const isT = dayKey(d) === todayK;
-    html += `<th class="${isT ? 'h-today' : ''}">${DOW[d.getDay()]}<br>${d.getDate()}</th>`;
-  });
-  html += '<th>Streak</th></tr></thead><tbody>';
-  habits.forEach(hb => {
-    const marks = hb.marks || {};
-    const st = habitStreaks(marks);
-    const nm = String(hb.name).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    html += `<tr draggable="true" data-hrow="${hb.id}"><td class="h-name" data-hedit="${hb.id}">${nm}<span class="h-del" data-hdel="${hb.id}" title="Remove">×</span></td>`;
-    days.forEach(d => {
-      const dk = dayKey(d);
-      const done = !!marks[dk];
-      const isT = dk === todayK;
-      html += `<td><div class="h-cell${done ? ' done' : ''}${isT ? ' today' : ''}" data-hid="${hb.id}" data-hdk="${dk}"></div></td>`;
-    });
-    html += `<td class="h-streak cur">${st.cur}</td></tr>`;
-  });
-  html += '</tbody></table><button class="habit-add" id="habit-add">+ Add Habit</button></div>';
-  wrap.innerHTML = html;
-  const habBody = document.getElementById('habits-body');
-  if (habBody) wireCollapse('habits-toggle', habBody, () => _habitsOpen, v => _habitsOpen = v);
-  wrap.querySelectorAll('[data-hid]').forEach(c => {
-    c.onclick = (e) => { e.stopPropagation(); toggleHabitMark(c.dataset.hid, c.dataset.hdk); };
-  });
-  wrap.querySelectorAll('[data-hedit]').forEach(n => {
-    n.onclick = (e) => {
-      if (e.target.classList.contains('h-del')) return; // let delete handler take it
-      e.stopPropagation();
-      const hb = loadHabits().find(x => x.id === n.dataset.hedit);
-      if (!hb) return;
-      const v = prompt('Rename habit:', hb.name);
-      if (v === null || v.trim() === '') return;
-      saveHabits(loadHabits().map(x => x.id === n.dataset.hedit ? Object.assign({}, x, { name: v.trim() }) : x));
-    };
-  });
-  wrap.querySelectorAll('[data-hdel]').forEach(x => {
-    x.onclick = (e) => {
-      e.stopPropagation();
-      const hb = loadHabits().find(y => y.id === x.dataset.hdel);
-      if (!hb) return;
-      if (confirm(`Remove habit "${hb.name}"?`)) saveHabits(loadHabits().filter(y => y.id !== x.dataset.hdel));
-    };
-  });
-  const addBtn = document.getElementById('habit-add');
-  if (addBtn) addBtn.onclick = (e) => {
-    e.stopPropagation();
-    const v = prompt('New habit:');
-    if (!v || !v.trim()) return;
-    saveHabits([{ id: String(Date.now()), name: v.trim(), marks: {} }].concat(loadHabits()));
-  };
-  // Drag-and-drop reorder
-  let _dragId = null;
-  wrap.querySelectorAll('[data-hrow]').forEach(row => {
-    row.addEventListener('dragstart', (e) => { _dragId = row.dataset.hrow; row.classList.add('h-dragging'); e.dataTransfer.effectAllowed = 'move'; });
-    row.addEventListener('dragend', () => { row.classList.remove('h-dragging'); wrap.querySelectorAll('.h-dragover').forEach(r => r.classList.remove('h-dragover')); });
-    row.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (row.dataset.hrow !== _dragId) row.classList.add('h-dragover'); });
-    row.addEventListener('dragleave', () => row.classList.remove('h-dragover'));
-    row.addEventListener('drop', (e) => {
-      e.preventDefault();
-      row.classList.remove('h-dragover');
-      const targetId = row.dataset.hrow;
-      if (!_dragId || _dragId === targetId) return;
-      const arr = loadHabits();
-      const from = arr.findIndex(x => x.id === _dragId);
-      const to = arr.findIndex(x => x.id === targetId);
-      if (from < 0 || to < 0) return;
-      const [moved] = arr.splice(from, 1);
-      arr.splice(to, 0, moved);
-      saveHabits(arr);
-    });
-  });
-}
 
 // Start listening for today
 listenToDay(dayKey(new Date()));
@@ -1188,13 +974,10 @@ function render() {
     tls.forEach(t => { t.style.height = maxH + 'px'; });
   });
 
-  renderImpulses(); // keep the impulse panel in sync with the viewed day
-  renderHygiene();
   wireCollapse('reminders-toggle', document.getElementById('reminders-body'), () => _remindersOpen, v => _remindersOpen = v);
-  wireCollapse('snags-toggle', document.getElementById('snags-body'), () => _snagsOpen, v => _snagsOpen = v);
 }
 
-let _hygieneOpen = false, _habitsOpen = false, _remindersOpen = false, _snagsOpen = false;
+let _remindersOpen = false;
 function wireCollapse(toggleId, bodyEl, isOpenGetter, setOpen) {
   const t = document.getElementById(toggleId);
   if (!t) return;
@@ -1202,33 +985,6 @@ function wireCollapse(toggleId, bodyEl, isOpenGetter, setOpen) {
   else { t.classList.remove('open'); bodyEl.classList.add('collapsed'); }
   t.onclick = (e) => { e.stopPropagation(); const nv = !isOpenGetter(); setOpen(nv); t.classList.toggle('open', nv); bodyEl.classList.toggle('collapsed', !nv); };
 }
-function renderHygiene() {
-  const skin = document.getElementById('skin-strip');
-  if (!skin) return;
-  const _sd = dateFromNum(cur);
-  const _dow = _sd.getDay();
-  const DOW_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  // AM: same every day — QD row
-  let html = `<div class="skin-card week-card"><div class="week-row"><div class="week-day">QD</div><div class="week-body"><div class="wk-line"><span class="wk-tag">AM</span><span class="wk-val">${SKINCARE_AM.map(s => `<span class="stp">${s}</span>`).join('')}</span></div></div></div></div>`;
-  // Weekly PM plan: Mon-first
-  const order = [1,2,3,4,5,6,0];
-  let week = '<div class="skin-card week-card">';
-  order.forEach(dw => {
-    const dObj = new Date(2026,0,4 + dw);
-    const pm = getSkincarePM(dObj);
-    const sh = getShowerTag(dObj);
-    const groom = (dw === 2 || dw === 5);
-    const isToday = dw === _dow;
-    let lines = `<div class="wk-line"><span class="wk-tag">PM</span><span class="wk-val">${pm.map(s => `<span class="stp">${s}</span>`).join('')}</span></div>`;
-    if (sh) lines += `<div class="wk-line"><span class="wk-tag">Hair</span><span class="wk-val">${sh} Shampoo</span></div>`;
-    if (groom) lines += `<div class="wk-line"><span class="wk-tag">Groom</span><span class="wk-val">Grooming</span></div>`;
-    week += `<div class="week-row${isToday ? ' week-today' : ''}"><div class="week-day">${DOW_NAMES[dw].slice(0,3)}</div><div class="week-body">${lines}</div></div>`;
-  });
-  week += '</div>';
-  skin.innerHTML = html + week;
-  wireCollapse('hygiene-toggle', skin, () => _hygieneOpen, v => _hygieneOpen = v);
-}
-
 setInterval(render, 10000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { render(); } });
 window.addEventListener('focus', render);
@@ -1267,39 +1023,24 @@ function wireRailAdds() {
     if (btn._wired) return; btn._wired = true;
     btn.onclick = (e) => {
       e.stopPropagation();
-      const kind = btn.dataset.add;
       // toggle an inline input box right after the button
       let box = btn.nextElementSibling;
       if (box && box.classList && box.classList.contains('rail-addbox')) { box.classList.toggle('show'); const i=box.querySelector('input'); if(i) i.focus(); return; }
       box = document.createElement('div');
       box.className = 'rail-addbox show';
-      if (kind === 'reminder') {
-        box.innerHTML = `<input type="text" placeholder="Reminder"><input type="date"><input type="time"><button class="rail-addgo">Add</button>`;
-      } else {
-        box.innerHTML = `<input type="text" placeholder="${kind === 'snag' ? 'New snag' : 'Note'}"><button class="rail-addgo">Add</button>`;
-      }
+      box.innerHTML = `<input type="text" placeholder="Reminder"><input type="date"><input type="time"><button class="rail-addgo">Add</button>`;
       btn.after(box);
       const inp = box.querySelector('input');
       inp.focus();
       const go = () => {
         const txt = inp.value.trim();
         if (!txt) { box.classList.remove('show'); return; }
-        if (kind === 'snag') {
-          const arr = loadImpulses();
-          arr.push({ id: String(Date.now()), text: txt, ts: Date.now(), dk: dayKey(new Date()), done: false });
-          saveImpulses(arr);
-        } else if (kind === 'reminder') {
-          const date = box.querySelector('input[type=date]').value;
-          const time = box.querySelector('input[type=time]').value;
-          if (!date) { inp.focus(); return; }
-          const arr = loadReminders();
-          arr.push({ id: String(Date.now()), name: txt, date, time: time || null });
-          saveReminders(arr);
-        } else if (kind === 'hygiene') {
-          const arr = loadImpulses();
-          arr.push({ id: String(Date.now()), text: 'Hygiene: ' + txt, ts: Date.now(), dk: dayKey(new Date()), done: false });
-          saveImpulses(arr);
-        }
+        const date = box.querySelector('input[type=date]').value;
+        const time = box.querySelector('input[type=time]').value;
+        if (!date) { inp.focus(); return; }
+        const arr = loadReminders();
+        arr.push({ id: String(Date.now()), name: txt, date, time: time || null });
+        saveReminders(arr);
         inp.value = ''; box.classList.remove('show');
       };
       box.querySelector('.rail-addgo').onclick = (ev) => { ev.stopPropagation(); go(); };
@@ -1388,136 +1129,10 @@ const remindersOverlay = document.getElementById('reminders-overlay');
 if (remindersBtn) {
   remindersBtn.onclick = (e) => {
     e.stopPropagation();
-    const imp = document.getElementById('impulse-overlay');
-    if (imp) imp.classList.remove('show');
     remindersOverlay.classList.toggle('show');
   };
   document.addEventListener('click', e => {
     if (!remindersOverlay.contains(e.target) && !remindersBtn.contains(e.target)) remindersOverlay.classList.remove('show');
-  });
-}
-// ── Impulse log ───────────────────────────────────────────────────────────────
-// Capture an urge instead of acting on it. Auto-stamps the time and the block you
-// were in, so patterns (which blocks generate urges) become visible over time.
-function loadImpulses() { return fbCache.impulses || []; }
-// Entries can arrive from Siri/Shortcuts as { text } under a push key. Fold those
-// into the shape the app uses, stamping id/ts/day so they sort and prune correctly.
-function normalizeImpulses() {
-  const v = fbCache.impulses;
-  if (!v) return [];
-  const wasObject = !Array.isArray(v);
-  const arr = (wasObject ? Object.keys(v).map(k => v[k]) : v.slice()).filter(x => x && x.text);
-  let changed = false;
-  arr.forEach((i, n) => {
-    if (!i.id) { i.id = String(Date.now() + n); changed = true; }
-    if (!i.ts) { i.ts = Date.now(); changed = true; }
-    if (!i.dk) { i.dk = dayKey(new Date(i.ts)); changed = true; }
-    if (typeof i.done !== 'boolean') { i.done = false; changed = true; }
-  });
-  fbCache.impulses = arr;
-  if (wasObject || changed) fbSetImpulses(arr);
-  return arr;
-}
-function saveImpulses(arr) { fbCache.impulses = arr; fbSetImpulses(arr); renderImpulses(); }
-// Carry-forward rule: unchecked impulses roll into the next day; checked ones drop
-// off once that day is over (a checked item stays visible for the rest of today).
-function pruneImpulses() {
-  const today = dayKey(new Date());
-  const arr = loadImpulses();
-  const kept = arr.filter(i => !(i.done && i.dk < today));
-  if (kept.length !== arr.length) {
-    fbCache.impulses = kept;
-    fbSetImpulses(kept);
-    return kept;
-  }
-  return arr;
-}
-function toggleImpulse(id) {
-  saveImpulses(loadImpulses().map(i => i.id === id ? { ...i, done: !i.done } : i));
-}
-function logImpulse() {
-  const inp = document.getElementById('impulse-text');
-  const text = inp.value.trim();
-  if (!text) return;
-  const now = new Date();
-  const arr = loadImpulses();
-  arr.push({
-    id: String(Date.now()),
-    text,
-    ts: now.getTime(),
-    block: currentBlockLabel || '',
-    dk: dayKey(now),
-    done: false
-  });
-  saveImpulses(arr);
-  inp.value = '';
-  inp.focus();
-}
-function renderImpulses() {
-  const list = document.getElementById('impulse-list');
-  if (!list) return;
-  // pruneImpulses() only ever deletes relative to the REAL today, so navigating to a
-  // future day can never destroy data. The viewed day is applied as a display filter.
-  const stored = pruneImpulses();
-  const viewed = dayKey(dateFromNum(cur));
-  const todayKey = dayKey(new Date());
-  const arr = stored
-    .filter(i => !(i.done && i.dk < viewed))
-    .slice()
-    .sort((a, b) => b.ts - a.ts);
-  const openCount = arr.filter(i => !i.done).length;
-  const countEl = document.getElementById('impulse-count');
-  if (countEl) countEl.textContent = openCount ? `${openCount} open` : '';
-  const badgeEl = document.getElementById('impulse-badge');
-  if (badgeEl) { badgeEl.textContent = openCount > 9 ? '9+' : openCount; badgeEl.classList.toggle('show', openCount > 0); }
-  // Snags — full-width checkable section under the schedule
-  const dock = document.getElementById('snags-dock');
-  if (dock) {
-    const open = arr.filter(i => !i.done && i.text && !/^(Provided Input|Dictated Text)$/i.test(String(i.text).trim()));
-    if (open.length === 0) {
-      dock.innerHTML = '';
-    } else {
-      const cards = open.map(i => {
-        const t = String(i.text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        return `<div class="snag-row"><span class="snag-box" data-toggle="${i.id}"></span><span class="snag-name" data-edit="${i.id}">${t}</span></div>`;
-      }).join('');
-      dock.innerHTML = `<div class="snags-grid">${cards}</div>`;
-      dock.querySelectorAll('[data-toggle]').forEach(box => {
-        box.onclick = (e) => { e.stopPropagation(); toggleImpulse(box.dataset.toggle); };
-      });
-      dock.querySelectorAll('[data-edit]').forEach(nm => {
-        nm.onclick = (e) => {
-          e.stopPropagation();
-          const cur = loadImpulses().find(x => x.id === nm.dataset.edit);
-          if (!cur) return;
-          const v = prompt('Edit snag:', cur.text);
-          if (v === null) return;
-          const t2 = v.trim();
-          if (t2 === '') { saveImpulses(loadImpulses().filter(x => x.id !== nm.dataset.edit)); }
-          else { saveImpulses(loadImpulses().map(x => x.id === nm.dataset.edit ? { ...x, text: t2 } : x)); }
-        };
-      });
-    }
-  }
-  if (arr.length === 0) {
-    list.innerHTML = '<div class="reminders-empty">Nothing logged yet</div>';
-    return;
-  }
-  let html = '', lastDay = null;
-  arr.slice(0, 50).forEach(i => {
-    if (i.dk !== lastDay) {
-      lastDay = i.dk;
-      html += `<div class="impulse-daylabel">${i.dk === todayKey ? 'Today' : i.dk}</div>`;
-    }
-    const safe = String(i.text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    html += `<div class="impulse-item${i.done ? ' done' : ''}"><div class="impulse-cb" data-toggle="${i.id}"></div><div class="impulse-body"><div class="impulse-text">${safe}</div></div><button class="reminder-delete" data-imp="${i.id}">×</button></div>`;
-  });
-  list.innerHTML = html;
-  list.querySelectorAll('[data-toggle]').forEach(cb => {
-    cb.onclick = (e) => { e.stopPropagation(); toggleImpulse(cb.dataset.toggle); };
-  });
-  list.querySelectorAll('[data-imp]').forEach(btn => {
-    btn.onclick = (e) => { e.stopPropagation(); saveImpulses(loadImpulses().filter(x => x.id !== btn.dataset.imp)); };
   });
 }
 // ── Skincare popup ──────────────────────────────────────────────────────────────
@@ -1532,7 +1147,6 @@ function openSkincare(when) {
   document.getElementById('skincare-steps').innerHTML = (SKINCARE[when] || []).map((s, i) =>
     `<div class="skincare-step"><span class="skincare-num">${i + 1}</span>${s}</div>`).join('');
   remindersOverlay.classList.remove('show');
-  const io = document.getElementById('impulse-overlay'); if (io) io.classList.remove('show');
   overlay.classList.add('show');
 }
 document.addEventListener('click', (e) => {
@@ -1540,27 +1154,6 @@ document.addEventListener('click', (e) => {
   if (o && o.classList.contains('show') && !o.contains(e.target) && !e.target.closest('[data-skincare]')) o.classList.remove('show');
 });
 
-const impulseBtn = document.getElementById('impulse-btn');
-const impulseOverlay = document.getElementById('impulse-overlay');
-if (impulseBtn) {
-  impulseBtn.onclick = (e) => {
-    e.stopPropagation();
-    remindersOverlay.classList.remove('show');
-    impulseOverlay.classList.toggle('show');
-    if (impulseOverlay.classList.contains('show')) {
-      renderImpulses();
-      setTimeout(() => document.getElementById('impulse-text').focus(), 0);
-    }
-  };
-  document.addEventListener('click', e => {
-    if (!impulseOverlay.contains(e.target) && !impulseBtn.contains(e.target)) impulseOverlay.classList.remove('show');
-  });
-}
-document.getElementById('impulse-save').onclick = (e) => { e.stopPropagation(); logImpulse(); };
-document.getElementById('impulse-text').addEventListener('keydown', e => {
-  if (e.key === 'Enter') { e.preventDefault(); logImpulse(); }
-});
-renderImpulses();
 
 document.addEventListener('click', e => {
 });
