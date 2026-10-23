@@ -26,55 +26,26 @@ body { padding: 12px; padding-bottom: 40px; }
 .sched { padding: 0.25rem 0; max-width: 860px; margin: 0 auto; }
 .columns { display: grid; grid-template-columns: 1fr; gap: 10px; flex: 0 0 440px; width: 440px; min-width: 0; }
 .board-row { display: flex; flex-direction: row; gap: 22px; align-items: flex-start; justify-content: center; }
-.side-rail { flex: 0 0 300px; width: 300px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
-.rail-col { display: flex; flex-direction: column; gap: 8px; }
-.board-spacer { flex: 0 0 300px; width: 300px; }
 @media (max-width: 1000px) {
   .board-row { flex-direction: column; }
-  .board-spacer { display: none; }
   .columns { flex: 1 1 auto; width: 100%; }
-  .side-rail { flex: 1 1 auto; width: 100%; flex-direction: column; }
 }
 @media (max-width: 720px) {
   .columns { flex: 1 1 auto; width: 100%; grid-template-columns: 1fr; gap: 16px; }
-  .column-label { padding-top: 8px; }
 }
-.column-label { font-size: 10px; font-weight: 700; color: #B4B2A9; text-transform: uppercase; letter-spacing: 0.08em; text-align: center; padding-bottom: 6px; }
 .date-header { display: flex; align-items: center; justify-content: center; margin-bottom: 14px; overflow: visible; position: relative; z-index: 50; }
-.reminders-panel { max-width: 1000px; margin: 32px auto 0; padding: 18px 20px; background: var(--surface); border-radius: 0; }
 .reminders-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 0.5px solid var(--border-strong); }
 .reminders-overlay { display: none; position: fixed; top: 70px; right: 20px; background: var(--surface); border-radius: 12px; padding: 16px 18px; box-shadow: 0 8px 28px rgba(0,0,0,0.18); z-index: 2000; width: 320px; max-width: calc(100vw - 40px); }
 .reminders-overlay.show { display: block; }
-.reminders-overlay .reminders-list { display: flex; flex-direction: column; flex-wrap: nowrap; gap: 6px; margin-top: 10px; }
-.reminders-overlay .reminder-item { width: 100%; box-sizing: border-box; }
-.reminders-overlay .reminder-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.reminders-overlay .reminders-add { flex-direction: column; align-items: stretch; }
-.reminders-overlay #reminder-name { min-width: 0; }
-.reminders-overlay .reminder-input { width: 100%; box-sizing: border-box; }
 .reminders-title { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.08em; }
-.reminders-toggle { background: none; border: 0.5px solid var(--border-strong); border-radius: 6px; padding: 3px 10px; cursor: pointer; font-size: 11px; font-family: inherit; color: var(--text-primary); }
-.reminders-toggle:active { background: rgba(0,0,0,0.04); }
-.reminders-list { display: flex; flex-wrap: wrap; gap: 8px; }
-.reminder-delete:hover { opacity: 1; color: #C8413A; }
-.reminders-empty { font-size: 11px; color: var(--text-tertiary); font-style: italic; }
-.reminder-item { display: flex; align-items: center; gap: 8px; background: var(--surface); border-radius: 6px; padding: 6px 10px; border: 0.5px solid var(--border-strong); }
-.reminder-item.due-today { border-color: #C8413A; }
-.reminder-item.due-soon { border-color: #CA8A04; }
-.reminder-name { font-size: 11px; font-weight: 600; color: var(--text-primary); flex: 1; text-transform: uppercase; letter-spacing: 0.04em; }
-.reminder-countdown { font-size: 10px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
-.reminder-item.due-today .reminder-countdown { color: #C8413A; font-weight: 600; }
-.reminder-item.due-soon .reminder-countdown { color: #CA8A04; font-weight: 600; }
-.reminder-delete { font-size: 14px; color: var(--text-tertiary); background: none; border: none; cursor: pointer; padding: 0 2px; line-height: 1; font-family: inherit; opacity: 0.5; }
-.reminders-add { display: none; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 0.5px solid var(--border-strong); flex-wrap: wrap; align-items: center; }
-.reminders-add.show { display: flex; }
-.reminder-input { font-size: 12px; padding: 5px 10px; border: 0.5px solid var(--border-strong); border-radius: 6px; font-family: inherit; color: var(--text-primary); background: transparent; }
-#reminder-name { flex: 1; min-width: 140px; }
-.reminder-save-btn { background: var(--text-primary); color: var(--surface); border: 0; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
-.date-nav { display: flex; align-items: center; gap: 8px; position: relative; overflow: visible; }
-.date-nav button { background: none; border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 4px 10px; cursor: pointer; font-size: 14px; color: var(--text-primary); font-family: inherit; }
-.date-nav button:active { background: rgba(0,0,0,0.04); }
-.date-label { font-size: 15px; font-weight: 500; color: var(--text-primary); min-width: 220px; text-align: center; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border-strong); }
-.reminder-pill { display: inline-block; background: #556274; color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+.date-nav { display: flex; align-items: center; gap: 10px; position: relative; overflow: visible; }
+.date-nav > button { width: 34px; height: 34px; padding: 0; border: none; border-radius: 50%; background: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-tertiary); font-family: inherit; transition: background 0.15s, color 0.15s; }
+.date-nav > button svg { width: 16px; height: 16px; }
+.date-nav > button:hover { color: var(--text-primary); background: rgba(0,0,0,0.04); }
+.date-nav > button:active { background: rgba(0,0,0,0.07); }
+.date-label { min-width: 170px; display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center; cursor: pointer; user-select: none; -webkit-user-select: none; }
+.date-dow { font-size: 9.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-tertiary); line-height: 1; }
+.date-md { font-size: 16px; font-weight: 600; color: var(--text-primary); line-height: 1.15; }
     .tag-clickable { cursor: pointer; background: #E3E9F1; transition: background 0.15s; }
     .tag-clickable:active { background: #D5DEE9; }
     .tag-act { cursor: pointer; background: #E3E9F1; transition: background 0.15s; }
@@ -98,31 +69,10 @@ body { padding: 12px; padding-bottom: 40px; }
     .skincare-step { display: flex; align-items: center; gap: 12px; padding: 11px 0; font-size: 14px; color: var(--text-primary); border-bottom: 0.5px solid var(--border); }
     .skincare-step:last-child { border-bottom: 0; }
     .skincare-num { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: #E8ECF1; color: #556274; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
-.reminder-wrap { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.reminder-wrap:not(:empty) { margin-top: 6px; }
 .now-banner-wrap { text-align: center; display: flex; align-items: center; justify-content: center; gap: 0; }
 .now-banner-wrap:not(:empty) { margin-top: 6px; }
 .now-banner { display: inline-block; background: #1E293B; color: #FFFFFF; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer; user-select: none; -webkit-user-select: none; }
 .now-banner-time { font-size: 10px; opacity: 0.85; margin-left: 8px; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; font-weight: 500; }
-    .collapse-toggle { cursor: pointer; user-select: none; -webkit-user-select: none; }
-    .collapse-caret { display: inline-block; font-weight: 700; transition: transform 0.15s; opacity: 0.6; }
-    .collapse-toggle.open .collapse-caret { transform: rotate(90deg); }
-    .collapsed { display: none !important; }
-    .rail-add { display: block; width: auto; margin: 2px 0 8px; padding: 2px 4px; background: none; border: none; font-size: 15px; line-height: 1; color: var(--text-tertiary); opacity: 0.5; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
-    .rail-add:hover { opacity: 1; }
-    .rail-add:active { background: rgba(0,0,0,0.03); }
-    .rail-addbox { display: none; flex-direction: column; gap: 5px; margin: -2px 0 6px; }
-    .rail-addbox.show { display: flex; }
-    .rail-addbox input { width: 100%; box-sizing: border-box; font-family: inherit; font-size: 12px; padding: 6px 8px; border: 0.5px solid var(--border-strong); border-radius: 6px; background: var(--surface); color: var(--text-primary); }
-    .rail-addbox .rail-addgo { background: var(--text-primary); color: var(--surface); border: none; border-radius: 6px; padding: 6px 0; font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; text-transform: uppercase; letter-spacing: 0.04em; }
-    .rail-reminders { display: none; }
-    .rail-reminders:not(:empty) { display: block; }
-    .rail-reminders .rail-head { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #B4B2A9; text-align: center; padding: 4px 0 10px; }
-    .rail-reminders .rr-item { cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; text-align: center; background: var(--surface); border: 0.5px solid var(--border-strong); border-left: 2px solid #C0392B; border-radius: 6px; padding: 8px 11px; margin-bottom: 7px; }
-    .rail-reminders .rr-name { font-size: 12px; font-weight: 500; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .rail-reminders .rr-count { font-size: 11px; color: var(--text-tertiary); flex-shrink: 0; font-variant-numeric: tabular-nums; }
-    .rail-reminders .rr-item.due-today .rr-count { color: #C8413A; font-weight: 600; }
-    .rail-reminders .rr-item.due-soon .rr-count { color: #CA8A04; font-weight: 600; }
 .shift-wrap { position: absolute; right: 0; top: 50%; transform: translateY(-50%); white-space: nowrap; }
 .shift-btn { text-decoration: none; box-sizing: border-box; background: none; border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 4px 10px; cursor: pointer; font-size: 14px; color: var(--text-primary); font-family: inherit; margin-left: 4px; }
 .shift-btn:active { background: rgba(0,0,0,0.04); }
@@ -177,8 +127,8 @@ body { padding: 12px; padding-bottom: 40px; }
 .cal-overlay.show { display: block; }
 .cal-grid { display: grid; grid-template-columns: repeat(7, 32px); gap: 2px; }
 .cal-day { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; border-radius: 50%; color: var(--text-primary); }
-.cal-day.today { font-weight: 500; color: var(--green); }
-.cal-day.selected { background: var(--green); color: white; }
+.cal-day.today { font-weight: 700; color: #1E293B; }
+.cal-day.selected { background: #1E293B; color: white; }
 .cal-day.empty { cursor: default; }
 .cal-dow { font-size: 10px; color: var(--text-tertiary); text-align: center; padding-bottom: 4px; text-transform: uppercase; }
 .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 0 4px; }
@@ -187,13 +137,51 @@ body { padding: 12px; padding-bottom: 40px; }
 .date-wrap { position: relative; }
 
 
+
+/* Timeline view */
+.tl-row { display: grid; grid-template-columns: 1fr 28px 1fr; position: relative; }
+.tl-time { text-align: right; padding-right: 14px; font-size: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums; line-height: 16px; }
+.tl-rail { position: relative; }
+.tl-rail::before { content: ''; position: absolute; left: 13px; top: 0; bottom: 0; width: 1.5px; background: #DEDCD5; }
+.tl-row.f-full .tl-rail::before { background: #1E293B; }
+.tl-row.f-part .tl-rail::before { background: linear-gradient(#1E293B 0 var(--p), #DEDCD5 var(--p)); }
+.tl-row.last .tl-rail::before { display: none; }
+.tl-row:first-child .tl-rail::before { top: 8px; }
+.tl-dot { position: absolute; left: 8px; top: 3px; width: 11px; height: 11px; border-radius: 50%; background: var(--bg); border: 1.5px solid #C9C7BF; z-index: 2; }
+.tl-row.past .tl-dot { background: #1E293B; border-color: #1E293B; }
+.tl-row.now .tl-dot { width: 15px; height: 15px; left: 6px; top: 1px; background: #1E293B; border-color: #1E293B; box-shadow: 0 0 0 4px rgba(30,41,59,0.12); }
+.tl-body { padding: 0 0 6px 12px; line-height: 16px; min-width: 0; }
+.tl-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-primary); }
+.tl-dur { font-size: 10.5px; color: var(--text-tertiary); margin-top: 2px; }
+.tl-row.past .tl-label, .tl-row.past .tl-time { color: #B5B3AB; }
+.tl-row.past .tl-dur { color: #C8C6BE; }
+.tl-row.now .tl-label { color: #1E293B; }
+.tl-pill { display: inline-block; margin-left: 8px; background: #1E293B; color: #FFFFFF; font-size: 9px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; padding: 2px 6px; border-radius: 3px; vertical-align: 1px; }
+
+
+/* Timeline tags (on a block) and marks (own spot on the rail) */
+.tl-chip { display: flex; width: fit-content; align-items: center; gap: 5px; margin-top: 6px; padding: 3px 8px 3px 6px; border-radius: 6px; background: rgba(85,98,116,0.09); color: #556274; font-size: 10.5px; font-weight: 600; line-height: 1.25; }
+.tl-chip svg { width: 12px; height: 12px; flex-shrink: 0; }
+.tl-row.past .tl-chip { background: rgba(110,109,103,0.06); color: #B5B3AB; }
+.tl-markrow .tl-time { color: #B45309; font-weight: 600; padding-top: 6px; }
+.tl-markrow-msg .tl-time { color: #556274; }
+.tl-markrow-msg .tl-diamond { border-color: #556274; }
+.tl-markrow .tl-chip { margin-top: -1px; }
+.tl-markrow .tl-body { padding-top: 6px; }
+.tl-markrow .tl-diamond { top: 10px; }
+.tl-diamond { position: absolute; left: 9px; top: 4px; width: 9px; height: 9px; transform: rotate(45deg); border-radius: 1.5px; background: var(--bg); border: 1.5px solid #B45309; z-index: 2; }
+.tl-mark { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #B45309; }
+.tl-mark svg { width: 13px; height: 13px; flex-shrink: 0; }
+.tl-markrow.past .tl-mark { color: #B5B3AB; }
+.tl-markrow.past .tl-diamond { background: #1E293B; border-color: #1E293B; }
+
 </style>
 </head>
 <body>
 <div class="sched">
   <div class="date-header">
     <div class="date-nav">
-      <button id="prev-btn">←</button>
+      <button id="prev-btn" aria-label="Previous day"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3.5 5.5 8l4.5 4.5"/></svg></button>
       <div class="date-wrap">
         <div class="date-label" id="date-label"></div>
         <div class="cal-overlay" id="cal">
@@ -207,45 +195,21 @@ body { padding: 12px; padding-bottom: 40px; }
 
         </div>
       </div>
-      <button id="next-btn">→</button>
+      <button id="next-btn" aria-label="Next day"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5 10.5 8 6 12.5"/></svg></button>
       <div class="shift-wrap">
       </div>
     </div>
   </div>
   <div class="now-banner-wrap" id="now-banner-wrap"></div>
 
-  <div class="reminder-wrap" id="reminder-wrap"></div>
   <div class="timeline-wrap">
     <div class="board-row">
-      <div class="board-spacer"></div>
       <div class="columns">
         <div>
           <div class="timeline" id="timeline-all"></div>
         </div>
       </div>
-      <div class="side-rail">
-        <div class="rail-col">
-          <div class="column-label collapse-toggle" id="reminders-toggle">Reminders <span class="collapse-caret">›</span></div>
-          <div class="rail-body collapsed" id="reminders-body">
-            <div class="rail-reminders" id="rail-reminders"></div>
-            <button class="rail-add" data-add="reminder">+</button>
-          </div>
-        </div>
-      </div>
     </div>
-  </div>
-</div>
-<div class="reminders-overlay" id="reminders-overlay">
-  <div class="reminders-header">
-    <span class="reminders-title">Reminders</span>
-    <button id="reminders-toggle" class="reminders-toggle">+ Add</button>
-  </div>
-  <div class="reminders-list" id="reminders-list"></div>
-  <div class="reminders-add" id="reminders-add">
-    <input type="text" id="reminder-name" class="reminder-input" placeholder="Reminder name">
-    <input type="date" id="reminder-date" class="reminder-input">
-    <input type="time" id="reminder-time" class="reminder-input">
-    <button id="reminder-save" class="reminder-save-btn">Add</button>
   </div>
 </div>
 <div class="reminders-overlay skincare-overlay" id="skincare-overlay">
@@ -290,7 +254,6 @@ function showSync(state, text) {
 // ── Firebase helpers ──────────────────────────────────────────────────────────
 // Paths: /tasks/{dayKey}/{blockStart} = [{text,done}]
 //        /tallies/{dayKey}/{blockStart} = number
-//        /reminders = [{id,name,date,time}]
 
 function fbSetTasks(dayKey, blockStart, tasks) {
   showSync('syncing', 'Syncing…');
@@ -309,13 +272,6 @@ function fbSetShift(dk, hours) {
 function fbSetTally(dayKey, blockStart, val) {
   showSync('syncing', 'Syncing…');
   set(ref(db, `tallies/${dayKey}/${blockStart.replace(':','_')}`), val)
-    .then(() => showSync('synced', 'Synced'))
-    .catch(() => showSync('error', 'Sync failed'));
-}
-
-function fbSetReminders(arr) {
-  showSync('syncing', 'Syncing…');
-  set(ref(db, 'reminders'), arr)
     .then(() => showSync('synced', 'Synced'))
     .catch(() => showSync('error', 'Sync failed'));
 }
@@ -350,17 +306,37 @@ const MIN_BLOCK_HEIGHT = 36;
 
 // Pomodoro: 25min work / 5min break, repeating
 
-const FIXED_BLOCKS = [
-  { start: '6:00', end: '6:00', label: 'Rest', wakeRest: true, tags: [] },
-  { start: '6:00', end: '8:00', label: 'MR', tags: [] },
-  { start: '8:00', end: '16:00', label: 'Work', tags: [] },
-  { start: '16:00', end: '21:00', label: 'Rest', tags: [], buffer: true, bufferPriority: 1 },
-  { start: '21:00', end: '22:00', label: 'NR', tags: [] },
+// Day plan. Same morning + work every day; the evening depends on gym day or not.
+// Gym days (upper/lower split): Tue, Wed, Sat, Sun -> Gym 16:00-18:30 (incl. drive), then 1h Business.
+// Other days -> Stretch 30 min, then 1h Business. Rest until NR at 21:00.
+const GYM_DAYS = [0, 2, 3, 6]; // Sun, Tue, Wed, Sat
+const DAY_AM = [
+  { start: '6:00', end: '7:00', label: 'MR' },
+  { start: '7:00', end: '7:30', label: 'Walk' },
+  { start: '7:30', end: '8:00', label: 'Rest' },
+  { start: '8:00', end: '12:00', label: 'Work' },
+  { start: '12:00', end: '12:30', label: 'Break' },
+  { start: '12:30', end: '13:00', label: 'Walk' },
+  { start: '13:00', end: '16:00', label: 'Work' }
+];
+const EVENING_GYM = [
+  { start: '16:00', end: '18:30', label: 'Gym' },
+  { start: '18:30', end: '19:30', label: 'Business' },
+  { start: '19:30', end: '21:00', label: 'Rest' }
+];
+const EVENING_REST = [
+  { start: '16:00', end: '16:30', label: 'Stretch' },
+  { start: '16:30', end: '17:30', label: 'Business' },
+  { start: '17:30', end: '21:00', label: 'Rest' }
+];
+const DAY_PM = [
+  { start: '21:00', end: '22:00', label: 'NR' },
   { start: '22:00', end: '30:00', label: 'Sleep', displayEnd: '6:00', capHeight: true }
 ];
+const FIXED_BLOCKS = [...DAY_AM, ...EVENING_REST, ...DAY_PM]; // default (non-gym) day
 
 function dayKey(d) { return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
-function dayNum(d) { const ref = new Date(2026,0,1); return Math.floor((d - ref) / 86400000); }
+function dayNum(d) { const ref = new Date(2026,0,1); const day = new Date(d.getFullYear(), d.getMonth(), d.getDate()); return Math.round((day - ref) / 86400000); } // calendar-day count, safe across daylight saving
 function dateFromNum(n) { return new Date(2026, 0, 1 + n); }
 function loadAll() { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch(e) { return {}; } }
 function saveAll(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch(e) {} }
@@ -442,7 +418,8 @@ function getTrainTag(d) {
   return TRAIN_CYCLE[(((dayNum(d) - EX_START) % n) + n) % n];
 }
 function dayBlocks(d) {
-  return FIXED_BLOCKS; // exercise is an open block now — no per-day duration changes
+  const evening = GYM_DAYS.includes(d.getDay()) ? EVENING_GYM : EVENING_REST;
+  return [...DAY_AM, ...evening, ...DAY_PM];
 }
 function getAmExerciseTag(d) {
   const n = EX_AM_CYCLE.length;
@@ -570,7 +547,6 @@ let calYear = new Date().getFullYear();
 const fbCache = {
   tasks: {},   // { [dayKey_blockStart]: [{text,done}] }
   tallies: {}, // { [dayKey_blockStart]: number }
-  reminders: null,
   shifts: {},  // { [dayKey]: hours }
   meditation: null,  // { minutes, lastEval:'YYYY-MM-DD', done:{ 'YYYY-MM-DD':true } }
   exdone: null,      // { 'YYYY-MM-DD_H:MM': true } — exercise blocks ticked done
@@ -594,14 +570,6 @@ function listenToDay(dk) {
     render();
   });
 }
-
-// Listen to reminders globally
-onValue(ref(db, 'reminders'), snap => {
-  const val = snap.val();
-  fbCache.reminders = val || [];
-  renderReminders();
-  render(); // re-render reminder pills
-});
 
 // Listen to shifts globally — sync wake-time adjustments across devices
 onValue(ref(db, 'shifts'), snap => {
@@ -660,13 +628,6 @@ function saveTally(dk, blockStart, val) {
   fbCache.tallies[`${dk}_${blockStart}`] = val;
   fbSetTally(dk, blockStart, val);
 }
-function loadReminders() {
-  return fbCache.reminders || [];
-}
-function saveReminders(arr) {
-  fbCache.reminders = arr;
-  fbSetReminders(arr);
-}
 
 // ── Rendering ─────────────────────────────────────────────────────────────────
 // Wake-time shift: re-pack the day so blocks flow continuously from the wake time.
@@ -707,200 +668,86 @@ function computeShiftedTimes(shiftHours, blocks) {
   });
 }
 
-function computeBlockHeight(b) {
-  if ((b.buffer || b.wakeRest) && b.dispStartT !== undefined && b.dispStartT >= b.dispEndT) return null;
-  const layoutStart = (b.buffer || b.wakeRest) ? b.dispStartT : b.startT;
-  const layoutEnd = (b.buffer || b.wakeRest) ? b.dispEndT : b.endT;
-  const naturalHeight = (layoutEnd - layoutStart) * HOUR_HEIGHT;
-  // Height is proportional to duration; a small floor keeps the label, time and
-  // (always-visible) pills legible for very short blocks.
-  const tagRows = (b.tags && b.tags.length) ? (b.tags.length <= 3 ? 1 : 2) : 0;
-  const contentMin = 54 + (tagRows ? 8 + tagRows * 26 : 0);
-  // Compact: size to content, not duration — no hollow tall blocks.
-  let height = contentMin;
-  return height;
+// Timeline view: time | rail with dot | label. The rail fills in as the day goes.
+function fmtDur(a, b) {
+  const m = Math.round((b - a) * 60);
+  if (m < 60) return m + 'm';
+  const h = m / 60;
+  return (Number.isInteger(h) ? h : h.toFixed(1)) + 'h';
 }
-function columnNaturalHeight(blocks) {
-  let sum = 0, n = 0;
-  blocks.forEach(b => { const h = computeBlockHeight(b); if (h !== null) { sum += h + 3; n++; } });
-  return 2 * TOP_PAD + (n ? sum - 3 : 0);
-}
-function renderColumn(elId, blocks, startHour, markers, doneState, currentDayKey, nowTime, targetHeight) {
+// Same every day. A mark that lands on a block's start shows as a tag on that block;
+// one that lands mid-block gets its own spot on the rail.
+const DAY_MARKS = []; // none right now (e.g. { time: '18:00', kind: 'meal' })
+const ICON_MAIL = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3.5" width="12" height="9" rx="1.8"/><path d="m2.8 4.8 5.2 4 5.2-4"/></svg>';
+const ICON_MEAL = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 1.8v4a1.6 1.6 0 0 0 3.2 0v-4M5.6 1.8v12.4M11.8 14.2V1.8c-1.6.9-2.6 2.6-2.6 4.8v2.6h2.6"/></svg>';
+const MARK_INFO = {
+  msg: { text: 'Emails & messages', icon: ICON_MAIL },
+  meal: { text: 'Last meal & drink', icon: ICON_MEAL }
+};
+function renderTimeline(elId, blocks, nowTime, viewedKey) {
   const tl = document.getElementById(elId);
-  tl.innerHTML = '';
-  const endHour = blocks.length ? Math.max(...blocks.map(b => b.endT)) : startHour + 10;
-  tl._endHour = endHour;
-  const layout = blocks.map(b => {
-    const h = computeBlockHeight(b);
-    if (h === null) return null;
-    const ls = b.buffer ? b.dispStartT : b.startT;
-    const le = b.buffer ? b.dispEndT : b.endT;
-    return { ...b, height: h, natural: (le - ls) * HOUR_HEIGHT };
-  }).filter(b => b !== null);
-  // Equal columns: grow blocks to fill a shared height, distributing the extra space in
-  // proportion to each block's duration so sizes still track time within the column.
-  // No fill-stretch: every block keeps a compact card height (see cap below), so columns
-  // read as tidy equal-ish cards instead of one giant block towering over short ones.
-  // Stack blocks contiguously (flush), sized by duration — no time-gap spacing
-  let _cursor = TOP_PAD;
-  for (let k = 0; k < layout.length; k++) {
-    layout[k].top = _cursor;
-    _cursor += layout[k].height + 3;
-  }
-  const lastBottom = layout.length ? layout[layout.length - 1].top + layout[layout.length - 1].height : 0;
-  tl.style.height = `${lastBottom + TOP_PAD}px`;
-
-  layout.forEach(b => {
-    const block = document.createElement('div');
-    block.className = 'block';
-    if (nowTime !== null && (b.dispEndT || b.endT) <= nowTime) block.classList.add('past');
-    block.style.top = `${b.top + 1}px`;
-    block.style.height = `${b.height - 3}px`;
-
-    const _isToday = currentDayKey === dayKey(new Date());
-    const _medDone = _isToday && fbCache.meditation && fbCache.meditation.done && fbCache.meditation.done[currentDayKey];
-    const _exDone = _isToday && isExDone(currentDayKey, b.start);
-    const _isExercise = b.label === 'Train';
-    const tagsHtml = b.tags ? `<div class="tag-row">${b.tags.map(t => {
-      if (t.indexOf('Meditate') === 0) {
-        return `<span class="tag">${t}</span>`;
-      }
-      if (t.indexOf('Gratitude') === 0 && _isToday) {
-        const _gd = isExDone(currentDayKey, 'gratitude');
-        return `<span class="tag tag-med${_gd ? ' med-done' : ''}" data-exdone="gratitude">${t}${_gd ? ' ✓' : ''}</span>`;
-      }
-      if (_isExercise && _isToday && !REST_OPTIONS.includes(t)) {
-        return `<span class="tag">${t}</span>`;
-      }
-      if (t === 'Personal Grooming') {
-        return `<span class="tag tag-clickable" data-popup="grooming">${t}</span>`;
-      }
-      if (t === 'Face Grooming') {
-        return `<span class="tag tag-clickable" data-popup="face-grooming">${t}</span>`;
-      }
-      if (t === 'Checklist') {
-        const _pk = b.label === 'MR' ? 'mr-routine' : b.label === 'Learn' ? 'learn-routine' : 'nr-routine';
-        return `<span class="tag tag-clickable" data-popup="${_pk}">${t}</span>`;
-      }
-      if (t === 'Lift') return `<span class="tag tag-clickable" data-popup="lift">${t}</span>`;
-      if (t === 'Cardio') return `<span class="tag tag-clickable" data-popup="cardio">${t}</span>`;
-      if (t === 'Stretch') return `<span class="tag">${t}</span>`;
-      return `<span class="tag">${t}</span>`;
-    }).join('')}</div>` : '';
-    const displayStart = b.displayStart || formatTime(b.dispStartT);
-    const displayEnd = b.displayEnd || formatTime(b.dispEndT);
-    const noteHtml = b.note ? `<div class="b-note">${b.note}</div>` : '';
-    const _exClickable = false;
-    const _mrClickable = false;
-    const _blockClickable = _exClickable || _mrClickable;
-    const _blockDone = _exClickable ? isExDone(currentDayKey, b.start) : (_mrClickable && _medDone);
-    if (_blockDone) block.classList.add('block-done');
-    if (_exClickable) block.dataset.exblock = b.start;
-    if (_mrClickable) block.dataset.medblock = '1';
-    const checkOverlay = _blockClickable
-      ? `<div class="ex-check-overlay"><svg viewBox="0 0 48 48" fill="none" stroke="#1E293B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M11 25 l9 9 l17 -19"/></svg></div>`
-      : '';
-    block.innerHTML = `
-      ${checkOverlay}
-      <div class="block-content">
-        <div class="b-label">${b.displayLabel || b.label}</div>
-        <div class="b-time">${displayStart} – ${displayEnd}</div>
-        ${noteHtml}
-        ${tagsHtml}
-      </div>
-    `;
-    tl.appendChild(block);
-
-    if (_blockClickable) block.style.cursor = 'pointer';
-
-    block.querySelectorAll('[data-exdone]').forEach(_exEl => {
-      _exEl.addEventListener('click', (e) => { e.stopPropagation(); toggleExDone(currentDayKey, _exEl.dataset.exdone); });
-    });
-
-    block.querySelectorAll('[data-skincare]').forEach(_skEl => {
-      _skEl.addEventListener('click', (e) => { e.stopPropagation(); openSkincare(_skEl.dataset.skincare); });
-    });
-
-    // Meditation pill: tap to mark today done (adaptive minutes)
-    const _medEl = block.querySelector('[data-med]');
-    if (_medEl) {
-      _medEl.addEventListener('click', (e) => { e.stopPropagation(); toggleMedDone(); });
-    }
-
-    block.querySelectorAll('.subitem').forEach(el => {
-      el.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const k = el.dataset.key;
-        const all = loadAll();
-        if (!all[currentDayKey]) all[currentDayKey] = {};
-        all[currentDayKey][k] = !all[currentDayKey][k];
-        saveAll(all);
-        el.classList.toggle('done');
-      });
-    });
+  if (!tl) return;
+  const esc = v => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const early = nowTime !== null && nowTime < START_HOUR; // after midnight: still in last night's sleep
+  const rows = blocks.filter(b => b.endT > b.startT);
+  const marks = DAY_MARKS.map(m => ({ ...m, t: parseTime(m.time) }));
+  // Chronological items: each block, then any marks that fall inside it
+  const items = [];
+  rows.forEach(b => {
+    items.push({ type: 'block', t: b.startT, b, tags: marks.filter(m => Math.abs(m.t - b.startT) < 1e-6) });
+    marks.filter(m => m.t > b.startT && m.t < b.endT).sort((x, y) => x.t - y.t)
+      .forEach(m => items.push({ type: 'mark', t: m.t, m }));
   });
-
-  markers.forEach(m => {
-    let markerTop;
-    if (m.cls === 'now-line' || m.cls === 'marker') {
-      const dS = bl => (bl.dispStartT !== undefined ? bl.dispStartT : bl.startT);
-      const dE = bl => (bl.dispEndT !== undefined ? bl.dispEndT : bl.endT);
-      let mt = m.time;
-      let containing = layout.find(bl => bl && dS(bl) <= mt && mt < dE(bl));
-      if (!containing) { mt = m.time + 24; containing = layout.find(bl => bl && dS(bl) <= mt && mt < dE(bl)); }
-      if (containing) {
-        const frac = (mt - dS(containing)) / (dE(containing) - dS(containing));
-        markerTop = containing.top + frac * containing.height;
-      } else {
-        markerTop = TOP_PAD + (m.time - startHour) * HOUR_HEIGHT;
-      }
-    } else {
-      markerTop = TOP_PAD + (m.time - startHour) * HOUR_HEIGHT;
+  tl.innerHTML = items.map((it, i) => {
+    const isLast = i === items.length - 1;
+    const tNext = isLast ? it.b.endT : items[i + 1].t; // each row's rail runs until the next item
+    const seg = tNext - it.t;
+    let fill = 0;
+    if (nowTime !== null) {
+      if (early) { if (isLast) fill = (nowTime + 24 - it.t) / seg; }
+      else if (nowTime >= tNext) fill = 1;
+      else if (nowTime >= it.t) fill = (nowTime - it.t) / seg;
     }
-    const marker = document.createElement('div');
-    marker.className = m.cls;
-    marker.style.top = `${markerTop}px`;
-    if (nowTime !== null && m.cls !== 'now-line' && m.time < nowTime) marker.style.opacity = '0.3';
-    marker.innerHTML = `<div class="${m.labelCls}"${m.popup ? ` data-popup="${m.popup}"` : ''}>${m.label}</div>`;
-    tl.appendChild(marker);
-
-    if (m.cls === 'now-line') {
-      marker.style.cursor = 'ns-resize';
-      marker.style.pointerEvents = 'all';
-      const onDrag = (clientY) => {
-        const rect = tl.getBoundingClientRect();
-        const y = Math.max(0, Math.min(clientY - rect.top, rect.height));
-        const scrubbed = startHour + (y / rect.height) * (tl._endHour - startHour);
-        nowScrub = Math.max(START_HOUR, Math.min(31, scrubbed));
-        render();
-      };
-      marker.addEventListener('mousedown', e => {
-        e.stopPropagation();
-        const move = e2 => onDrag(e2.clientY);
-        const up = () => { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up); };
-        document.addEventListener('mousemove', move);
-        document.addEventListener('mouseup', up);
-      });
-      marker.addEventListener('touchstart', e => {
-        e.stopPropagation();
-        const move = e2 => { e2.preventDefault(); onDrag(e2.touches[0].clientY); };
-        const up = () => { document.removeEventListener('touchmove', move); document.removeEventListener('touchend', up); };
-        document.addEventListener('touchmove', move, { passive: false });
-        document.addEventListener('touchend', up);
-      });
+    const fillCls = fill >= 1 ? ' f-full' : fill > 0 ? ' f-part' : '';
+    const style = `--p:${Math.round(fill * 100)}%`;
+    if (it.type === 'mark') {
+      const info = MARK_INFO[it.m.kind];
+      const past = !early && nowTime !== null && it.t <= nowTime ? ' past' : '';
+      const minH = Math.round(Math.max(40, Math.min(86, 24 + seg * 14)));
+      const body = it.m.kind === 'msg'
+        ? `<div class="tl-chip tl-chip-msg">${info.icon}${info.text}</div>`
+        : `<span class="tl-mark tl-mark-${it.m.kind}">${info.icon}${info.text}</span>`;
+      return `<div class="tl-row tl-markrow tl-markrow-${it.m.kind}${past}${fillCls}" style="min-height:${minH}px;${style}">
+      <span class="tl-time">${formatTime(it.t)}</span>
+      <span class="tl-rail"><span class="tl-diamond"></span></span>
+      <span class="tl-body">${body}</span>
+    </div>`;
     }
-  });
+    const b = it.b, a = b.startT, e = b.endT;
+    let state = '';
+    if (nowTime !== null) {
+      if (early) { if (isLast) state = ' now'; }
+      else if (e <= nowTime) state = ' past';
+      else if (a <= nowTime) state = ' now';
+    }
+    const minH = b.label === 'Sleep' ? 40 : Math.round(Math.min(96, 34 + seg * 14));
+    const durTxt = b.displayEnd ? 'until ' + b.displayEnd : fmtDur(a, e);
+    const tagHtml = it.tags.map(m => `<div class="tl-chip tl-chip-${m.kind}">${MARK_INFO[m.kind].icon}${MARK_INFO[m.kind].text}</div>`).join('');
+    return `<div class="tl-row${state}${fillCls}${isLast ? ' last' : ''}" style="min-height:${minH}px;${style}">
+      <span class="tl-time">${formatTime(a)}</span>
+      <span class="tl-rail"><span class="tl-dot"></span></span>
+      <span class="tl-body"><span class="tl-label">${esc(b.displayLabel || b.label)}</span>${state === ' now' ? '<span class="tl-pill">Now</span>' : ''}<div class="tl-dur">${durTxt}</div>${tagHtml}</span>
+    </div>`;
+  }).join('');
 }
 
 function render() {
   const d = dateFromNum(cur);
   const key = dayKey(d);
   const doneState = getDoneState(key);
-  document.getElementById('date-label').textContent = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  document.getElementById('date-label').innerHTML = `<span class="date-dow">${d.toLocaleDateString('en-US', { weekday: 'long' })}</span><span class="date-md">${d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</span>`;
 
   const dow = d.getDay();
-  const reminderWrap = document.getElementById('reminder-wrap');
-  if (reminderWrap) reminderWrap.innerHTML = '';
 
   const shiftKey = `shift_${key}`;
   const shiftHours = 0;
@@ -937,54 +784,13 @@ function render() {
   const today = new Date();
   const showNow = dayNum(today) === cur;
   const nowTime = showNow ? (nowScrub !== null ? nowScrub : today.getHours() + today.getMinutes() / 60) : null;
-  const hh = showNow ? String(today.getHours()).padStart(2,'0') : '';
-  const mm = showNow ? String(today.getMinutes()).padStart(2,'0') : '';
 
   const nowBanner = document.getElementById('now-banner-wrap');
   if (nowBanner) nowBanner.innerHTML = '';
 
-  // Fixed clock-time markers + reminders + the now-line, each placed in the column whose
-  // (packed) displayed range contains its time — so they track the re-packed day.
-  const allMarkers = [];
-
-  const timelineMarkers = [];
-
-  // Timed reminders due on the viewed day
-  const viewedDayReminders = loadReminders().filter(r => r.date === key && r.time);
-  viewedDayReminders.forEach(r => {
-    const [rh, rm] = r.time.split(':').map(Number);
-    if (isNaN(rh) || isNaN(rm)) return;
-    timelineMarkers.push({ time: rh + rm / 60, cls: 'marker', labelCls: 'marker-label', label: `${r.name} · ${r.time}` });
-  });
-
-  // Now-line at the real current time, positioned within the packed schedule
-  if (showNow) {
-    timelineMarkers.push({ time: nowTime, cls: 'now-line', labelCls: 'now-label', label: `Now · ${hh}:${mm}` });
-  }
-
-  timelineMarkers.forEach(m => allMarkers.push(m));
-
-  renderColumn('timeline-all', allBlocks, START_HOUR, allMarkers, doneState, key, nowTime, null);
-
-  // Column bottoms: set all columns to the tallest natural height (empty space fills
-  // shorter columns) so blocks stay proportional and same-duration blocks match across columns.
-  requestAnimationFrame(() => {
-    const tls = ['timeline-all'].map(id => document.getElementById(id));
-    const maxH = Math.max(...tls.map(t => parseInt(t.style.height) || 0));
-    tls.forEach(t => { t.style.height = maxH + 'px'; });
-  });
-
-  wireCollapse('reminders-toggle', document.getElementById('reminders-body'), () => _remindersOpen, v => _remindersOpen = v);
+  renderTimeline('timeline-all', allBlocks, nowTime, key);
 }
 
-let _remindersOpen = false;
-function wireCollapse(toggleId, bodyEl, isOpenGetter, setOpen) {
-  const t = document.getElementById(toggleId);
-  if (!t) return;
-  if (isOpenGetter()) { t.classList.add('open'); bodyEl.classList.remove('collapsed'); }
-  else { t.classList.remove('open'); bodyEl.classList.add('collapsed'); }
-  t.onclick = (e) => { e.stopPropagation(); const nv = !isOpenGetter(); setOpen(nv); t.classList.toggle('open', nv); bodyEl.classList.toggle('collapsed', !nv); };
-}
 setInterval(render, 10000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { render(); } });
 window.addEventListener('focus', render);
@@ -1010,131 +816,12 @@ document.getElementById('date-label').onclick = () => {
   cal.classList.toggle('show');
 };
 document.addEventListener('click', e => {
-  if (!cal.contains(e.target) && e.target.id !== 'date-label') cal.classList.remove('show');
+  if (!cal.contains(e.target) && !e.target.closest('#date-label')) cal.classList.remove('show');
 });
 document.getElementById('cal-prev').onclick = (e) => { e.stopPropagation(); calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCal(); };
 document.getElementById('cal-next').onclick = (e) => { e.stopPropagation(); calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCal(); };
 
 
-// ── Reminders ─────────────────────────────────────────────────────────────────
-let _railAddsWired = false;
-function wireRailAdds() {
-  document.querySelectorAll('.rail-add').forEach(btn => {
-    if (btn._wired) return; btn._wired = true;
-    btn.onclick = (e) => {
-      e.stopPropagation();
-      // toggle an inline input box right after the button
-      let box = btn.nextElementSibling;
-      if (box && box.classList && box.classList.contains('rail-addbox')) { box.classList.toggle('show'); const i=box.querySelector('input'); if(i) i.focus(); return; }
-      box = document.createElement('div');
-      box.className = 'rail-addbox show';
-      box.innerHTML = `<input type="text" placeholder="Reminder"><input type="date"><input type="time"><button class="rail-addgo">Add</button>`;
-      btn.after(box);
-      const inp = box.querySelector('input');
-      inp.focus();
-      const go = () => {
-        const txt = inp.value.trim();
-        if (!txt) { box.classList.remove('show'); return; }
-        const date = box.querySelector('input[type=date]').value;
-        const time = box.querySelector('input[type=time]').value;
-        if (!date) { inp.focus(); return; }
-        const arr = loadReminders();
-        arr.push({ id: String(Date.now()), name: txt, date, time: time || null });
-        saveReminders(arr);
-        inp.value = ''; box.classList.remove('show');
-      };
-      box.querySelector('.rail-addgo').onclick = (ev) => { ev.stopPropagation(); go(); };
-      inp.onkeydown = (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); go(); } };
-    };
-  });
-}
-function renderReminders() {
-  const list = document.getElementById('reminders-list');
-  if (!list) return;
-  const arr = loadReminders();
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  const enriched = arr.map(r => {
-    const d = new Date(r.date + 'T00:00:00');
-    const days = Math.round((d - today) / 86400000);
-    return { ...r, days };
-  }).filter(r => r.days >= 0).sort((a, b) => a.days - b.days);
-  if (enriched.length === 0) {
-    list.innerHTML = '<div class="reminders-empty">No upcoming reminders</div>';
-    return;
-  }
-  list.innerHTML = enriched.map(r => {
-    let cls = 'reminder-item';
-    let countdown;
-    if (r.days === 0) { cls += ' due-today'; countdown = r.time ? r.time : 'Today'; }
-    else if (r.days <= 2) { cls += ' due-soon'; countdown = `${r.days}d${r.time ? ' · ' + r.time : ''}`; }
-    else { countdown = `${r.days}d${r.time ? ' · ' + r.time : ''}`; }
-    return `<div class="${cls}"><span class="reminder-name">${r.name}</span><span class="reminder-countdown">${countdown}</span><button class="reminder-delete" data-id="${r.id}">×</button></div>`;
-  }).join('');
-  list.querySelectorAll('.reminder-delete').forEach(btn => {
-    btn.onclick = (e) => { e.stopPropagation(); saveReminders(loadReminders().filter(r => r.id !== btn.dataset.id)); };
-  });
-  wireRailAdds();
-  // Mirror into the right rail as a Reminders section
-  const rail = document.getElementById('rail-reminders');
-  if (rail) {
-    if (enriched.length === 0) { rail.innerHTML = ''; }
-    else {
-      const rows = enriched.map(r => {
-        let cls = 'rr-item'; let cd;
-        if (r.days === 0) { cls += ' due-today'; cd = r.time ? r.time : 'Today'; }
-        else if (r.days <= 2) { cls += ' due-soon'; cd = `${r.days}d${r.time ? ' · ' + r.time : ''}`; }
-        else { cd = `${r.days}d${r.time ? ' · ' + r.time : ''}`; }
-        const nm = String(r.name).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        return `<div class="${cls}" data-redit="${r.id}"><span class="rr-name">${nm}</span><span class="rr-count">${cd}</span></div>`;
-      }).join('');
-      rail.innerHTML = rows;
-      rail.querySelectorAll('[data-redit]').forEach(row => {
-        row.onclick = (e) => {
-          e.stopPropagation();
-          const cur = loadReminders().find(x => x.id === row.dataset.redit);
-          if (!cur) return;
-          const nv = prompt('Edit reminder name (blank to delete):', cur.name);
-          if (nv === null) return;
-          if (nv.trim() === '') { saveReminders(loadReminders().filter(x => x.id !== row.dataset.redit)); return; }
-          const dv = prompt('Date (YYYY-MM-DD):', cur.date);
-          if (dv === null) return;
-          const tv = prompt('Time (HH:MM, blank for none):', cur.time || '');
-          saveReminders(loadReminders().map(x => x.id === row.dataset.redit ? { ...x, name: nv.trim(), date: dv.trim() || cur.date, time: (tv && tv.trim()) ? tv.trim() : null } : x));
-        };
-      });
-    }
-  }
-}
-
-document.getElementById('reminders-toggle').onclick = (e) => { e.stopPropagation(); document.getElementById('reminders-add').classList.toggle('show'); };
-document.getElementById('reminder-save').onclick = (e) => {
-  e.stopPropagation();
-  const name = document.getElementById('reminder-name').value.trim();
-  const date = document.getElementById('reminder-date').value;
-  const time = document.getElementById('reminder-time').value;
-  if (!name || !date) return;
-  const arr = loadReminders();
-  arr.push({ id: String(Date.now()), name, date, time: time || null });
-  saveReminders(arr);
-  document.getElementById('reminder-name').value = '';
-  document.getElementById('reminder-date').value = '';
-  document.getElementById('reminder-time').value = '';
-  document.getElementById('reminders-add').classList.remove('show');
-};
-
-// ── Shift overlay ─────────────────────────────────────────────────────────────
-const remindersBtn = document.getElementById('reminders-btn');
-const remindersOverlay = document.getElementById('reminders-overlay');
-if (remindersBtn) {
-  remindersBtn.onclick = (e) => {
-    e.stopPropagation();
-    remindersOverlay.classList.toggle('show');
-  };
-  document.addEventListener('click', e => {
-    if (!remindersOverlay.contains(e.target) && !remindersBtn.contains(e.target)) remindersOverlay.classList.remove('show');
-  });
-}
 // ── Skincare popup ──────────────────────────────────────────────────────────────
 const SKINCARE = {
   morning: ['Scrub With Toothbrush', 'Moisturizer', 'Sunscreen'],
@@ -1146,7 +833,6 @@ function openSkincare(when) {
   document.getElementById('skincare-title').textContent = (when === 'morning' ? 'Morning' : 'Evening') + ' Skincare';
   document.getElementById('skincare-steps').innerHTML = (SKINCARE[when] || []).map((s, i) =>
     `<div class="skincare-step"><span class="skincare-num">${i + 1}</span>${s}</div>`).join('');
-  remindersOverlay.classList.remove('show');
   overlay.classList.add('show');
 }
 document.addEventListener('click', (e) => {
