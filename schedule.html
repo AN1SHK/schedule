@@ -308,15 +308,13 @@ const MIN_BLOCK_HEIGHT = 36;
 
 // Day plan. Same morning + work every day; the evening depends on gym day or not.
 // Gym days (upper/lower split): Tue, Wed, Sat, Sun -> Gym 16:00-18:30 (incl. drive), then 1h Business.
-// Other days -> Stretch 30 min, then 1h Business. Rest until NR at 21:00.
+// Other days -> 1h Business right after work. Rest until NR at 21:00.
+// Thursday -> Sprint 16:00-17:00 first, then Business, then Rest.
 const GYM_DAYS = [0, 2, 3, 6]; // Sun, Tue, Wed, Sat
 const DAY_AM = [
-  { start: '6:00', end: '7:00', label: 'MR' },
-  { start: '7:00', end: '7:30', label: 'Walk' },
-  { start: '7:30', end: '8:00', label: 'Rest' },
+  { start: '6:00', end: '8:00', label: 'MR' },
   { start: '8:00', end: '12:00', label: 'Work' },
-  { start: '12:00', end: '12:30', label: 'Break' },
-  { start: '12:30', end: '13:00', label: 'Walk' },
+  { start: '12:00', end: '13:00', label: 'Walk' },
   { start: '13:00', end: '16:00', label: 'Work' }
 ];
 const EVENING_GYM = [
@@ -325,9 +323,13 @@ const EVENING_GYM = [
   { start: '19:30', end: '21:00', label: 'Rest' }
 ];
 const EVENING_REST = [
-  { start: '16:00', end: '16:30', label: 'Stretch' },
-  { start: '16:30', end: '17:30', label: 'Business' },
-  { start: '17:30', end: '21:00', label: 'Rest' }
+  { start: '16:00', end: '17:00', label: 'Business' },
+  { start: '17:00', end: '21:00', label: 'Rest' }
+];
+const EVENING_THU = [
+  { start: '16:00', end: '17:00', label: 'Sprint' },
+  { start: '17:00', end: '18:00', label: 'Business' },
+  { start: '18:00', end: '21:00', label: 'Rest' }
 ];
 const DAY_PM = [
   { start: '21:00', end: '22:00', label: 'NR' },
@@ -418,7 +420,8 @@ function getTrainTag(d) {
   return TRAIN_CYCLE[(((dayNum(d) - EX_START) % n) + n) % n];
 }
 function dayBlocks(d) {
-  const evening = GYM_DAYS.includes(d.getDay()) ? EVENING_GYM : EVENING_REST;
+  const dow = d.getDay();
+  const evening = GYM_DAYS.includes(dow) ? EVENING_GYM : dow === 4 ? EVENING_THU : EVENING_REST;
   return [...DAY_AM, ...evening, ...DAY_PM];
 }
 function getAmExerciseTag(d) {
