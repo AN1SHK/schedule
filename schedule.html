@@ -167,6 +167,7 @@ body { padding: 12px; padding-bottom: 40px; }
 .tl-markrow-msg .tl-time { color: #556274; }
 .tl-markrow-msg .tl-diamond { border-color: #556274; }
 .tl-markrow .tl-chip { margin-top: -1px; }
+.tl-chip-meal { background: rgba(180,83,9,0.10); color: #B45309; font-size: 11px; padding: 3px 9px 3px 7px; }
 .tl-markrow .tl-body { padding-top: 6px; }
 .tl-markrow .tl-diamond { top: 10px; }
 .tl-diamond { position: absolute; left: 9px; top: 4px; width: 9px; height: 9px; transform: rotate(45deg); border-radius: 1.5px; background: var(--bg); border: 1.5px solid #B45309; z-index: 2; }
@@ -174,6 +175,13 @@ body { padding: 12px; padding-bottom: 40px; }
 .tl-mark svg { width: 13px; height: 13px; flex-shrink: 0; }
 .tl-markrow.past .tl-mark { color: #B5B3AB; }
 .tl-markrow.past .tl-diamond { background: #1E293B; border-color: #1E293B; }
+
+
+/* 7pm cutoff: quiet caps note with a small dash on the rail */
+.tl-markrow-meal .tl-time { color: var(--text-tertiary); font-weight: 400; }
+.tl-tick { position: absolute; left: 8px; top: 13px; width: 11px; height: 1.5px; border-radius: 1px; background: #1E293B; z-index: 2; }
+.tl-note { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-secondary); line-height: 16px; }
+.tl-markrow.past .tl-note { color: #B5B3AB; }
 
 </style>
 </head>
@@ -307,35 +315,27 @@ const MIN_BLOCK_HEIGHT = 36;
 // Pomodoro: 25min work / 5min break, repeating
 
 // Day plan. Same morning + work every day; the evening depends on gym day or not.
-// Gym days (upper/lower split): Tue, Wed, Sat, Sun -> Gym 16:00-18:30 (incl. drive), then 1h Business.
-// Other days -> 1h Business right after work. Rest until NR at 21:00.
-// Thursday -> Sprint 16:00-17:00 first, then Business, then Rest.
+// Gym days (upper/lower split): Tue, Wed, Sat, Sun -> Gym 16:00-18:30 (incl. drive), then Business until NR.
+// Other days -> Business from 16:00 until NR at 21:00.
 const GYM_DAYS = [0, 2, 3, 6]; // Sun, Tue, Wed, Sat
 const DAY_AM = [
   { start: '6:00', end: '8:00', label: 'MR' },
   { start: '8:00', end: '12:00', label: 'Work' },
-  { start: '12:00', end: '13:00', label: 'Walk' },
+  { start: '12:00', end: '13:00', label: 'Business' },
   { start: '13:00', end: '16:00', label: 'Work' }
 ];
 const EVENING_GYM = [
   { start: '16:00', end: '18:30', label: 'Gym' },
-  { start: '18:30', end: '19:30', label: 'Business' },
-  { start: '19:30', end: '21:00', label: 'Rest' }
+  { start: '18:30', end: '21:00', label: 'Business' }
 ];
-const EVENING_REST = [
-  { start: '16:00', end: '17:00', label: 'Business' },
-  { start: '17:00', end: '21:00', label: 'Rest' }
-];
-const EVENING_THU = [
-  { start: '16:00', end: '17:00', label: 'Sprint' },
-  { start: '17:00', end: '18:00', label: 'Business' },
-  { start: '18:00', end: '21:00', label: 'Rest' }
+const EVENING_NOGYM = [
+  { start: '16:00', end: '21:00', label: 'Business' }
 ];
 const DAY_PM = [
   { start: '21:00', end: '22:00', label: 'NR' },
   { start: '22:00', end: '30:00', label: 'Sleep', displayEnd: '6:00', capHeight: true }
 ];
-const FIXED_BLOCKS = [...DAY_AM, ...EVENING_REST, ...DAY_PM]; // default (non-gym) day
+const FIXED_BLOCKS = [...DAY_AM, ...EVENING_NOGYM, ...DAY_PM]; // default (non-gym) day
 
 function dayKey(d) { return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
 function dayNum(d) { const ref = new Date(2026,0,1); const day = new Date(d.getFullYear(), d.getMonth(), d.getDate()); return Math.round((day - ref) / 86400000); } // calendar-day count, safe across daylight saving
@@ -421,7 +421,7 @@ function getTrainTag(d) {
 }
 function dayBlocks(d) {
   const dow = d.getDay();
-  const evening = GYM_DAYS.includes(dow) ? EVENING_GYM : dow === 4 ? EVENING_THU : EVENING_REST;
+  const evening = GYM_DAYS.includes(dow) ? EVENING_GYM : EVENING_NOGYM;
   return [...DAY_AM, ...evening, ...DAY_PM];
 }
 function getAmExerciseTag(d) {
@@ -680,12 +680,12 @@ function fmtDur(a, b) {
 }
 // Same every day. A mark that lands on a block's start shows as a tag on that block;
 // one that lands mid-block gets its own spot on the rail.
-const DAY_MARKS = []; // none right now (e.g. { time: '18:00', kind: 'meal' })
+const DAY_MARKS = [{ time: '19:00', kind: 'meal' }]; // last meal & drink cutoff, every day
 const ICON_MAIL = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3.5" width="12" height="9" rx="1.8"/><path d="m2.8 4.8 5.2 4 5.2-4"/></svg>';
 const ICON_MEAL = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 1.8v4a1.6 1.6 0 0 0 3.2 0v-4M5.6 1.8v12.4M11.8 14.2V1.8c-1.6.9-2.6 2.6-2.6 4.8v2.6h2.6"/></svg>';
 const MARK_INFO = {
   msg: { text: 'Emails & messages', icon: ICON_MAIL },
-  meal: { text: 'Last meal & drink', icon: ICON_MEAL }
+  meal: { text: 'Last Meal and Drink', icon: ICON_MEAL }
 };
 function renderTimeline(elId, blocks, nowTime, viewedKey) {
   const tl = document.getElementById(elId);
@@ -717,12 +717,13 @@ function renderTimeline(elId, blocks, nowTime, viewedKey) {
       const info = MARK_INFO[it.m.kind];
       const past = !early && nowTime !== null && it.t <= nowTime ? ' past' : '';
       const minH = Math.round(Math.max(40, Math.min(86, 24 + seg * 14)));
-      const body = it.m.kind === 'msg'
-        ? `<div class="tl-chip tl-chip-msg">${info.icon}${info.text}</div>`
-        : `<span class="tl-mark tl-mark-${it.m.kind}">${info.icon}${info.text}</span>`;
+      const body = it.m.kind === 'meal'
+        ? `<span class="tl-note">${info.text}</span>`
+        : `<div class="tl-chip tl-chip-${it.m.kind}">${info.icon}${info.text}</div>`;
+      const marker = it.m.kind === 'meal' ? '<span class="tl-tick"></span>' : '<span class="tl-diamond"></span>';
       return `<div class="tl-row tl-markrow tl-markrow-${it.m.kind}${past}${fillCls}" style="min-height:${minH}px;${style}">
       <span class="tl-time">${formatTime(it.t)}</span>
-      <span class="tl-rail"><span class="tl-diamond"></span></span>
+      <span class="tl-rail">${marker}</span>
       <span class="tl-body">${body}</span>
     </div>`;
     }
@@ -734,12 +735,12 @@ function renderTimeline(elId, blocks, nowTime, viewedKey) {
       else if (a <= nowTime) state = ' now';
     }
     const minH = b.label === 'Sleep' ? 40 : Math.round(Math.min(96, 34 + seg * 14));
-    const durTxt = b.displayEnd ? 'until ' + b.displayEnd : fmtDur(a, e);
+    const durTxt = b.displayEnd ? '' : fmtDur(a, e); // Sleep shows no sub-line
     const tagHtml = it.tags.map(m => `<div class="tl-chip tl-chip-${m.kind}">${MARK_INFO[m.kind].icon}${MARK_INFO[m.kind].text}</div>`).join('');
     return `<div class="tl-row${state}${fillCls}${isLast ? ' last' : ''}" style="min-height:${minH}px;${style}">
       <span class="tl-time">${formatTime(a)}</span>
       <span class="tl-rail"><span class="tl-dot"></span></span>
-      <span class="tl-body"><span class="tl-label">${esc(b.displayLabel || b.label)}</span>${state === ' now' ? '<span class="tl-pill">Now</span>' : ''}<div class="tl-dur">${durTxt}</div>${tagHtml}</span>
+      <span class="tl-body"><span class="tl-label">${esc(b.displayLabel || b.label)}</span>${state === ' now' ? '<span class="tl-pill">Now</span>' : ''}${durTxt ? `<div class="tl-dur">${durTxt}</div>` : ''}${tagHtml}</span>
     </div>`;
   }).join('');
 }
