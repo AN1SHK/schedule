@@ -315,25 +315,25 @@ const MIN_BLOCK_HEIGHT = 36;
 // Pomodoro: 25min work / 5min break, repeating
 
 // Day plan. Same morning + work every day; the evening depends on gym day or not.
-// Gym days (upper/lower split): Tue, Wed, Sat, Sun -> Gym 16:00-18:30 (incl. drive), then Business until NR.
-// Other days -> Business from 16:00 until NR at 21:00.
-const GYM_DAYS = [0, 2, 3, 6]; // Sun, Tue, Wed, Sat
+// Gym days: Tue, Thu, Sat -> Gym 16:00-17:30, then Rest until NR.
+// Other days -> Rest from 16:00 until NR at 20:30. Sleep 21:30-6:30. (Business blocks set to Rest for now.)
+const GYM_DAYS = [2, 4, 6]; // Tue, Thu, Sat
 const DAY_AM = [
-  { start: '6:00', end: '8:00', label: 'MR' },
+  { start: '6:30', end: '8:00', label: 'MR' },
   { start: '8:00', end: '12:00', label: 'Work' },
-  { start: '12:00', end: '13:00', label: 'Business' },
+  { start: '12:00', end: '13:00', label: 'Rest' },
   { start: '13:00', end: '16:00', label: 'Work' }
 ];
 const EVENING_GYM = [
-  { start: '16:00', end: '18:30', label: 'Gym' },
-  { start: '18:30', end: '21:00', label: 'Business' }
+  { start: '16:00', end: '17:30', label: 'Gym' },
+  { start: '17:30', end: '20:30', label: 'Rest' }
 ];
 const EVENING_NOGYM = [
-  { start: '16:00', end: '21:00', label: 'Business' }
+  { start: '16:00', end: '20:30', label: 'Rest' }
 ];
 const DAY_PM = [
-  { start: '21:00', end: '22:00', label: 'NR' },
-  { start: '22:00', end: '30:00', label: 'Sleep', displayEnd: '6:00', capHeight: true }
+  { start: '20:30', end: '21:30', label: 'NR' },
+  { start: '21:30', end: '30:30', label: 'Sleep', displayEnd: '6:30', capHeight: true }
 ];
 const FIXED_BLOCKS = [...DAY_AM, ...EVENING_NOGYM, ...DAY_PM]; // default (non-gym) day
 
@@ -680,7 +680,7 @@ function fmtDur(a, b) {
 }
 // Same every day. A mark that lands on a block's start shows as a tag on that block;
 // one that lands mid-block gets its own spot on the rail.
-const DAY_MARKS = [{ time: '19:00', kind: 'meal' }]; // last meal & drink cutoff, every day
+const DAY_MARKS = [{ time: '18:30', kind: 'meal' }]; // last meal & drink cutoff, every day
 const ICON_MAIL = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3.5" width="12" height="9" rx="1.8"/><path d="m2.8 4.8 5.2 4 5.2-4"/></svg>';
 const ICON_MEAL = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 1.8v4a1.6 1.6 0 0 0 3.2 0v-4M5.6 1.8v12.4M11.8 14.2V1.8c-1.6.9-2.6 2.6-2.6 4.8v2.6h2.6"/></svg>';
 const MARK_INFO = {
@@ -691,7 +691,8 @@ function renderTimeline(elId, blocks, nowTime, viewedKey) {
   const tl = document.getElementById(elId);
   if (!tl) return;
   const esc = v => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  const early = nowTime !== null && nowTime < START_HOUR; // after midnight: still in last night's sleep
+  const wakeT = blocks.length ? Math.min(...blocks.map(b => b.startT)) : START_HOUR;
+  const early = nowTime !== null && nowTime < wakeT; // after midnight, before wake-up: still in last night's sleep
   const rows = blocks.filter(b => b.endT > b.startT);
   const marks = DAY_MARKS.map(m => ({ ...m, t: parseTime(m.time) }));
   // Chronological items: each block, then any marks that fall inside it
