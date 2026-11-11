@@ -183,6 +183,35 @@ body { padding: 12px; padding-bottom: 40px; }
 .tl-note { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-secondary); line-height: 16px; }
 .tl-markrow.past .tl-note { color: #B5B3AB; }
 
+
+/* Block checklists (tap MR to open) */
+.tl-row.has-list .tl-head { cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+.tl-caret { display: inline-flex; width: 10px; height: 10px; margin-left: 5px; vertical-align: -1px; color: var(--text-tertiary); transition: transform 0.15s; }
+.tl-caret svg { width: 10px; height: 10px; }
+.tl-row.open .tl-caret { transform: rotate(90deg); }
+.tl-list { margin: 8px 0 4px; display: flex; flex-direction: column; }
+.tl-item { display: flex; align-items: flex-start; gap: 9px; padding: 5px 0; font-size: 12px; line-height: 16px; color: var(--text-primary); cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+.tl-box { width: 14px; height: 14px; margin-top: 1px; flex-shrink: 0; border-radius: 50%; border: 1.5px solid #C9C7BF; display: flex; align-items: center; justify-content: center; }
+.tl-box svg { width: 9px; height: 9px; color: #FFFFFF; opacity: 0; }
+.tl-item.done .tl-box { background: #1E293B; border-color: #1E293B; }
+.tl-item.done .tl-box svg { opacity: 1; }
+.tl-item.done .tl-txt { color: var(--text-tertiary); }
+.tl-row.past .tl-item { color: #B5B3AB; }
+
+
+/* Eating window bracket, left of the times */
+.tl-bracket { position: absolute; left: calc(50% - 104px); width: 7px; border: 1.5px solid #8E8C85; border-right: none; border-radius: 4px 0 0 4px; pointer-events: none; }
+.tl-bracket-label { position: absolute; top: 50%; left: -0.75px; transform: translate(-50%, -50%); padding: 6px 0 6px 0.14em; background: var(--bg); font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-secondary); line-height: 1.6; text-align: center; white-space: nowrap; }
+.tl-bracket.past { border-color: #D3D1CA; }
+.tl-bracket.past .tl-bracket-label { color: #C8C6BE; }
+
+
+/* Quiet note under a block (e.g. Work: 50 work · 10 break) */
+.tl-subnote { display: flex; align-items: center; gap: 7px; margin-top: 5px; font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-secondary); line-height: 14px; }
+.tl-subnote::before { content: ''; width: 9px; height: 1.5px; border-radius: 1px; background: #1E293B; flex-shrink: 0; }
+.tl-row.past .tl-subnote { color: #B5B3AB; }
+.tl-row.past .tl-subnote::before { background: #B5B3AB; }
+
 </style>
 </head>
 <body>
@@ -305,6 +334,13 @@ function fbSetExDone(map) {
     .catch(() => showSync('error', 'Sync failed'));
 }
 
+function fbSetChecklists(map) {
+  showSync('syncing', 'Syncing…');
+  set(ref(db, 'checklists'), map)
+    .then(() => showSync('synced', 'Synced'))
+    .catch(() => showSync('error', 'Sync failed'));
+}
+
 // ── Schedule constants ────────────────────────────────────────────────────────
 const KEY = 'schedule_v2';
 const START_HOUR = 6;
@@ -316,12 +352,12 @@ const MIN_BLOCK_HEIGHT = 36;
 
 // Day plan. Same morning + work every day; the evening depends on gym day or not.
 // Gym days: Tue, Thu, Sat -> Gym 16:00-17:30, then Rest until NR.
-// Other days -> Rest from 16:00 until NR at 20:30. Sleep 21:30-6:30. (Business blocks set to Rest for now.)
+// Other days -> Rest from 16:00 until NR at 20:30. Sleep 21:30-6:00. (Business blocks set to Rest for now.)
 const GYM_DAYS = [2, 4, 6]; // Tue, Thu, Sat
-const DAY_AM = [
-  { start: '6:30', end: '8:00', label: 'MR' },
+const DAY_AM = [ // sub = extra text in the small gray line
+  { start: '6:00', end: '8:00', label: 'MR' },
   { start: '8:00', end: '12:00', label: 'Work' },
-  { start: '12:00', end: '13:00', label: 'Rest' },
+  { start: '12:00', end: '13:00', label: 'Break' },
   { start: '13:00', end: '16:00', label: 'Work' }
 ];
 const EVENING_GYM = [
@@ -331,9 +367,13 @@ const EVENING_GYM = [
 const EVENING_NOGYM = [
   { start: '16:00', end: '20:30', label: 'Rest' }
 ];
+const SUNDAY_DAY = [ // Sunday: MR, then rest all day
+  { start: '6:00', end: '8:00', label: 'MR' },
+  { start: '8:00', end: '20:30', label: 'Rest' }
+];
 const DAY_PM = [
   { start: '20:30', end: '21:30', label: 'NR' },
-  { start: '21:30', end: '30:30', label: 'Sleep', displayEnd: '6:30', capHeight: true }
+  { start: '21:30', end: '30:00', label: 'Sleep', displayEnd: '6:00', capHeight: true }
 ];
 const FIXED_BLOCKS = [...DAY_AM, ...EVENING_NOGYM, ...DAY_PM]; // default (non-gym) day
 
@@ -421,6 +461,7 @@ function getTrainTag(d) {
 }
 function dayBlocks(d) {
   const dow = d.getDay();
+  if (dow === 0) return [...SUNDAY_DAY, ...DAY_PM];
   const evening = GYM_DAYS.includes(dow) ? EVENING_GYM : EVENING_NOGYM;
   return [...DAY_AM, ...evening, ...DAY_PM];
 }
@@ -553,6 +594,7 @@ const fbCache = {
   shifts: {},  // { [dayKey]: hours }
   meditation: null,  // { minutes, lastEval:'YYYY-MM-DD', done:{ 'YYYY-MM-DD':true } }
   exdone: null,      // { 'YYYY-MM-DD_H:MM': true } — exercise blocks ticked done
+  checklists: null,  // { 'YYYY-MM-DD': { MR: { 'Make Bed': true } } } — block checklists
   routines: null     // { 'YYYY-MM-DD': { popupKey: { i0:true, ... } } } — skincare/grooming checklists
 };
 
@@ -608,6 +650,12 @@ onValue(ref(db, 'routines'), snap => {
 // Exercise completions — synced across devices
 onValue(ref(db, 'exdone'), snap => {
   fbCache.exdone = snap.val() || {};
+  render();
+});
+
+// Block checklists (MR) — synced across devices
+onValue(ref(db, 'checklists'), snap => {
+  fbCache.checklists = snap.val() || {};
   render();
 });
 
@@ -680,16 +728,43 @@ function fmtDur(a, b) {
 }
 // Same every day. A mark that lands on a block's start shows as a tag on that block;
 // one that lands mid-block gets its own spot on the rail.
-const DAY_MARKS = [{ time: '18:30', kind: 'meal' }]; // last meal & drink cutoff, every day
+// Eating window: a bracket down the left side of the times (null to hide)
+const EAT_WINDOW = { start: '8:00', end: '16:00', labels: ['Eat'] }; // eat 8–4
+const DAY_MARKS = []; // none right now (e.g. { time: '18:30', kind: 'meal' }) // last meal & drink cutoff, every day
 const ICON_MAIL = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3.5" width="12" height="9" rx="1.8"/><path d="m2.8 4.8 5.2 4 5.2-4"/></svg>';
 const ICON_MEAL = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 1.8v4a1.6 1.6 0 0 0 3.2 0v-4M5.6 1.8v12.4M11.8 14.2V1.8c-1.6.9-2.6 2.6-2.6 4.8v2.6h2.6"/></svg>';
 const MARK_INFO = {
   msg: { text: 'Emails & messages', icon: ICON_MAIL },
   meal: { text: 'Last Meal and Drink', icon: ICON_MEAL }
 };
+// Tap a block that has a checklist (MR, NR) to open it. Ticks are saved per day, so each morning starts fresh.
+const CHECKLISTS = {
+  MR: ['Wake Room', 'Dental', 'Groom', 'Skincare', 'Meditate', 'Gratitude & Visualize', 'Get Dressed', 'Walk'],
+  NR: ['Devices Off', 'Dental', 'Shower', 'Skincare', 'Get Dressed', 'Prepare Clothes, Devices, Bag', 'Minoxidil', 'Read']
+};
+const ICON_CHECK = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.6 6.2 2.2 2.2 4.6-4.8"/></svg>';
+const ICON_CARET = '<svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m3.5 2 3 3-3 3"/></svg>';
+const openLists = {};  // which checklists are open (this device only)
+let listDayKey = null; // the day the timeline is showing
+function listTicks(dk, label) { return ((fbCache.checklists || {})[dk] || {})[label] || {}; }
+function toggleListItem(label, idx) {
+  const name = (CHECKLISTS[label] || [])[idx];
+  if (!name || !listDayKey) return;
+  const all = Object.assign({}, fbCache.checklists || {});
+  const day = Object.assign({}, all[listDayKey] || {});
+  const ticks = Object.assign({}, day[label] || {});
+  if (ticks[name]) delete ticks[name]; else ticks[name] = true;
+  day[label] = ticks;
+  all[listDayKey] = day;
+  Object.keys(all).sort().slice(0, -14).forEach(k => delete all[k]); // keep the last 14 days
+  fbCache.checklists = all;
+  fbSetChecklists(all);
+  render();
+}
 function renderTimeline(elId, blocks, nowTime, viewedKey) {
   const tl = document.getElementById(elId);
   if (!tl) return;
+  listDayKey = viewedKey;
   const esc = v => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const wakeT = blocks.length ? Math.min(...blocks.map(b => b.startT)) : START_HOUR;
   const early = nowTime !== null && nowTime < wakeT; // after midnight, before wake-up: still in last night's sleep
@@ -736,14 +811,54 @@ function renderTimeline(elId, blocks, nowTime, viewedKey) {
       else if (a <= nowTime) state = ' now';
     }
     const minH = b.label === 'Sleep' ? 40 : Math.round(Math.min(96, 34 + seg * 14));
-    const durTxt = b.displayEnd ? '' : fmtDur(a, e); // Sleep shows no sub-line
+    const durTxt = fmtDur(a, e);
     const tagHtml = it.tags.map(m => `<div class="tl-chip tl-chip-${m.kind}">${MARK_INFO[m.kind].icon}${MARK_INFO[m.kind].text}</div>`).join('');
-    return `<div class="tl-row${state}${fillCls}${isLast ? ' last' : ''}" style="min-height:${minH}px;${style}">
+    const list = CHECKLISTS[b.label];
+    let listCls = '', headAttr = '', caret = '', progress = '', listHtml = '';
+    if (list) {
+      const ticks = listTicks(viewedKey, b.label);
+      const open = !!openLists[b.label];
+      listCls = ' has-list' + (open ? ' open' : '');
+      headAttr = ` data-list-toggle="${esc(b.label)}"`;
+      caret = `<span class="tl-caret">${ICON_CARET}</span>`;
+      progress = ` · ${list.filter(n => ticks[n]).length}/${list.length}`;
+      if (open) listHtml = `<div class="tl-list">${list.map((n, idx) => `<div class="tl-item${ticks[n] ? ' done' : ''}" data-list-item="${esc(b.label)}" data-idx="${idx}"><span class="tl-box">${ICON_CHECK}</span><span class="tl-txt">${esc(n)}</span></div>`).join('')}</div>`;
+    }
+    return `<div class="tl-row${state}${fillCls}${listCls}${isLast ? ' last' : ''}" style="min-height:${minH}px;${style}">
       <span class="tl-time">${formatTime(a)}</span>
       <span class="tl-rail"><span class="tl-dot"></span></span>
-      <span class="tl-body"><span class="tl-label">${esc(b.displayLabel || b.label)}</span>${state === ' now' ? '<span class="tl-pill">Now</span>' : ''}${durTxt ? `<div class="tl-dur">${durTxt}</div>` : ''}${tagHtml}</span>
+      <span class="tl-body"><div class="tl-head"${headAttr}><span class="tl-label">${esc(b.displayLabel || b.label)}</span>${caret}${state === ' now' ? '<span class="tl-pill">Now</span>' : ''}${durTxt ? `<div class="tl-dur">${durTxt}${progress}${b.sub ? ' · ' + esc(b.sub) : ''}</div>` : ''}</div>${listHtml}${tagHtml}</span>
     </div>`;
   }).join('');
+
+  // Eating-window bracket: map clock times to y using the rendered rows
+  if (EAT_WINDOW && items.length) {
+    const rowEls = [...tl.querySelectorAll('.tl-row')];
+    const tops = rowEls.map(r => r.offsetTop);
+    const yAt = t => {
+      for (let i = 0; i < items.length; i++) {
+        const last = i === items.length - 1;
+        const t0 = items[i].t, t1 = last ? items[i].b.endT : items[i + 1].t;
+        if (t >= t0 && t <= t1) {
+          const y0 = tops[i] + 8, y1 = (last ? tops[i] + rowEls[i].offsetHeight : tops[i + 1]) + 8;
+          return y0 + (t - t0) / (t1 - t0) * (y1 - y0);
+        }
+      }
+      return null;
+    };
+    const ws = parseTime(EAT_WINDOW.start), we = parseTime(EAT_WINDOW.end);
+    const yS = yAt(ws), yE = yAt(we);
+    if (yS !== null && yE !== null && yE > yS) {
+      const br = document.createElement('div');
+      br.className = 'tl-bracket' + (nowTime !== null && !early && nowTime >= we ? ' past' : '');
+      br.style.top = yS + 'px';
+      br.style.height = (yE - yS) + 'px';
+      const hasWork = rows.some(b => b.label === 'Work'); // 50/10 only on days with work
+      const labels = EAT_WINDOW.labels.filter(l => l !== '50/10' || hasWork);
+      br.innerHTML = `<span class="tl-bracket-label">${labels.map(esc).join('<br>')}</span>`;
+      tl.appendChild(br);
+    }
+  }
 }
 
 function render() {
@@ -797,6 +912,15 @@ function render() {
 }
 
 setInterval(render, 10000);
+let _rsz = null;
+window.addEventListener('resize', () => { clearTimeout(_rsz); _rsz = setTimeout(render, 150); });
+
+document.getElementById('timeline-all').addEventListener('click', e => {
+  const item = e.target.closest('[data-list-item]');
+  if (item) { toggleListItem(item.dataset.listItem, Number(item.dataset.idx)); return; }
+  const head = e.target.closest('[data-list-toggle]');
+  if (head) { const k = head.dataset.listToggle; openLists[k] = !openLists[k]; render(); }
+});
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { render(); } });
 window.addEventListener('focus', render);
 window.addEventListener('pageshow', render);
