@@ -198,6 +198,33 @@ body { padding: 12px; padding-bottom: 40px; }
 .tl-item.done .tl-txt { color: var(--text-tertiary); }
 .tl-row.past .tl-item { color: #B5B3AB; }
 
+/* Focus card (tap MR): one step at a time, big and centered */
+body.fc-open { overflow: hidden; }
+.fc-wrap { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background: rgba(245,244,239,0.94); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); animation: fcIn 0.18s ease-out; }
+@keyframes fcIn { from { opacity: 0; } }
+.fc-wrap button { font-family: inherit; border: none; background: none; padding: 0; cursor: pointer; color: inherit; -webkit-tap-highlight-color: transparent; }
+.fc { width: 330px; max-width: calc(100% - 40px); text-align: center; }
+.fc-k { font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-tertiary); }
+.fc-dots { display: flex; justify-content: center; margin: 8px 0 34px; }
+.fc-wrap .fc-dot { width: 20px; height: 22px; display: flex; align-items: center; justify-content: center; }
+.fc-dot::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #DEDCD5; }
+.fc-dot.on::before { background: #1E293B; }
+.fc-dot.cur::before { width: 7px; height: 7px; background: var(--bg); box-shadow: inset 0 0 0 1.5px #1E293B; }
+.fc-dot.on.cur::before { background: #1E293B; box-shadow: 0 0 0 3px rgba(30,41,59,0.14); }
+.fc-step { font-size: 30px; font-weight: 600; letter-spacing: -0.015em; line-height: 1.15; color: var(--text-primary); animation: fcStep 0.22s ease-out; }
+@keyframes fcStep { from { opacity: 0; transform: translateY(5px); } }
+.fc-step.fit { font-size: 24px; } /* long name on a small screen: shrink so it stays on one line */
+.fc-sub { font-size: 12px; color: var(--text-tertiary); margin-top: 8px; }
+.fc-sub b { font-weight: 600; color: var(--text-secondary); }
+.fc-wrap .fc-btn { margin: 44px auto 0; width: 66px; height: 66px; border-radius: 50%; background: #1E293B; color: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 18px rgba(30,41,59,0.18); transition: transform 0.1s; }
+.fc-wrap .fc-btn:active { transform: scale(0.94); }
+.fc-wrap .fc-btn.is-done { background: transparent; color: #1E293B; box-shadow: inset 0 0 0 1.5px #1E293B; }
+.fc-btn svg { width: 26px; height: 26px; }
+.fc-then { font-size: 12px; color: var(--text-tertiary); margin-top: 28px; min-height: 16px; }
+.fc-then b { font-weight: 600; color: var(--text-secondary); }
+.fc-wrap .fc-x { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 14px); right: 14px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: var(--text-tertiary); }
+.fc-x svg { width: 14px; height: 14px; }
+
 
 /* Eating window bracket, left of the times */
 .tl-bracket { position: absolute; left: calc(50% - 94px); width: 0; border-left: 1.5px solid #8E8C85; pointer-events: none; }
@@ -744,7 +771,7 @@ const MARK_INFO = {
 };
 // Tap a block that has a checklist (MR, NR) to open it. Ticks are saved per day, so each morning starts fresh.
 const CHECKLISTS = {
-  MR: ['Wake Room', 'Dental', 'Groom', 'Skincare', 'Meditate', 'Gratitude & Visualize', 'Get Dressed'],
+  MR: ['Make Bed & Lights On', 'Meditate (5 Minutes)', 'Gratitude', 'Hydrate (750 mL)', 'Visualize (10 Minutes)', 'Exercise & Sunlight', 'Hygiene', 'Cold Exposure', 'Deep Work (90 Minutes)'],
   NR: ['Devices Off', 'Dental', 'Shower', 'Skincare', 'Get Dressed', 'Prepare Clothes, Devices, Bag', 'Minoxidil', 'Read']
 };
 const ICON_CHECK = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.6 6.2 2.2 2.2 4.6-4.8"/></svg>';
@@ -766,6 +793,83 @@ function toggleListItem(label, idx) {
   fbSetChecklists(all);
   render();
 }
+
+// Focus card: tap MR to do the routine one step at a time (big step name + check button)
+const FOCUS_LISTS = { MR: 'Morning routine' };
+const ICON_X = '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 3l8 8M11 3l-8 8"/></svg>';
+const ICON_FC_CHECK = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m2.6 6.2 2.2 2.2 4.6-4.8"/></svg>';
+let focus = null; // { label, idx } while the card is open; idx === list.length is the all-done screen
+const splitStep = n => { const m = String(n).match(/^(.*?)\s*\(([^)]+)\)\s*$/); return m ? [m[1], m[2]] : [String(n), '']; }; // 'Hydrate (750 mL)' -> ['Hydrate', '750 mL']
+const escHtml = v => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+function firstOpenStep(label) {
+  const list = CHECKLISTS[label] || [], ticks = listTicks(listDayKey, label);
+  const i = list.findIndex(n => !ticks[n]);
+  return i < 0 ? list.length : i;
+}
+function openFocus(label) {
+  focus = { label, idx: firstOpenStep(label) };
+  document.body.classList.add('fc-open');
+  renderFocus();
+}
+function closeFocus() {
+  focus = null;
+  document.body.classList.remove('fc-open');
+  const el = document.getElementById('focus-card');
+  if (el) el.remove();
+}
+function renderFocus() {
+  if (!focus) return;
+  const list = CHECKLISTS[focus.label] || [];
+  const ticks = listTicks(listDayKey, focus.label);
+  if (focus.idx >= list.length && list.some(n => !ticks[n])) focus.idx = firstOpenStep(focus.label); // un-ticked elsewhere
+  const i = focus.idx;
+  const allDone = i >= list.length;
+  const done = !allDone && !!ticks[list[i]];
+  const after = allDone ? -1 : list.findIndex((n, k) => k > i && !ticks[n]);
+  const [big, detail] = allDone ? ['', ''] : splitStep(list[i]);
+  const dots = list.map((n, k) => `<button class="fc-dot${ticks[n] ? ' on' : ''}${k === i ? ' cur' : ''}" data-fc-go="${k}" aria-label="${escHtml(n)}"></button>`).join('');
+  const html = `<button class="fc-x" data-fc-close aria-label="Close">${ICON_X}</button>
+    <div class="fc">
+      <div class="fc-k">${escHtml(FOCUS_LISTS[focus.label] || focus.label)}</div>
+      <div class="fc-dots">${dots}</div>
+      <div class="fc-step">${allDone ? 'All done' : escHtml(big)}</div>
+      <div class="fc-sub">${allDone ? `${list.length} of ${list.length}` : `${detail ? `<b>${escHtml(detail)}</b> · ` : ''}Step ${i + 1} of ${list.length}${done ? ' · done' : ''}`}</div>
+      <button class="fc-btn${done || allDone ? ' is-done' : ''}" data-fc-check aria-label="${allDone ? 'Close' : done ? 'Undo' : 'Done'}">${ICON_FC_CHECK}</button>
+      <div class="fc-then">${after >= 0 ? `Then <b>${escHtml(splitStep(list[after])[0])}</b>` : ''}</div>
+    </div>`;
+  let el = document.getElementById('focus-card');
+  if (!el) { el = document.createElement('div'); el.id = 'focus-card'; el.className = 'fc-wrap'; document.body.appendChild(el); }
+  if (el._html !== html) { // redraw only when something changed
+    el.innerHTML = html; el._html = html;
+    const st = el.querySelector('.fc-step');
+    if (st && st.getBoundingClientRect().height > 40) st.classList.add('fit');
+  }
+}
+document.addEventListener('click', e => {
+  if (!focus) return;
+  if (e.target.closest('[data-fc-close]')) { closeFocus(); return; }
+  const go = e.target.closest('[data-fc-go]');
+  if (go) { focus.idx = Number(go.dataset.fcGo); renderFocus(); return; }
+  if (!e.target.closest('[data-fc-check]')) return;
+  const list = CHECKLISTS[focus.label] || [];
+  if (focus.idx >= list.length) { closeFocus(); return; } // all done: the button closes
+  const cur = focus.idx;
+  const wasDone = !!listTicks(listDayKey, focus.label)[list[cur]];
+  toggleListItem(focus.label, cur); // saves and redraws
+  if (!wasDone) { // ticked: move on to the next step that isn't done
+    const ticks = listTicks(listDayKey, focus.label);
+    const nxt = list.findIndex((n, k) => k > cur && !ticks[n]);
+    focus.idx = nxt >= 0 ? nxt : firstOpenStep(focus.label);
+  }
+  renderFocus();
+});
+document.addEventListener('keydown', e => {
+  if (!focus) return;
+  const n = (CHECKLISTS[focus.label] || []).length;
+  if (e.key === 'Escape') closeFocus();
+  else if (e.key === 'ArrowRight') { focus.idx = Math.min(n - 1, focus.idx + 1); renderFocus(); }
+  else if (e.key === 'ArrowLeft') { focus.idx = Math.max(0, Math.min(n - 1, focus.idx - 1)); renderFocus(); }
+});
 function renderTimeline(elId, blocks, nowTime, viewedKey) {
   const tl = document.getElementById(elId);
   if (!tl) return;
@@ -919,6 +1023,7 @@ function render() {
   if (nowBanner) nowBanner.innerHTML = '';
 
   renderTimeline('timeline-all', allBlocks, nowTime, key);
+  renderFocus();
 }
 
 setInterval(render, 10000);
@@ -929,7 +1034,7 @@ document.getElementById('timeline-all').addEventListener('click', e => {
   const item = e.target.closest('[data-list-item]');
   if (item) { toggleListItem(item.dataset.listItem, Number(item.dataset.idx)); return; }
   const head = e.target.closest('[data-list-toggle]');
-  if (head) { const k = head.dataset.listToggle; openLists[k] = !openLists[k]; render(); }
+  if (head) { const k = head.dataset.listToggle; if (FOCUS_LISTS[k]) { openFocus(k); return; } openLists[k] = !openLists[k]; render(); }
 });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { render(); } });
 window.addEventListener('focus', render);
