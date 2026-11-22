@@ -182,6 +182,8 @@ body { padding: 12px; padding-bottom: 40px; }
 .tl-tick { position: absolute; left: 8px; top: 13px; width: 11px; height: 1.5px; border-radius: 1px; background: #1E293B; z-index: 2; }
 .tl-note { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-secondary); line-height: 16px; }
 .tl-markrow.past .tl-note { color: #B5B3AB; }
+.tl-note-in { display: block; margin-top: 7px; }
+.tl-row.past .tl-note-in { color: #B5B3AB; }
 
 
 /* Block checklists (tap MR to open) */
@@ -228,6 +230,7 @@ body.fc-open { overflow: hidden; }
 
 /* Eating window bracket, left of the times */
 .tl-bracket { position: absolute; left: calc(50% - 94px); width: 0; border-left: 1.5px solid #8E8C85; pointer-events: none; }
+@media (max-width: 370px) { .tl-bracket { left: calc(50% - 82px); } .tl-meal-txt { font-size: 8.5px; } } /* small phones: keep meal names on screen */
 .tl-bracket-label { position: absolute; bottom: 100%; left: -0.75px; transform: translateX(-50%); margin-bottom: 18px; padding-left: 0.14em; font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-secondary); line-height: 1; text-align: center; white-space: nowrap; }
 .tl-bracket.past { border-color: #D3D1CA; }
 .tl-bracket.past .tl-bracket-label { color: #C8C6BE; }
@@ -384,7 +387,7 @@ const MIN_BLOCK_HEIGHT = 36;
 // Pomodoro: 25min work / 5min break, repeating
 
 // Day plan. Mon-Fri: MR 5-8, Work 8-12, lunch Break 12-1, Work 1-4; the evening depends on gym day or not.
-// Gym days: Mon, Wed, Fri -> Gym 16:00-17:30, then Rest until NR. Tue, Thu -> Rest after work. Weekends: no work, no gym.
+// Gym days: Mon, Wed, Fri -> Gym 16:00-17:30, then Rest until NR. Tue, Thu -> Walk & NSDR 16:00-16:30, then Rest. Weekends: no work, no gym.
 // Every day: markers at 18:00 (last meal & drink) and 19:00 (lights & devices off), NR 20-21, Sleep 21:00-5:00.
 const GYM_DAYS = [1, 3, 5]; // Mon, Wed, Fri
 const DAY_AM = [ // sub = extra text in the small gray line
@@ -397,8 +400,9 @@ const EVENING_GYM = [ // Mon, Wed, Fri
   { start: '16:00', end: '17:30', label: 'Gym' },
   { start: '17:30', end: '20:00', label: 'Rest' }
 ];
-const EVENING_NOGYM = [ // Tue, Thu: just rest after work
-  { start: '16:00', end: '20:00', label: 'Rest' }
+const EVENING_NOGYM = [ // Tue, Thu: 30m walk & NSDR after work, then rest
+  { start: '16:00', end: '16:30', label: 'Walk & NSDR' },
+  { start: '16:30', end: '20:00', label: 'Rest' }
 ];
 const WEEKEND_DAY = [ // Saturday & Sunday: MR, then rest all day
   { start: '5:00', end: '8:00', label: 'MR' },
@@ -762,8 +766,13 @@ function fmtDur(a, b) {
 // Same every day. A mark that lands on a block's start shows as a tag on that block;
 // one that lands mid-block gets its own spot on the rail.
 // Eating window: a bracket down the left side of the times (null to hide)
-const EAT_WINDOW = null; // off. Was { start: '8:00', end: '18:00', labels: [], meals: [{ name: 'Breakfast', time: '8:00' }, { name: 'Lunch', time: '12:00' }, { name: 'Preworkout', time: '14:30' }, { name: 'Dinner', time: '18:00' }] }
+const EAT_WINDOW = { start: '12:00', end: '18:00', labels: [], meals: [ // eat 12–6: three meals on a line left of the times, ending at the 18:00 cutoff (null = off)
+  { name: 'Lunch', time: '12:00' },
+  { name: 'Snack', time: '15:30' },
+  { name: 'Dinner', time: '17:30' }
+] };
 const DAY_MARKS = [ // every day: quiet markers on the timeline
+  { time: '13:00', kind: 'nap' }, // last nap: 8 hours before bedtime (21:00)
   { time: '18:00', kind: 'meal' },
   { time: '19:00', kind: 'lights' }
 ];
@@ -772,11 +781,12 @@ const ICON_MEAL = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" st
 const MARK_INFO = {
   msg: { text: 'Emails & messages', icon: ICON_MAIL },
   meal: { text: 'Last meal & drink', icon: ICON_MEAL, quiet: true },
-  lights: { text: 'Lights & devices off', quiet: true }
+  lights: { text: 'Lights & devices off', quiet: true },
+  nap: { text: 'Last nap', quiet: true }
 };
 // Tap a block that has a checklist (MR, NR) to open it. Ticks are saved per day, so each morning starts fresh.
 const CHECKLISTS = {
-  MR: ['Make Bed & Lights On', 'Meditate (5 Minutes)', 'Gratitude', 'Hydrate (750 mL)', 'Visualize (10 Minutes)', 'Exercise & Sunlight', 'Hygiene', 'Cold Exposure', 'Deep Work (90 Minutes)'],
+  MR: ['Make Bed & Lights On', 'Meditate (10 Minutes)', 'Gratitude', 'Hydrate (750 mL)', 'Visualize (10 Minutes)', { 2: 'Skip & Sunlight', 4: 'Skip & Sunlight', other: 'Walk & Sunlight' }, 'Hygiene', 'Cold Exposure', 'Deep Work (90 Minutes)'],
   Break: ['Eat & Hydrate', 'Walk', 'NSDR / Nap'],
   NR: ['Prepare Tomorrow (Clothes, Bag, Devices, Schedule)', 'Shower', 'Hygiene (Dental, Skincare, Haircare)', 'Visualize']
 };
@@ -784,15 +794,20 @@ const ICON_CHECK = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" s
 const ICON_CARET = '<svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m3.5 2 3 3-3 3"/></svg>';
 const openLists = {};  // which checklists are open (this device only)
 let listDayKey = null; // the day the timeline is showing
+// A step can change by weekday: { 2: 'Skip & Sunlight', 4: 'Skip & Sunlight', other: 'Walk & Sunlight' } (0 = Sun, 1 = Mon ... 6 = Sat)
+function checklistFor(label, dk) {
+  const dow = dk ? new Date(dk + 'T12:00:00').getDay() : -1;
+  return (CHECKLISTS[label] || []).map(n => typeof n === 'string' ? n : (n[dow] || n.other));
+}
 const tickKey = n => String(n).replace(/[.#$\/\[\]]/g, '_'); // the database can't store . # $ / [ ] in a key, e.g. 'NSDR / Nap' is saved as 'NSDR _ Nap'
 function listTicks(dk, label) { // returns { itemName: true } for the ticked items of this list
   const raw = ((fbCache.checklists || {})[dk] || {})[label] || {};
   const out = {};
-  (CHECKLISTS[label] || []).forEach(n => { if (raw[tickKey(n)]) out[n] = true; });
+  checklistFor(label, dk).forEach(n => { if (raw[tickKey(n)]) out[n] = true; });
   return out;
 }
 function toggleListItem(label, idx) {
-  const name = (CHECKLISTS[label] || [])[idx];
+  const name = checklistFor(label, listDayKey)[idx];
   if (!name || !listDayKey) return;
   const all = Object.assign({}, fbCache.checklists || {});
   const day = Object.assign({}, all[listDayKey] || {});
@@ -815,7 +830,7 @@ let focus = null; // { label, idx } while the card is open; idx === list.length 
 const splitStep = n => { const m = String(n).match(/^(.*?)\s*\(([^)]+)\)\s*$/); return m ? [m[1], m[2]] : [String(n), '']; }; // 'Hydrate (750 mL)' -> ['Hydrate', '750 mL']
 const escHtml = v => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 function firstOpenStep(label) {
-  const list = CHECKLISTS[label] || [], ticks = listTicks(listDayKey, label);
+  const list = checklistFor(label, listDayKey), ticks = listTicks(listDayKey, label);
   const i = list.findIndex(n => !ticks[n]);
   return i < 0 ? list.length : i;
 }
@@ -832,7 +847,7 @@ function closeFocus() {
 }
 function renderFocus() {
   if (!focus) return;
-  const list = CHECKLISTS[focus.label] || [];
+  const list = checklistFor(focus.label, listDayKey);
   const ticks = listTicks(listDayKey, focus.label);
   if (focus.idx >= list.length && list.some(n => !ticks[n])) focus.idx = firstOpenStep(focus.label); // un-ticked elsewhere
   const i = focus.idx;
@@ -864,7 +879,7 @@ document.addEventListener('click', e => {
   const go = e.target.closest('[data-fc-go]');
   if (go) { focus.idx = Number(go.dataset.fcGo); renderFocus(); return; }
   if (!e.target.closest('[data-fc-check]')) return;
-  const list = CHECKLISTS[focus.label] || [];
+  const list = checklistFor(focus.label, listDayKey);
   if (focus.idx >= list.length) { closeFocus(); return; } // all done: the button closes
   const cur = focus.idx;
   const wasDone = !!listTicks(listDayKey, focus.label)[list[cur]];
@@ -878,7 +893,7 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('keydown', e => {
   if (!focus) return;
-  const n = (CHECKLISTS[focus.label] || []).length;
+  const n = checklistFor(focus.label, listDayKey).length;
   if (e.key === 'Escape') closeFocus();
   else if (e.key === 'ArrowRight') { focus.idx = Math.min(n - 1, focus.idx + 1); renderFocus(); }
   else if (e.key === 'ArrowLeft') { focus.idx = Math.max(0, Math.min(n - 1, focus.idx - 1)); renderFocus(); }
@@ -895,7 +910,10 @@ function renderTimeline(elId, blocks, nowTime, viewedKey) {
   // Chronological items: each block, then any marks that fall inside it
   const items = [];
   rows.forEach(b => {
-    items.push({ type: 'block', t: b.startT, b, tags: marks.filter(m => Math.abs(m.t - b.startT) < 1e-6) });
+    const atStart = marks.filter(m => Math.abs(m.t - b.startT) < 1e-6);
+    // a quiet marker that lands exactly on a block's start gets its own row just above that block (its time shows on the block)
+    atStart.filter(m => MARK_INFO[m.kind].quiet).forEach(m => items.push({ type: 'mark', t: m.t, m, noTime: true }));
+    items.push({ type: 'block', t: b.startT, b, tags: atStart.filter(m => !MARK_INFO[m.kind].quiet) });
     marks.filter(m => m.t > b.startT && m.t < b.endT).sort((x, y) => x.t - y.t)
       .forEach(m => items.push({ type: 'mark', t: m.t, m }));
   });
@@ -914,13 +932,14 @@ function renderTimeline(elId, blocks, nowTime, viewedKey) {
     if (it.type === 'mark') {
       const info = MARK_INFO[it.m.kind];
       const past = !early && nowTime !== null && it.t <= nowTime ? ' past' : '';
-      const minH = Math.round(Math.max(40, Math.min(86, 24 + seg * 14)));
+      const mealsIn = ((EAT_WINDOW && EAT_WINDOW.meals) || []).filter(m => { const mt = parseTime(m.time); return mt >= it.t && mt < tNext; }).length;
+      const minH = Math.max(Math.round(Math.max(40, Math.min(86, 24 + seg * 14))), mealsIn > 1 ? 40 + mealsIn * 40 : 0);
       const body = info.quiet
         ? `<span class="tl-note">${info.text}</span>`
         : `<div class="tl-chip tl-chip-${it.m.kind}">${info.icon}${info.text}</div>`;
       const marker = info.quiet ? '<span class="tl-tick"></span>' : '<span class="tl-diamond"></span>';
       return `<div class="tl-row tl-markrow tl-markrow-${it.m.kind}${info.quiet ? ' tl-markrow-quiet' : ''}${past}${fillCls}" style="min-height:${minH}px;${style}">
-      <span class="tl-time">${formatTime(it.t)}</span>
+      <span class="tl-time">${it.noTime ? '' : formatTime(it.t)}</span>
       <span class="tl-rail">${marker}</span>
       <span class="tl-body">${body}</span>
     </div>`;
@@ -936,8 +955,10 @@ function renderTimeline(elId, blocks, nowTime, viewedKey) {
     const mealsHere = ((EAT_WINDOW && EAT_WINDOW.meals) || []).filter(m => { const mt = parseTime(m.time); return mt >= it.t && mt < tNext; }).length;
     const minH = b.label === 'Sleep' ? 40 : Math.max(Math.round(Math.min(96, 34 + seg * 14)), mealsHere > 1 ? 40 + mealsHere * 40 : 0);
     const durTxt = fmtDur(a, e);
-    const tagHtml = it.tags.map(m => `<div class="tl-chip tl-chip-${m.kind}">${MARK_INFO[m.kind].icon}${MARK_INFO[m.kind].text}</div>`).join('');
-    const list = CHECKLISTS[b.label];
+    const tagHtml = it.tags.map(m => MARK_INFO[m.kind].quiet
+      ? `<div class="tl-note tl-note-in">${MARK_INFO[m.kind].text}</div>` // same quiet caps as the marker rows
+      : `<div class="tl-chip tl-chip-${m.kind}">${MARK_INFO[m.kind].icon}${MARK_INFO[m.kind].text}</div>`).join('');
+    const list = CHECKLISTS[b.label] ? checklistFor(b.label, viewedKey) : null;
     let listCls = '', headAttr = '', caret = '', progress = '', listHtml = '';
     if (list) {
       const ticks = listTicks(viewedKey, b.label);
@@ -959,12 +980,18 @@ function renderTimeline(elId, blocks, nowTime, viewedKey) {
   if (EAT_WINDOW && items.length) {
     const rowEls = [...tl.querySelectorAll('.tl-row')];
     const tops = rowEls.map(r => r.offsetTop);
+    const anchor = k => { // how far below row k's top its circle (or a marker's dash) sits
+      const el = rowEls[k], mk = el && el.querySelector('.tl-dot, .tl-tick');
+      if (!mk) return 8;
+      const r = mk.getBoundingClientRect();
+      return r.top + r.height / 2 - el.getBoundingClientRect().top;
+    };
     const yAt = t => {
       for (let i = 0; i < items.length; i++) {
         const last = i === items.length - 1;
         const t0 = items[i].t, t1 = last ? items[i].b.endT : items[i + 1].t;
         if (t >= t0 && t <= t1) {
-          const y0 = tops[i] + 8, y1 = (last ? tops[i] + rowEls[i].offsetHeight : tops[i + 1]) + 8;
+          const y0 = tops[i] + anchor(i), y1 = last ? tops[i] + rowEls[i].offsetHeight + 8 : tops[i + 1] + anchor(i + 1);
           return y0 + (t - t0) / (t1 - t0) * (y1 - y0);
         }
       }
