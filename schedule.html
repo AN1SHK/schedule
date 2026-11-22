@@ -178,7 +178,7 @@ body { padding: 12px; padding-bottom: 40px; }
 
 
 /* 7pm cutoff: quiet caps note with a small dash on the rail */
-.tl-markrow-meal .tl-time { color: var(--text-tertiary); font-weight: 400; }
+.tl-markrow-quiet .tl-time { color: var(--text-tertiary); font-weight: 400; }
 .tl-tick { position: absolute; left: 8px; top: 13px; width: 11px; height: 1.5px; border-radius: 1px; background: #1E293B; z-index: 2; }
 .tl-note { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-secondary); line-height: 16px; }
 .tl-markrow.past .tl-note { color: #B5B3AB; }
@@ -383,27 +383,28 @@ const MIN_BLOCK_HEIGHT = 36;
 
 // Pomodoro: 25min work / 5min break, repeating
 
-// Day plan. Mon-Fri: MR 5-8, then Work 8-4 straight; the evening depends on gym day or not.
-// Gym days: Mon, Wed, Fri -> Gym 16:00-17:30, then Rest until NR. Weekends: no work, no gym.
-// Tue, Thu -> 30m Walk right after work, then Rest until NR at 20:00. Sleep 21:00-5:00.
+// Day plan. Mon-Fri: MR 5-8, Work 8-12, lunch Break 12-1, Work 1-4; the evening depends on gym day or not.
+// Gym days: Mon, Wed, Fri -> Gym 16:00-17:30, then Rest until NR. Tue, Thu -> Rest after work. Weekends: no work, no gym.
+// Every day: markers at 18:00 (last meal & drink) and 19:00 (lights & devices off), NR 20-21, Sleep 21:00-5:00.
 const GYM_DAYS = [1, 3, 5]; // Mon, Wed, Fri
 const DAY_AM = [ // sub = extra text in the small gray line
   { start: '5:00', end: '8:00', label: 'MR' },
-  { start: '8:00', end: '16:00', label: 'Work' } // Mon-Fri: one straight work block, no break
+  { start: '8:00', end: '12:00', label: 'Work' },
+  { start: '12:00', end: '13:00', label: 'Break' }, // lunch: tap for Eat & Hydrate, Walk, NSDR / Nap
+  { start: '13:00', end: '16:00', label: 'Work' }
 ];
-const EVENING_GYM = [
+const EVENING_GYM = [ // Mon, Wed, Fri
   { start: '16:00', end: '17:30', label: 'Gym' },
   { start: '17:30', end: '20:00', label: 'Rest' }
 ];
-const EVENING_NOGYM = [ // Tue, Thu
-  { start: '16:00', end: '16:30', label: 'Walk' },
-  { start: '16:30', end: '20:00', label: 'Rest' }
+const EVENING_NOGYM = [ // Tue, Thu: just rest after work
+  { start: '16:00', end: '20:00', label: 'Rest' }
 ];
 const WEEKEND_DAY = [ // Saturday & Sunday: MR, then rest all day
   { start: '5:00', end: '8:00', label: 'MR' },
   { start: '8:00', end: '20:00', label: 'Rest' }
 ];
-const DAY_PM = [
+const DAY_PM = [ // every day
   { start: '20:00', end: '21:00', label: 'NR' },
   { start: '21:00', end: '29:00', label: 'Sleep', displayEnd: '5:00', capHeight: true }
 ];
@@ -762,30 +763,42 @@ function fmtDur(a, b) {
 // one that lands mid-block gets its own spot on the rail.
 // Eating window: a bracket down the left side of the times (null to hide)
 const EAT_WINDOW = null; // off. Was { start: '8:00', end: '18:00', labels: [], meals: [{ name: 'Breakfast', time: '8:00' }, { name: 'Lunch', time: '12:00' }, { name: 'Preworkout', time: '14:30' }, { name: 'Dinner', time: '18:00' }] }
-const DAY_MARKS = []; // none right now (e.g. { time: '18:30', kind: 'meal' }) // last meal & drink cutoff, every day
+const DAY_MARKS = [ // every day: quiet markers on the timeline
+  { time: '18:00', kind: 'meal' },
+  { time: '19:00', kind: 'lights' }
+];
 const ICON_MAIL = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3.5" width="12" height="9" rx="1.8"/><path d="m2.8 4.8 5.2 4 5.2-4"/></svg>';
 const ICON_MEAL = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 1.8v4a1.6 1.6 0 0 0 3.2 0v-4M5.6 1.8v12.4M11.8 14.2V1.8c-1.6.9-2.6 2.6-2.6 4.8v2.6h2.6"/></svg>';
 const MARK_INFO = {
   msg: { text: 'Emails & messages', icon: ICON_MAIL },
-  meal: { text: 'Last Meal and Drink', icon: ICON_MEAL }
+  meal: { text: 'Last meal & drink', icon: ICON_MEAL, quiet: true },
+  lights: { text: 'Lights & devices off', quiet: true }
 };
 // Tap a block that has a checklist (MR, NR) to open it. Ticks are saved per day, so each morning starts fresh.
 const CHECKLISTS = {
   MR: ['Make Bed & Lights On', 'Meditate (5 Minutes)', 'Gratitude', 'Hydrate (750 mL)', 'Visualize (10 Minutes)', 'Exercise & Sunlight', 'Hygiene', 'Cold Exposure', 'Deep Work (90 Minutes)'],
-  NR: ['Devices Off', 'Dental', 'Shower', 'Skincare', 'Get Dressed', 'Prepare Clothes, Devices, Bag', 'Minoxidil', 'Read']
+  Break: ['Eat & Hydrate', 'Walk', 'NSDR / Nap'],
+  NR: ['Prepare Tomorrow (Clothes, Bag, Devices, Schedule)', 'Hygiene', 'Shower', 'Skincare & Haircare', 'Visualize']
 };
 const ICON_CHECK = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.6 6.2 2.2 2.2 4.6-4.8"/></svg>';
 const ICON_CARET = '<svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m3.5 2 3 3-3 3"/></svg>';
 const openLists = {};  // which checklists are open (this device only)
 let listDayKey = null; // the day the timeline is showing
-function listTicks(dk, label) { return ((fbCache.checklists || {})[dk] || {})[label] || {}; }
+const tickKey = n => String(n).replace(/[.#$\/\[\]]/g, '_'); // the database can't store . # $ / [ ] in a key, e.g. 'NSDR / Nap' is saved as 'NSDR _ Nap'
+function listTicks(dk, label) { // returns { itemName: true } for the ticked items of this list
+  const raw = ((fbCache.checklists || {})[dk] || {})[label] || {};
+  const out = {};
+  (CHECKLISTS[label] || []).forEach(n => { if (raw[tickKey(n)]) out[n] = true; });
+  return out;
+}
 function toggleListItem(label, idx) {
   const name = (CHECKLISTS[label] || [])[idx];
   if (!name || !listDayKey) return;
   const all = Object.assign({}, fbCache.checklists || {});
   const day = Object.assign({}, all[listDayKey] || {});
   const ticks = Object.assign({}, day[label] || {});
-  if (ticks[name]) delete ticks[name]; else ticks[name] = true;
+  const k = tickKey(name);
+  if (ticks[k]) delete ticks[k]; else ticks[k] = true;
   day[label] = ticks;
   all[listDayKey] = day;
   Object.keys(all).sort().slice(0, -14).forEach(k => delete all[k]); // keep the last 14 days
@@ -795,7 +808,7 @@ function toggleListItem(label, idx) {
 }
 
 // Focus card: tap MR to do the routine one step at a time (big step name + check button)
-const FOCUS_LISTS = { MR: 'Morning routine' };
+const FOCUS_LISTS = { MR: 'Morning routine', Break: 'Lunch break', NR: 'Night routine' };
 const ICON_X = '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 3l8 8M11 3l-8 8"/></svg>';
 const ICON_FC_CHECK = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m2.6 6.2 2.2 2.2 4.6-4.8"/></svg>';
 let focus = null; // { label, idx } while the card is open; idx === list.length is the all-done screen
@@ -902,11 +915,11 @@ function renderTimeline(elId, blocks, nowTime, viewedKey) {
       const info = MARK_INFO[it.m.kind];
       const past = !early && nowTime !== null && it.t <= nowTime ? ' past' : '';
       const minH = Math.round(Math.max(40, Math.min(86, 24 + seg * 14)));
-      const body = it.m.kind === 'meal'
+      const body = info.quiet
         ? `<span class="tl-note">${info.text}</span>`
         : `<div class="tl-chip tl-chip-${it.m.kind}">${info.icon}${info.text}</div>`;
-      const marker = it.m.kind === 'meal' ? '<span class="tl-tick"></span>' : '<span class="tl-diamond"></span>';
-      return `<div class="tl-row tl-markrow tl-markrow-${it.m.kind}${past}${fillCls}" style="min-height:${minH}px;${style}">
+      const marker = info.quiet ? '<span class="tl-tick"></span>' : '<span class="tl-diamond"></span>';
+      return `<div class="tl-row tl-markrow tl-markrow-${it.m.kind}${info.quiet ? ' tl-markrow-quiet' : ''}${past}${fillCls}" style="min-height:${minH}px;${style}">
       <span class="tl-time">${formatTime(it.t)}</span>
       <span class="tl-rail">${marker}</span>
       <span class="tl-body">${body}</span>
