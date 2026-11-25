@@ -231,13 +231,14 @@ body.fc-open { overflow: hidden; }
 
 /* Eating window bracket, left of the times */
 .tl-bracket { position: absolute; left: calc(50% - 94px); width: 0; border-left: 1.5px solid #8E8C85; pointer-events: none; }
-@media (max-width: 370px) { .tl-bracket { left: calc(50% - 82px); } .tl-meal-txt { font-size: 8.5px; } } /* small phones: keep meal names on screen */
+@media (max-width: 370px) { .tl-bracket { left: calc(50% - 82px); } .tl-meal-txt { font-size: 8.5px; } .tl-meal-note { font-size: 8px; } } /* small phones: keep meal names on screen */
 .tl-bracket-label { position: absolute; bottom: 100%; left: -0.75px; transform: translateX(-50%); margin-bottom: 18px; padding-left: 0.14em; font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-secondary); line-height: 1; text-align: center; white-space: nowrap; }
 .tl-bracket.past { border-color: #D3D1CA; }
 .tl-bracket.past .tl-bracket-label { color: #C8C6BE; }
 .tl-meal { position: absolute; left: -0.75px; width: 0; height: 0; }
 .tl-meal::before { content: ''; position: absolute; left: -3.5px; top: -3.5px; width: 7px; height: 7px; border-radius: 50%; background: #8E8C85; box-shadow: 0 0 0 2px var(--bg); }
 .tl-meal-txt { position: absolute; right: 9px; top: 0; transform: translateY(-50%); text-align: right; white-space: nowrap; font-size: 9px; line-height: 1.35; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
+.tl-meal-note { position: absolute; right: 0; top: 100%; font-style: normal; white-space: nowrap; }
 .tl-meal-txt b { display: block; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-secondary); }
 .tl-bracket.past .tl-meal::before { background: #D3D1CA; }
 .tl-bracket.past .tl-meal-txt, .tl-bracket.past .tl-meal-txt b { color: #C8C6BE; }
@@ -396,7 +397,7 @@ function gymDays(d) { return dayKey(d) < GYM_SWITCH ? [2, 4, 6] : [1, 3, 5]; }
 const DAY_AM = [ // sub = extra text in the small gray line
   { start: '5:00', end: '8:00', label: 'MR' },
   { start: '8:00', end: '12:00', label: 'Work' },
-  { start: '12:00', end: '13:00', label: 'Break' }, // lunch: tap for Eat & Hydrate, Walk, NSDR / Nap
+  { start: '12:00', end: '13:00', label: 'Break' }, // lunch: tap for Eat & Hydrate (Supplements), Walk, NSDR / Nap
   { start: '13:00', end: '16:00', label: 'Work' }
 ];
 const EVENING_GYM = [ // weekday gym days
@@ -510,7 +511,18 @@ function dayBlocks(d) {
   const blocks = (dow === 0 || dow === 6)
     ? [...(gym ? WEEKEND_GYM : WEEKEND_DAY), ...DAY_PM] // weekends: no work
     : [...DAY_AM, ...(gym ? EVENING_GYM : EVENING_NOGYM), ...DAY_PM];
-  return blocks; // Retin-A nights show only inside the NR card (Skincare step), not on the timeline
+  const logged = hevyFor(dayKey(d)); // a workout logged in Hevy shows on the Gym row, e.g. "1.5h · ✓ Upper · 72m"
+  return logged ? blocks.map(b => b.label === 'Gym' ? { ...b, sub: hevyText(logged) } : b) : blocks;
+}
+function hevyFor(dk) { // that day's Hevy workouts, or null
+  const days = fbCache.hevy && fbCache.hevy.days, w = days && days[dk];
+  const list = !w ? [] : Array.isArray(w) ? w : Object.values(w);
+  return list.length ? list : null;
+}
+function hevyText(list) {
+  const titles = [...new Set(list.map(w => String((w && w.title) || 'Workout')))].join(' + ');
+  const mins = list.reduce((n, w) => n + ((w && w.mins) || 0), 0);
+  return '✓ ' + (titles.length > 14 ? titles.slice(0, 13).trim() + '…' : titles) + (mins ? ' · ' + mins + 'm' : ''); // short, so it fits on one line
 }
 function getAmExerciseTag(d) {
   const n = EX_AM_CYCLE.length;
@@ -642,7 +654,8 @@ const fbCache = {
   meditation: null,  // { minutes, lastEval:'YYYY-MM-DD', done:{ 'YYYY-MM-DD':true } }
   exdone: null,      // { 'YYYY-MM-DD_H:MM': true } — exercise blocks ticked done
   checklists: null,  // { 'YYYY-MM-DD': { MR: { 'Make Bed': true } } } — block checklists
-  routines: null     // { 'YYYY-MM-DD': { popupKey: { i0:true, ... } } } — skincare/grooming checklists
+  routines: null,    // { 'YYYY-MM-DD': { popupKey: { i0:true, ... } } } — skincare/grooming checklists
+  hevy: null         // { updated, days: { 'YYYY-MM-DD': [{ title, start, mins, exercises, sets }] } } — written by the GitHub "Hevy sync" job
 };
 
 // Listen to today + tomorrow tasks/tallies
@@ -697,6 +710,12 @@ onValue(ref(db, 'routines'), snap => {
 // Exercise completions — synced across devices
 onValue(ref(db, 'exdone'), snap => {
   fbCache.exdone = snap.val() || {};
+  render();
+});
+
+// Workouts logged in Hevy (copied into Firebase every ~15 min by the repo's "Hevy sync" GitHub Action)
+onValue(ref(db, 'hevy'), snap => {
+  fbCache.hevy = snap.val() || null;
   render();
 });
 
@@ -777,7 +796,7 @@ function fmtDur(a, b) {
 // one that lands mid-block gets its own spot on the rail.
 // Eating window: a bracket down the left side of the times (null to hide)
 const EAT_WINDOW = { start: '12:00', end: '18:00', labels: [], meals: [ // eat 12–6: three meals on a line left of the times, ending at the 18:00 cutoff (null = off)
-  { name: 'Lunch', time: '12:00' },
+  { name: 'Lunch', time: '12:00', note: '+ Supplements' }, // note: a small line under the time
   { name: 'Snack', time: '15:30' },
   { name: 'Dinner', time: '17:30' }
 ] };
@@ -806,7 +825,7 @@ const CHECKLISTS = {
        'Hygiene',
        'Skincare (Cleanser, Moisturizer, Sunscreen)', 'Cold Exposure',
        dk => { const w = dk ? new Date(dk + 'T12:00:00').getDay() : 1; return w === 0 || w === 6 ? null : 'Deep Work (60 Minutes)'; }], // weekdays only
-  Break: ['Eat & Hydrate', 'Walk', 'NSDR / Nap'],
+  Break: ['Eat & Hydrate (Supplements)', 'Walk', 'NSDR / Nap'],
   NR: ['Prepare Tomorrow (Clothes, Bag, Devices, Schedule)',
        'Mobility',
        dk => { // all hair washing happens in this shower
@@ -1063,7 +1082,7 @@ function renderTimeline(elId, blocks, nowTime, viewedKey) {
       const labels = EAT_WINDOW.labels.filter(l => l !== '50/10' || hasWork);
       // Meal dots on the line, labels to the left; EAT sits on top of the line as its title
       const meals = (EAT_WINDOW.meals || []).map(m => ({ ...m, y: yAt(parseTime(m.time)) })).filter(m => m.y !== null).map(m => ({ ...m, y: m.y - yS }));
-      const mealHtml = meals.map(m => `<span class="tl-meal" style="top:${m.y}px"><span class="tl-meal-txt"><b>${esc(m.name)}</b>${esc(m.time + (m.end ? '–' + m.end : ''))}</span></span>`).join('');
+      const mealHtml = meals.map(m => `<span class="tl-meal" style="top:${m.y}px"><span class="tl-meal-txt"><b>${esc(m.name)}</b>${esc(m.time + (m.end ? '–' + m.end : ''))}${m.note ? `<i class="tl-meal-note">${esc(m.note)}</i>` : ''}</span></span>`).join('');
       br.innerHTML = (labels.length ? `<span class="tl-bracket-label">${labels.map(esc).join('<br>')}</span>` : '') + mealHtml;
       tl.appendChild(br);
     }
