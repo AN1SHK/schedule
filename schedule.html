@@ -155,6 +155,7 @@ body { padding: 12px; padding-bottom: 40px; }
 .tl-dur { font-size: 10.5px; color: var(--text-tertiary); margin-top: 2px; }
 .tl-row.past .tl-label, .tl-row.past .tl-time { color: #B5B3AB; }
 .tl-row.past .tl-dur { color: #C8C6BE; }
+.tl-note2 { margin-top: 1px; line-height: 1.35; } /* second gray line under a block, e.g. the hair note under Gym */
 .tl-row.now .tl-label { color: #1E293B; }
 .tl-pill { display: inline-block; margin-left: 8px; background: #1E293B; color: #FFFFFF; font-size: 9px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; padding: 2px 6px; border-radius: 3px; vertical-align: 1px; }
 
@@ -216,7 +217,7 @@ body.fc-open { overflow: hidden; }
 .fc-step { font-size: 30px; font-weight: 600; letter-spacing: -0.015em; line-height: 1.15; color: var(--text-primary); animation: fcStep 0.22s ease-out; }
 @keyframes fcStep { from { opacity: 0; transform: translateY(5px); } }
 .fc-step.fit { font-size: 24px; } /* long name on a small screen: shrink so it stays on one line */
-.fc-sub { font-size: 12px; color: var(--text-tertiary); margin-top: 8px; }
+.fc-sub { font-size: 12px; color: var(--text-tertiary); margin-top: 8px; text-wrap: balance; } /* long details wrap into even lines */
 .fc-sub b { font-weight: 600; color: var(--text-secondary); }
 .fc-wrap .fc-btn { margin: 44px auto 0; width: 66px; height: 66px; border-radius: 50%; background: #1E293B; color: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 18px rgba(30,41,59,0.18); transition: transform 0.1s; }
 .fc-wrap .fc-btn:active { transform: scale(0.94); }
@@ -387,22 +388,30 @@ const MIN_BLOCK_HEIGHT = 36;
 // Pomodoro: 25min work / 5min break, repeating
 
 // Day plan. Mon-Fri: MR 5-8, Work 8-12, lunch Break 12-1, Work 1-4; the evening depends on gym day or not.
-// Gym days: Mon, Wed, Fri -> Gym 16:00-17:30, then Rest until NR. Tue, Thu -> Walk & NSDR 16:00-16:30, then Rest. Weekends: no work, no gym.
+// Gym days (Tue/Thu/Sat until Dec 5, then Mon/Wed/Fri) -> Gym 16:00-17:30, then Rest until NR. Other weekdays -> Walk & NSDR 16:00-16:30, then Rest. Weekends: no work.
 // Every day: markers at 18:00 (last meal & drink) and 19:00 (lights & devices off), NR 20-21, Sleep 21:00-5:00.
-const GYM_DAYS = [1, 3, 5]; // Mon, Wed, Fri
+// Gym days change on Sun 2026-12-06: Tue, Thu, Sat before it; Mon, Wed, Fri from then on (0 = Sun ... 6 = Sat)
+const GYM_SWITCH = '2026-12-06';
+function gymDays(d) { return dayKey(d) < GYM_SWITCH ? [2, 4, 6] : [1, 3, 5]; }
 const DAY_AM = [ // sub = extra text in the small gray line
   { start: '5:00', end: '8:00', label: 'MR' },
   { start: '8:00', end: '12:00', label: 'Work' },
   { start: '12:00', end: '13:00', label: 'Break' }, // lunch: tap for Eat & Hydrate, Walk, NSDR / Nap
   { start: '13:00', end: '16:00', label: 'Work' }
 ];
-const EVENING_GYM = [ // Mon, Wed, Fri
+const EVENING_GYM = [ // weekday gym days
   { start: '16:00', end: '17:30', label: 'Gym' },
   { start: '17:30', end: '20:00', label: 'Rest' }
 ];
-const EVENING_NOGYM = [ // Tue, Thu: 30m walk & NSDR after work, then rest
+const EVENING_NOGYM = [ // weekdays without gym: 30m walk & NSDR after work, then rest
   { start: '16:00', end: '16:30', label: 'Walk & NSDR' },
   { start: '16:30', end: '20:00', label: 'Rest' }
+];
+const WEEKEND_GYM = [ // a weekend gym day (Saturdays until Dec 5): gym at the usual 16:00
+  { start: '5:00', end: '8:00', label: 'MR' },
+  { start: '8:00', end: '16:00', label: 'Rest' },
+  { start: '16:00', end: '17:30', label: 'Gym' },
+  { start: '17:30', end: '20:00', label: 'Rest' }
 ];
 const WEEKEND_DAY = [ // Saturday & Sunday: MR, then rest all day
   { start: '5:00', end: '8:00', label: 'MR' },
@@ -497,10 +506,15 @@ function getTrainTag(d) {
   return TRAIN_CYCLE[(((dayNum(d) - EX_START) % n) + n) % n];
 }
 function dayBlocks(d) {
-  const dow = d.getDay();
-  if (dow === 0 || dow === 6) return [...WEEKEND_DAY, ...DAY_PM]; // weekends: no work, no gym
-  const evening = GYM_DAYS.includes(dow) ? EVENING_GYM : EVENING_NOGYM;
-  return [...DAY_AM, ...evening, ...DAY_PM];
+  const dow = d.getDay(), gym = gymDays(d).includes(dow);
+  const blocks = (dow === 0 || dow === 6)
+    ? [...(gym ? WEEKEND_GYM : WEEKEND_DAY), ...DAY_PM] // weekends: no work
+    : [...DAY_AM, ...(gym ? EVENING_GYM : EVENING_NOGYM), ...DAY_PM];
+  const r = retinA(dayKey(d));
+  return blocks.map(b => {
+    if (b.label === 'NR' && r && r.tonight) return { ...b, sub: 'Retin-A night' }; // shown in NR's gray line
+    return b;
+  });
 }
 function getAmExerciseTag(d) {
   const n = EX_AM_CYCLE.length;
@@ -786,18 +800,66 @@ const MARK_INFO = {
 };
 // Tap a block that has a checklist (MR, NR) to open it. Ticks are saved per day, so each morning starts fresh.
 const CHECKLISTS = {
-  MR: ['Make Bed & Lights On', 'Meditate (10 Minutes)', 'Gratitude', 'Hydrate (750 mL)', 'Visualize (10 Minutes)', { 2: 'Skip & Sunlight', 4: 'Skip & Sunlight', other: 'Walk & Sunlight' }, 'Hygiene', 'Cold Exposure', 'Deep Work (90 Minutes)'],
+  MR: ['Make Bed & Lights On', 'Meditate (10 Minutes)', 'Gratitude', 'Hydrate (750 mL)', 'Visualize (10 Minutes)',
+       dk => { // skip on the weekdays without gym: Wed & Fri until the gym switch (Dec 6), then Tue & Thu
+         if (!dk) return 'Walk & Sunlight';
+         const dow = new Date(dk + 'T12:00:00').getDay();
+         return (dk < GYM_SWITCH ? [3, 5] : [2, 4]).includes(dow) ? 'Skip & Sunlight' : 'Walk & Sunlight';
+       },
+       dk => dk && new Date(dk + 'T12:00:00').getDay() === 6 ? 'Grooming (Beard, Face Razor, Nose Hair, Body, Underarms, Groin, Leg Hair, Nails)' : null, // Saturdays, before Hygiene
+       'Hygiene',
+       'Skincare (Cleanser, Moisturizer, Sunscreen)', 'Cold Exposure',
+       dk => { const w = dk ? new Date(dk + 'T12:00:00').getDay() : 1; return w === 0 || w === 6 ? null : 'Deep Work (60 Minutes)'; }], // weekdays only
   Break: ['Eat & Hydrate', 'Walk', 'NSDR / Nap'],
-  NR: ['Prepare Tomorrow (Clothes, Bag, Devices, Schedule)', 'Shower', 'Hygiene (Dental, Skincare, Haircare)', 'Visualize']
+  Gym: ['Workout (90 Minutes)',
+        dk => { // hair right after the workout: shampoo on shampoo days, otherwise rinse with water only
+          if (!dk) return 'Rinse Hair (Water Only)';
+          const sh = SHAMPOO[new Date(dk + 'T12:00:00').getDay()];
+          return sh ? `Shower (${sh} Shampoo, Conditioner)` : 'Rinse Hair (Water Only)';
+        }],
+  NR: ['Prepare Tomorrow (Clothes, Bag, Devices, Schedule)',
+       dk => { // shampoo nights (not gym days: then it's done right after the workout)
+         if (!dk) return 'Shower';
+         const d = new Date(dk + 'T12:00:00'), sh = SHAMPOO[d.getDay()];
+         return sh && !gymDays(d).includes(d.getDay()) ? `Shower (${sh} Shampoo, Conditioner)` : 'Shower';
+       },
+       'Hygiene (Dental)',
+       dk => { const r = retinA(dk); return r && r.tonight ? 'Skincare (Cleanser, Retin-A, Moisturizer)' : 'Skincare (Cleanser, Moisturizer)'; }, // Retin-A night or rest night
+       'Haircare (Minoxidil)', // every night
+       'Visualize']
 };
 const ICON_CHECK = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.6 6.2 2.2 2.2 4.6-4.8"/></svg>';
 const ICON_CARET = '<svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m3.5 2 3 3-3 3"/></svg>';
 const openLists = {};  // which checklists are open (this device only)
 let listDayKey = null; // the day the timeline is showing
-// A step can change by weekday: { 2: 'Skip & Sunlight', 4: 'Skip & Sunlight', other: 'Walk & Sunlight' } (0 = Sun, 1 = Mon ... 6 = Sat)
-function checklistFor(label, dk) {
+// A step can change by weekday, e.g. { 2: 'Tue name', 4: 'Thu name', other: 'Usual name' } (0 = Sun, 1 = Mon ... 6 = Sat)
+function checklistFor(label, dk) { // a step can also be a function of the day: dk => name
   const dow = dk ? new Date(dk + 'T12:00:00').getDay() : -1;
-  return (CHECKLISTS[label] || []).map(n => typeof n === 'string' ? n : (n[dow] || n.other));
+  return (CHECKLISTS[label] || []).map(n => typeof n === 'string' ? n : typeof n === 'function' ? n(dk) : (n[dow] || n.other)).filter(Boolean); // a step can be skipped on some days (null)
+}
+// Hair plan: shampoo + conditioner on these days (0 = Sun ... 6 = Sat); none on Tue, Thu, Sat. On a gym day it's done right after the
+// workout (Gym card); on other days in the NR shower. Gym days without shampoo: rinse hair with water only after. Minoxidil every night (NR Haircare).
+const SHAMPOO = { 1: 'Black', 3: 'Brown', 5: 'Black', 0: 'Brown' };
+// Retin-A plan, started Tue 2026-11-24 (week 1 = Nov 24-30). Each level lists its Retin-A nights (0 = Sun, 1 = Mon ... 6 = Sat); other nights are rest nights.
+const RETIN_A = {
+  start: '2026-11-24',
+  levels: [
+    { fromWeek: 1, nights: [1, 4] },                // Level 1, weeks 1-2: Mon, Thu
+    { fromWeek: 3, nights: [1, 3, 5] },             // Level 2, weeks 3-4: Mon, Wed, Fri
+    { fromWeek: 5, nights: [1, 3, 5, 0] },          // Level 3, weeks 5-8: Mon, Wed, Fri, Sun
+    { fromWeek: 9, nights: [1, 2, 3, 5, 0] },       // Level 4, weeks 9-12: Mon, Tue, Wed, Fri, Sun
+    { fromWeek: 13, nights: [0, 1, 2, 3, 4, 5, 6] } // Level 5, week 13+: every night
+  ]
+};
+function retinA(dk) { // -> { level, week, tonight } for that day, or null before the start
+  if (!dk) return null;
+  const d = new Date(dk + 'T12:00:00'), s = new Date(RETIN_A.start + 'T12:00:00');
+  const days = Math.round((d - s) / 86400000);
+  if (days < 0) return null;
+  const week = Math.floor(days / 7) + 1;
+  let li = 0;
+  RETIN_A.levels.forEach((l, i) => { if (week >= l.fromWeek) li = i; });
+  return { level: li + 1, week, tonight: RETIN_A.levels[li].nights.includes(d.getDay()) };
 }
 const tickKey = n => String(n).replace(/[.#$\/\[\]]/g, '_'); // the database can't store . # $ / [ ] in a key, e.g. 'NSDR / Nap' is saved as 'NSDR _ Nap'
 function listTicks(dk, label) { // returns { itemName: true } for the ticked items of this list
@@ -823,7 +885,7 @@ function toggleListItem(label, idx) {
 }
 
 // Focus card: tap MR to do the routine one step at a time (big step name + check button)
-const FOCUS_LISTS = { MR: 'Morning routine', Break: 'Lunch break', NR: 'Night routine' };
+const FOCUS_LISTS = { MR: 'Morning routine', Break: 'Lunch break', Gym: 'Gym', NR: 'Night routine' };
 const ICON_X = '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 3l8 8M11 3l-8 8"/></svg>';
 const ICON_FC_CHECK = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m2.6 6.2 2.2 2.2 4.6-4.8"/></svg>';
 let focus = null; // { label, idx } while the card is open; idx === list.length is the all-done screen
@@ -972,7 +1034,7 @@ function renderTimeline(elId, blocks, nowTime, viewedKey) {
     return `<div class="tl-row${state}${fillCls}${listCls}${isLast ? ' last' : ''}" style="min-height:${minH}px;${style}">
       <span class="tl-time">${formatTime(a)}</span>
       <span class="tl-rail"><span class="tl-dot"></span></span>
-      <span class="tl-body"><div class="tl-head"${headAttr}><span class="tl-label">${esc(b.displayLabel || b.label)}</span>${caret}${state === ' now' ? '<span class="tl-pill">Now</span>' : ''}${durTxt ? `<div class="tl-dur">${durTxt}${progress}${b.sub ? ' · ' + esc(b.sub) : ''}</div>` : ''}</div>${listHtml}${tagHtml}</span>
+      <span class="tl-body"><div class="tl-head"${headAttr}><span class="tl-label">${esc(b.displayLabel || b.label)}</span>${caret}${state === ' now' ? '<span class="tl-pill">Now</span>' : ''}${durTxt ? `<div class="tl-dur">${durTxt}${progress}${b.sub ? ' · ' + esc(b.sub) : ''}</div>` : ''}${b.note ? `<div class="tl-dur tl-note2">${esc(b.note)}</div>` : ''}</div>${listHtml}${tagHtml}</span>
     </div>`;
   }).join('');
 
