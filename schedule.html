@@ -807,17 +807,14 @@ const CHECKLISTS = {
        'Skincare (Cleanser, Moisturizer, Sunscreen)', 'Cold Exposure',
        dk => { const w = dk ? new Date(dk + 'T12:00:00').getDay() : 1; return w === 0 || w === 6 ? null : 'Deep Work (60 Minutes)'; }], // weekdays only
   Break: ['Eat & Hydrate', 'Walk', 'NSDR / Nap'],
-  Gym: ['Workout (90 Minutes)',
-        dk => { // hair right after the workout: shampoo on shampoo days, otherwise rinse with water only
-          if (!dk) return 'Rinse Hair (Water Only)';
-          const sh = SHAMPOO[new Date(dk + 'T12:00:00').getDay()];
-          return sh ? `Shower (${sh} Shampoo, Conditioner)` : 'Rinse Hair (Water Only)';
-        }],
   NR: ['Prepare Tomorrow (Clothes, Bag, Devices, Schedule)',
-       dk => { // shampoo nights (not gym days: then it's done right after the workout)
+       'Mobility',
+       dk => { // all hair washing happens in this shower
          if (!dk) return 'Shower';
-         const d = new Date(dk + 'T12:00:00'), sh = SHAMPOO[d.getDay()];
-         return sh && !gymDays(d).includes(d.getDay()) ? `Shower (${sh} Shampoo, Conditioner)` : 'Shower';
+         const d = new Date(dk + 'T12:00:00'), dow = d.getDay(), sh = SHAMPOO[dow];
+         if (sh) return `Shower (${sh} Shampoo, Conditioner)`;
+         if (gymDays(d).includes(dow)) return 'Shower (Rinse Hair, Water Only)'; // workout day without shampoo
+         return 'Shower';
        },
        'Hygiene (Dental)',
        dk => { const r = retinA(dk); return r && r.tonight ? 'Skincare (Cleanser, Retin-A, Moisturizer)' : 'Skincare (Cleanser, Moisturizer)'; }, // Retin-A night or rest night
@@ -833,8 +830,8 @@ function checklistFor(label, dk) { // a step can also be a function of the day: 
   const dow = dk ? new Date(dk + 'T12:00:00').getDay() : -1;
   return (CHECKLISTS[label] || []).map(n => typeof n === 'string' ? n : typeof n === 'function' ? n(dk) : (n[dow] || n.other)).filter(Boolean); // a step can be skipped on some days (null)
 }
-// Hair plan: shampoo + conditioner on these days (0 = Sun ... 6 = Sat); none on Tue, Thu, Sat. On a gym day it's done right after the
-// workout (Gym card); on other days in the NR shower. Gym days without shampoo: rinse hair with water only after. Minoxidil every night (NR Haircare).
+// Hair plan: shampoo + conditioner on these days (0 = Sun ... 6 = Sat); none on Tue, Thu, Sat. All in the NR shower.
+// Gym days without shampoo: rinse hair with water only (NR shower). Minoxidil every night (NR Haircare).
 const SHAMPOO = { 1: 'Black', 3: 'Brown', 5: 'Black', 0: 'Brown' };
 // Retin-A plan, started Tue 2026-11-24 (week 1 = Nov 24-30). Each level lists its Retin-A nights (0 = Sun, 1 = Mon ... 6 = Sat); other nights are rest nights.
 const RETIN_A = {
@@ -881,7 +878,7 @@ function toggleListItem(label, idx) {
 }
 
 // Focus card: tap MR to do the routine one step at a time (big step name + check button)
-const FOCUS_LISTS = { MR: 'Morning routine', Break: 'Lunch break', Gym: 'Gym', NR: 'Night routine' };
+const FOCUS_LISTS = { MR: 'Morning routine', Break: 'Lunch break', NR: 'Night routine' };
 const ICON_X = '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 3l8 8M11 3l-8 8"/></svg>';
 const ICON_FC_CHECK = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m2.6 6.2 2.2 2.2 4.6-4.8"/></svg>';
 let focus = null; // { label, idx } while the card is open; idx === list.length is the all-done screen
