@@ -510,11 +510,7 @@ function dayBlocks(d) {
   const blocks = (dow === 0 || dow === 6)
     ? [...(gym ? WEEKEND_GYM : WEEKEND_DAY), ...DAY_PM] // weekends: no work
     : [...DAY_AM, ...(gym ? EVENING_GYM : EVENING_NOGYM), ...DAY_PM];
-  const r = retinA(dayKey(d));
-  return blocks.map(b => {
-    if (b.label === 'NR' && r && r.tonight) return { ...b, sub: 'Retin-A night' }; // shown in NR's gray line
-    return b;
-  });
+  return blocks; // Retin-A nights show only inside the NR card (Skincare step), not on the timeline
 }
 function getAmExerciseTag(d) {
   const n = EX_AM_CYCLE.length;
