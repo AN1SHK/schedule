@@ -1,0 +1,52 @@
+# Copies your recent Hevy workouts into your schedule's Firebase, so the Gym row can show what you logged.
+# Your Hevy API key stays secret: it is read from the repo secret HEVY_API_KEY and never put in the page.
+name: Hevy sync
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'   # every 15 minutes (GitHub sometimes runs it a little late)
+  workflow_dispatch:          # lets you run it by hand from the Actions tab
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Copy recent Hevy workouts into Firebase
+        env:
+          HEVY_API_KEY: ${{ secrets.HEVY_API_KEY }}
+          FIREBASE_DB: https://my-schedule-a0ded-default-rtdb.firebaseio.com
+          HEVY_API: https://api.hevyapp.com
+        run: |
+          cat > sync.mjs <<'EOF'
+          const KEY = process.env.HEVY_API_KEY, DB = process.env.FIREBASE_DB.replace(/\/$/, ''), API = process.env.HEVY_API.replace(/\/$/, '');
+          if (!KEY) throw new Error('Add your Hevy API key as the repo secret HEVY_API_KEY');
+          // Hevy times can be ISO text or numbers; turn either into a Date
+          const toDate = t => new Date(typeof t === 'number' ? (t < 1e12 ? t * 1000 : t) : t);
+          // The day in Toronto, as YYYY-MM-DD (same keys the schedule uses)
+          const dayKey = d => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Toronto', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+          const res = await fetch(`${API}/v1/workouts?page=1&pageSize=10`, { headers: { 'api-key': KEY, accept: 'application/json' } });
+          if (!res.ok) throw new Error(`Hevy answered ${res.status}: ${(await res.text()).slice(0, 200)}`);
+          const { workouts = [] } = await res.json();
+          const days = {};
+          for (const w of workouts) {
+            const start = toDate(w.start_time), end = toDate(w.end_time);
+            if (isNaN(start)) continue;
+            const ex = Array.isArray(w.exercises) ? w.exercises : [];
+            const k = dayKey(start);
+            (days[k] = days[k] || []).push({
+              title: String(w.title || 'Workout').slice(0, 60),
+              start: start.toISOString(),
+              mins: isNaN(end) ? null : Math.max(0, Math.round((end - start) / 60000)),
+              exercises: ex.length,
+              sets: ex.reduce((n, e) => n + (Array.isArray(e.sets) ? e.sets.length : 0), 0)
+            });
+          }
+          const put = await fetch(`${DB}/hevy.json`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ updated: new Date().toISOString(), days }) });
+          if (!put.ok) throw new Error(`Firebase answered ${put.status}: ${(await put.text()).slice(0, 200)}`);
+          console.log(`Synced ${workouts.length} workouts across ${Object.keys(days).length} days`);
+          EOF
+          node sync.mjs
