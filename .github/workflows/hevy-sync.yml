@@ -1,4 +1,4 @@
-# Copies your recent Hevy workouts into your schedule's Firebase, so the Gym row can show what you logged.
+# Copies your Hevy workouts and routines into your schedule's Firebase, so tapping Gym shows the routine.
 # Your Hevy API key stays secret: it is read from the repo secret HEVY_API_KEY and never put in the page.
 name: Hevy sync
 
@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - name: Copy recent Hevy workouts into Firebase
+      - name: Copy Hevy workouts and routines into Firebase
         env:
           HEVY_API_KEY: ${{ secrets.HEVY_API_KEY }}
           FIREBASE_DB: https://my-schedule-a0ded-default-rtdb.firebaseio.com
@@ -24,29 +24,53 @@ jobs:
           cat > sync.mjs <<'EOF'
           const KEY = process.env.HEVY_API_KEY, DB = process.env.FIREBASE_DB.replace(/\/$/, ''), API = process.env.HEVY_API.replace(/\/$/, '');
           if (!KEY) throw new Error('Add your Hevy API key as the repo secret HEVY_API_KEY');
+          const hevy = async path => {
+            const res = await fetch(`${API}${path}`, { headers: { 'api-key': KEY, accept: 'application/json' } });
+            if (!res.ok) throw new Error(`Hevy answered ${res.status} for ${path.split('?')[0]}: ${(await res.text()).slice(0, 200)}`);
+            return res.json();
+          };
           // Hevy times can be ISO text or numbers; turn either into a Date
           const toDate = t => new Date(typeof t === 'number' ? (t < 1e12 ? t * 1000 : t) : t);
           // The day in Toronto, as YYYY-MM-DD (same keys the schedule uses)
           const dayKey = d => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Toronto', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
-          const res = await fetch(`${API}/v1/workouts?page=1&pageSize=10`, { headers: { 'api-key': KEY, accept: 'application/json' } });
-          if (!res.ok) throw new Error(`Hevy answered ${res.status}: ${(await res.text()).slice(0, 200)}`);
-          const { workouts = [] } = await res.json();
+          const list = v => Array.isArray(v) ? v : [];
+          const num = v => typeof v === 'number' && isFinite(v) ? v : undefined;
+          // Each set, kept small: type, reps or rep range, weight (kg), time (s), distance (m)
+          const set = s => ({ ty: String(s.type || 'normal'), r: num(s.reps), lo: num(s.rep_range && s.rep_range.start), hi: num(s.rep_range && s.rep_range.end), w: num(s.weight_kg), d: num(s.duration_seconds), m: num(s.distance_meters) });
+          const exercises = v => list(v).map(e => ({ t: String(e.title || 'Exercise').slice(0, 80), s: list(e.sets).map(set) }));
+
+          // Your last 10 workouts, grouped by day
+          const { workouts = [] } = await hevy('/v1/workouts?page=1&pageSize=10');
           const days = {};
-          for (const w of workouts) {
+          for (const w of list(workouts)) {
             const start = toDate(w.start_time), end = toDate(w.end_time);
             if (isNaN(start)) continue;
-            const ex = Array.isArray(w.exercises) ? w.exercises : [];
             const k = dayKey(start);
             (days[k] = days[k] || []).push({
               title: String(w.title || 'Workout').slice(0, 60),
               start: start.toISOString(),
-              mins: isNaN(end) ? null : Math.max(0, Math.round((end - start) / 60000)),
-              exercises: ex.length,
-              sets: ex.reduce((n, e) => n + (Array.isArray(e.sets) ? e.sets.length : 0), 0)
+              mins: isNaN(end) ? undefined : Math.max(0, Math.round((end - start) / 60000)),
+              rid: w.routine_id ? String(w.routine_id) : undefined,
+              ex: exercises(w.exercises)
             });
           }
-          const put = await fetch(`${DB}/hevy.json`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ updated: new Date().toISOString(), days }) });
+          for (const k in days) days[k].sort((a, b) => a.start.localeCompare(b.start));
+
+          // All your routines (if this part fails, the workouts still sync and the old routines stay)
+          let routines = [], routineError = null;
+          try {
+            for (let page = 1, pages = 1; page <= pages && page <= 10; page++) {
+              const r = await hevy(`/v1/routines?page=${page}&pageSize=10`);
+              pages = Number(r.page_count) || 1;
+              for (const x of list(r.routines)) routines.push({ id: String(x.id), title: String(x.title || 'Routine').slice(0, 60), folder: x.folder_id ?? undefined, ex: exercises(x.exercises) });
+            }
+          } catch (e) { routineError = e; }
+
+          const body = { updated: new Date().toISOString(), days };
+          if (!routineError) body.routines = routines;
+          const put = await fetch(`${DB}/hevy.json`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
           if (!put.ok) throw new Error(`Firebase answered ${put.status}: ${(await put.text()).slice(0, 200)}`);
-          console.log(`Synced ${workouts.length} workouts across ${Object.keys(days).length} days`);
+          console.log(`Synced ${workouts.length} workouts across ${Object.keys(days).length} days` + (routineError ? '' : ` and ${routines.length} routines`));
+          if (routineError) throw new Error(`Workouts synced, but routines failed: ${routineError.message}`);
           EOF
           node sync.mjs
